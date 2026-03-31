@@ -25,5 +25,6 @@ export default {
 	},
 	shop: {
 		max_level_reached: "等级已满"
-	}
+	},
+	lottery: {}
 };

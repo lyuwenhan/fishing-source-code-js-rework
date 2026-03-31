@@ -25,5 +25,6 @@ export default {
 	},
 	shop: {
 		max_level_reached: "Max level reached."
-	}
+	},
+	lottery: {}
 };

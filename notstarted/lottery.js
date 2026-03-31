@@ -2,13 +2,13 @@ import lang from "./lang.js";
 import * as data from "./data.js";
 import * as functions from "./functions.js";
 
-export default async function spin(){
+export default async function lottery(){
 	await functions.clear();
-	await functions.print(lang.current.spin.sp_1);
-	await functions.print(lang.current.spin.sp_2 + data.gameState.dataSaver.cnt + lang.current.spin.sp_3 + data.gameState.dataSaver.money);
-	await functions.print(lang.current.spin.sp_4);
-	await functions.print(lang.current.spin.sp_5);
-	await functions.print(lang.current.spin.sp_6);
+	await functions.print(lang.current.lottery.lot_1);
+	await functions.print(lang.current.lottery.lot_2 + data.gameState.dataSaver.cnt + lang.current.lottery.lot_3 + data.gameState.dataSaver.money);
+	await functions.print(lang.current.lottery.lot_4);
+	await functions.print(lang.current.lottery.lot_5);
+	await functions.print(lang.current.lottery.lot_6);
 	while(true){
 		while(true){
 			char c = getch();
