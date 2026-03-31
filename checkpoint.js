@@ -16,7 +16,7 @@ export async function loadGame() {
 	return loadState
 }
 export async function saveGame() {
-	return functions.requiredFunctions.saveGame(data.gameState.username, data.gameState.password, JSON.stringify(data.gameState.dataSaver))
+	return functions.requiredFunctions.saveGame(data.gameState.username, data.gameState.password, data.gameState.dataSaver)
 }
 export async function login() {
 	while (true) {

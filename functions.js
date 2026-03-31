@@ -15,7 +15,6 @@ export function deepCopy(obj) {
 }
 export const requiredFunctions = {
 	write: async text => console.log(text),
-	getConsoleSize: async () => [100, 100],
 	loadGame: async () => ({
 		code: false
 	}),
@@ -24,16 +23,13 @@ export const requiredFunctions = {
 	}),
 	hasSave: async () => ({
 		code: false
-	}),
-	updated: false
+	})
 };
-export function setFunctions(write, getConsoleSize, loadGame, saveGame, hasSave) {
+export function setFunctions(write, loadGame, saveGame, hasSave) {
 	requiredFunctions.write = write;
-	requiredFunctions.getConsoleSize = getConsoleSize;
 	requiredFunctions.loadGame = loadGame;
 	requiredFunctions.saveGame = saveGame;
-	requiredFunctions.hasSave = hasSave;
-	requiredFunctions.updated = true
+	requiredFunctions.hasSave = hasSave
 }
 export function listToChoice(...lists) {
 	return [lists].flat(2).map((name, index) => `${index+1}. ${capitalize(name)}`).join(", ")
@@ -44,6 +40,14 @@ function write(text) {
 }
 export async function clear() {
 	await write("c")
+}
+export let consoleSize = {
+	rows: 100,
+	cols: 100
+};
+export function setConsoleSize(data) {
+	consoleSize.rows = data.rows || 100;
+	consoleSize.cols = data.cols || 100
 }
 const inputBuffer = [];
 const waitingResolvers = [];
@@ -231,7 +235,7 @@ export async function choose() {
 			break
 		}
 	}
-	await clear();
+	await clear()
 }
 export async function setTextSpeed() {
 	await clear();

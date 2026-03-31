@@ -3,7 +3,10 @@ import * as data from "./data.js";
 import * as functions from "./functions.js";
 import * as checkpoint from "./checkpoint.js";
 
-export default async function main(){
+export default async function main(write, loadGame, saveGame, hasSave, giveOnInput, giveSetConsoleSize) {
+	functions.setFunctions(write, loadGame, saveGame, hasSave);
+	giveOnInput(functions.onInput);
+	giveSetConsoleSize(functions.setConsoleSize);
 	await functions.clear();
 	for (let text of lang.current.main.story) {
 		await functions.printa(text)
@@ -43,7 +46,7 @@ export default async function main(){
 				break;
 			}else if(type === '6'){
 				await functions.clear();
-				return 0;
+				return;
 			}
 		}
 		const saveState = await checkpoint.saveGame();
