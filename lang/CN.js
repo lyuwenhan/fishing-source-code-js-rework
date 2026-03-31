@@ -18,10 +18,12 @@ export default {
 		password_error: "用户名或密码错误",
 		invalid_username: "无效的用户名"
 	},
-	story: {
-		main_story: ["2136年, 全球冰山融化了", "海平面上升了许多", "大部分城市被海平面淹没了", "你待在一个小岛上, 等待救援", "你每天只能钓鱼度日"]
+	main: {
+		story: ["2136年, 全球冰山融化了", "海平面上升了许多", "大部分城市被海平面淹没了", "你待在一个小岛上, 等待救援", "你每天只能钓鱼度日"],
+		main_menu: ["开始钓鱼", "进入商店", "更改输出速度", "抽奖", "挑战", "退出"],
+		challenge_completed: "您已经完成所有挑战"
 	},
 	shop: {
-		max_level_reached: "等级已满",
+		max_level_reached: "等级已满"
 	}
 };

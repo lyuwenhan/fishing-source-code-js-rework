@@ -19,11 +19,11 @@ int main(){
 		exit(0);
 	}
 	story();
-	if(!checkpoint::chp()){
+	if(!checkpoint.chp()){
 		sleep(1);
 		choose();
 	}
-	checkpoint::savechpnp(variate::name);
+	checkpoint.savechpnp(variate.name);
 	sleep(1);
 	while(true){
 		clear();
@@ -31,22 +31,22 @@ int main(){
 		while(true){
 			char type = getch();
 			if(type === '1'){
-				fishing::fishing_setup();
+				fishing.fishing_setup();
 				break;
 			}else if(type === '2'){
-				shop::shop();
+				shop.shop();
 				break;
 			}else if(type === '3'){
 				setsp();
 				break;
 			}else if(type === '4'){
-				spin::spin();
+				spin.spin();
 				break;
 			}else if(type === '5'){
-				if(variate::data_saver.try_level === 0){
-					parkour::main();
-				}else if(variate::data_saver.try_level === 1){
-					beat::main();
+				if(variate.data_saver.try_level === 0){
+					parkour.main();
+				}else if(variate.data_saver.try_level === 1){
+					beat.main();
 				}else{
 					clear();
 					printa(m_did);
@@ -56,11 +56,11 @@ int main(){
 				clear();
 				return 0;
 			}else if(type === 127){
-				tool::tool();
+				tool.tool();
 				break;
 			}
 		}
-		checkpoint::savechpnp(variate::name);
+		checkpoint.savechpnp(variate.name);
 		sleep(0.5);
 	}
 }

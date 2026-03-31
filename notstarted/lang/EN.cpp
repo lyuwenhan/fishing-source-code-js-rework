@@ -2,8 +2,6 @@
 #define LANG_ANY
 #define LANG_EN
 #define LANG EN
-#define m_main "1.Start fishing, 2.Enter shop, 3.Edit output speed, 4.Lucky Draw, 5.Challenging, 6.Exit."
-#define m_did "Challenge Completed"
 #define fi_wea {"Rain", "Snow", "Sunny     ", "Overcast  ", "Cloudy    ", "Fog       "}
 #define fi_big {"", "   Light ", "Moderate ", "   Heavy "}
 #define fi_type {"Rotten ", "Common ", "Amethyst ", "L.Lazuli ", "Gold ", "Emerald ", "Diamond "}

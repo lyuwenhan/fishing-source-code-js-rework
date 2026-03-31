@@ -186,7 +186,7 @@ export async function printYn(text = "", time = .02) {
 		"\r": "y"
 	};
 	await print(text + (text ? " " : "") + "(Y/n)", time);
-	var c;
+	let c;
 	do {
 		c = await getch()
 	} while (!toYN[c]);
@@ -198,12 +198,11 @@ export function random(l, r) {
 export async function choose() {
 	await print(lang.current.functions.choose_speed);
 	await print(listToChoice(lang.current.functions.speed_name));
-	var c;
+	let c;
 	do {
 		c = await getch()
 	} while (!/[1-3]/.test(c));
 	data.gameState.dataSaver.textSpeed = Number(c) - 1;
-	await clear();
 	for (let text of lang.current.functions.skills) {
 		await print(text)
 	}
@@ -232,12 +231,13 @@ export async function choose() {
 			break
 		}
 	}
+	await clear();
 }
-export async function setSpeed() {
+export async function setTextSpeed() {
 	await clear();
 	await print(lang.current.functions.choose_speed);
 	await print(listToChoice(lang.current.functions.speed_name, lang.current.functions.exit));
-	var c;
+	let c;
 	do {
 		c = Number(await getch())
 	} while (!isNumberBetween(c, 1, 4));

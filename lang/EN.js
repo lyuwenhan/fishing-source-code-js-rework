@@ -1,3 +1,4 @@
+import main from "../main";
 export default {
 	functions: {
 		output_speed: 2,
@@ -18,8 +19,10 @@ export default {
 		password_error: "Username or password error.",
 		invalid_username: "Invalid username."
 	},
-	story: {
-		main_story: ["In the year 2136, the global icebergs had melted.", "Sea levels rose significantly.", "Most cities were submerged.", "You are now stranded on a small island, waiting for rescue.", "You survive each day by fishing."]
+	main: {
+		story: ["In the year 2136, the global icebergs had melted.", "Sea levels rose significantly.", "Most cities were submerged.", "You are now stranded on a small island, waiting for rescue.", "You survive each day by fishing."],
+		main_menu: ["Start fishing", "Enter shop", "Edit output speed", "Lucky Draw", "Challenging", "Exit"],
+		challenge_completed: "You have completed all challenges."
 	},
 	shop: {
 		max_level_reached: "Max level reached."

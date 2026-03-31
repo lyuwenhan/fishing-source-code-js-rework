@@ -13,36 +13,36 @@ export default async function spin(){
 		while(true){
 			char c = getch();
 			if(c === '1'){
-				if(variate::data_saver.cnt < 100 && variate::data_saver.money < 1000){
+				if(variate.data_saver.cnt < 100 && variate.data_saver.money < 1000){
 					print(sp_7);
 					sleep(1);
 					break;
 				}
-				if(variate::data_saver.cnt < 100){
+				if(variate.data_saver.cnt < 100){
 					print(sp_8);
 					sleep(1);
 					break;
 				}
-				if(variate::data_saver.money < 1000){
+				if(variate.data_saver.money < 1000){
 					print(sp_9);
 					sleep(1);
 					break;
 				}
 
-				variate::data_saver.cnt -= 100;
-				variate::data_saver.money -= 1000;
+				variate.data_saver.cnt -= 100;
+				variate.data_saver.money -= 1000;
 				int ran = random(1, 100);
 				if(ran <= 20){
 					print(sp_10);
 					print(sp_11);
-					variate::fish_man = true;
+					variate.fish_man = true;
 				}else if(ran <= 40){
 					print(sp_12);
-					variate::big++;
+					variate.big++;
 				}else if(ran <= 41){
 					print(sp_13);
 					print(sp_14);
-					variate::diamond++;
+					variate.diamond++;
 				}else{
 					print(sp_15);
 				}
@@ -54,7 +54,7 @@ export default async function spin(){
 		}
 		clear();
 		cout << sp_1 << endl;
-		cout << sp_2 << variate::data_saver.cnt << sp_3 << variate::data_saver.money << endl;
+		cout << sp_2 << variate.data_saver.cnt << sp_3 << variate.data_saver.money << endl;
 		cout << sp_4 << endl;
 		cout << sp_5 << endl;
 		cout << sp_6 << endl;

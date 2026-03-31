@@ -2,8 +2,6 @@
 #define LANG_ANY
 #define LANG_ZH
 #define LANG ZH
-#define m_main "1.开始钓鱼, 2.进入商店, 3.更改输出速度, 4.抽奖, 5.挑战, 6.退出, 其他输入无效。"
-#define m_did "已完成挑战"
 #define fi_wea {"雨  ", "雪  ", "晴    ", "阴    ", "多云  ", "雾    "}
 #define fi_big {"", "小", "中", "大"}
 #define fi_type {"腐烂的", "普通的", "紫水晶", "青金石", "金", "绿宝石", "钻石"}
