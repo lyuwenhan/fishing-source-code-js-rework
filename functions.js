@@ -1,0 +1,247 @@
+import lang from "./lang.js";
+import * as data from "./data.js";
+export function deepCopy(obj) {
+	if (obj === null || typeof obj !== "object") {
+		return obj
+	}
+	if (Array.isArray(obj)) {
+		return obj.map(deepCopy)
+	}
+	const result = {};
+	for (const key of Object.keys(obj)) {
+		result[key] = deepCopy(obj[key])
+	}
+	return result
+}
+export const requiredFunctions = {
+	write: async text => console.log(text),
+	getConsoleSize: async () => [100, 100],
+	loadGame: async () => ({
+		code: false
+	}),
+	saveGame: async () => ({
+		code: false
+	}),
+	hasSave: async () => ({
+		code: false
+	}),
+	updated: false
+};
+export function setFunctions(write, getConsoleSize, loadGame, saveGame, hasSave) {
+	requiredFunctions.write = write;
+	requiredFunctions.getConsoleSize = getConsoleSize;
+	requiredFunctions.loadGame = loadGame;
+	requiredFunctions.saveGame = saveGame;
+	requiredFunctions.hasSave = hasSave;
+	requiredFunctions.updated = true
+}
+export function listToChoice(...lists) {
+	return [lists].flat(2).map((name, index) => `${index+1}. ${capitalize(name)}`).join(", ")
+}
+
+function write(text) {
+	return requiredFunctions.write(text)
+}
+export async function clear() {
+	await write("c")
+}
+const inputBuffer = [];
+const waitingResolvers = [];
+export function onInput(str) {
+	if (typeof str !== "string") {
+		str = String(str)
+	}
+	for (const ch of str.replace(/\r\n/g, "\r").replace(/\n/g, "\r").replace(/\b/g, "")) {
+		if (waitingResolvers.length > 0) {
+			const resolve = waitingResolvers.shift();
+			resolve(ch)
+		} else {
+			inputBuffer.push(ch)
+		}
+	}
+}
+export async function getch() {
+	if (inputBuffer.length > 0) {
+		return inputBuffer.shift()
+	}
+	return new Promise(resolve => {
+		waitingResolvers.push(resolve)
+	})
+}
+export function getch2() {
+	if (inputBuffer.length > 0) {
+		return inputBuffer.shift()
+	}
+	return ""
+}
+export function getch2s() {
+	if (inputBuffer.length === 0) {
+		return ""
+	}
+	return inputBuffer.splice(0).join("")
+}
+export function isNumberBetween(num, l, r) {
+	return num >= l && num <= r
+}
+export async function getline(type = 0) {
+	let ans = "";
+	while (true) {
+		const a = await getch();
+		if (a === "\r") {
+			if (ans) {
+				break
+			} else {
+				continue
+			}
+		}
+		if (a === "") {
+			if (ans.length > 0) {
+				ans = ans.slice(0, -1);
+				if (type === 1 || type === 2) {
+					await write("\b \b")
+				}
+			}
+			continue
+		}
+		if (!/[!-~]/.test(a)) {
+			continue
+		}
+		ans += a;
+		if (type === 1) {
+			await write(a)
+		} else if (type === 2) {
+			await write("*")
+		}
+	}
+	await write("\n");
+	return ans
+}
+export async function getlineYe(type = 0) {
+	let ans = "";
+	while (true) {
+		const a = await getch();
+		if (a === "\r") {
+			break
+		}
+		if (a === "") {
+			if (ans.length > 0) {
+				ans = ans.slice(0, -1);
+				if (type === 1 || type === 2) {
+					await write("\b \b")
+				}
+			}
+			continue
+		}
+		if (!/[!-~]/.test(a)) {
+			continue
+		}
+		ans += a;
+		if (type === 1) {
+			await write(a)
+		} else if (type === 2) {
+			await write("*")
+		}
+	}
+	await write("\n");
+	return ans
+}
+export async function sleep(s) {
+	return new Promise(resolve => setTimeout(resolve, s * 1e3))
+}
+export function capitalize(text) {
+	if (!text) {
+		return ""
+	}
+	return text[0].toUpperCase() + text.slice(1)
+}
+export async function printnl(text, time = .02) {
+	await write("[?25l");
+	try {
+		if (!isNumberBetween(data.gameState.dataSaver.speed, 0, 1) || time <= 0) {
+			await write(text)
+		} else {
+			for (const char of text) {
+				await write(char);
+				await sleep(time / (data.gameState.dataSaver.speed + 1) / lang.current.functions.output_speed)
+			}
+		}
+	} finally {
+		await write("[m[?25h")
+	}
+}
+export async function print(text, time = .02) {
+	await printnl(text, time);
+	await write("\n")
+}
+export async function printa(text = "", time = .02) {
+	await print(text + (text ? "    " : "") + "(" + capitalize(lang.current.functions.press_enter_to_continue) + ")", time);
+	while (await getch() !== "\r");
+}
+export async function printYn(text = "", time = .02) {
+	const toYN = {
+		Y: "y",
+		N: "n",
+		y: "y",
+		n: "n",
+		"\r": "y"
+	};
+	await print(text + (text ? " " : "") + "(Y/n)", time);
+	var c;
+	do {
+		c = await getch()
+	} while (!toYN[c]);
+	return toYN[c] === "y"
+}
+export function random(l, r) {
+	return Math.floor(Math.random() * (r - l + 1)) + l
+}
+export async function choose() {
+	await print(lang.current.functions.choose_speed);
+	await print(listToChoice(lang.current.functions.speed_name));
+	var c;
+	do {
+		c = await getch()
+	} while (!/[1-3]/.test(c));
+	data.gameState.dataSaver.speed = Number(c) - 1;
+	await clear();
+	for (let text of lang.current.functions.skills) {
+		await print(text)
+	}
+	while (true) {
+		const c = await getch();
+		if (c === "1") {
+			data.gameState.dataSaver.catchSpeedLevel = 5;
+			break
+		} else if (c === "2") {
+			data.gameState.dataSaver.incomeLevel = 5;
+			break
+		} else if (c === "3") {
+			data.gameState.dataSaver.slip = 10;
+			break
+		} else if (c === "4") {
+			data.gameState.dataSaver.cleaning_ball = 1;
+			data.gameState.dataSaver.cleaning_sub = 2;
+			break
+		} else if (c === "5") {
+			data.gameState.dataSaver.actionSpeedMultiplier = 2;
+			break
+		} else if (c === "6") {
+			data.gameState.dataSaver.bigFishChance = 40;
+			break
+		} else if (c === "7") {
+			break
+		}
+	}
+}
+export async function setSpeed() {
+	await clear();
+	await print(lang.current.functions.choose_speed);
+	await print(listToChoice(lang.current.functions.speed_name, lang.current.functions.exit));
+	var c;
+	do {
+		c = Number(await getch())
+	} while (!isNumberBetween(c, 1, 4));
+	if (c <= 3) {
+		data.gameState.dataSaver.speed = c - 1
+	}
+}
