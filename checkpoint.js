@@ -70,6 +70,7 @@ export async function login() {
 				continue
 			}
 		}
+		await functions.clear();
 		break
 	}
 }
