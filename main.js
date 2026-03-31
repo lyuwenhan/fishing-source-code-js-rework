@@ -3,14 +3,15 @@ import * as data from "./data.js";
 import * as functions from "./functions.js";
 import * as checkpoint from "./checkpoint.js";
 let started = false;
-export async function start(write, loadGame, saveGame, hasSave, giveOnInput, giveSetConsoleSize) {
+export async function start(write, loadGame, saveGame, hasSave, giveOnInput, giveSetConsoleSize, giveSetLanguage) {
 	if (started) {
 		return
 	}
 	started = true;
 	functions.setFunctions(write, loadGame, saveGame, hasSave);
-	giveOnInput(functions.onInput);
-	giveSetConsoleSize(functions.setConsoleSize);
+	giveOnInput?.(functions.onInput);
+	giveSetConsoleSize?.(functions.setConsoleSize);
+	giveSetLanguage?.(lang);
 	await functions.clear();
 	for (let text of lang.current.main.story) {
 		await functions.printa(text)
