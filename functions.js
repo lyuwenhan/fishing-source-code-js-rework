@@ -36,7 +36,7 @@ export function listToChoice(...lists) {
 }
 
 function write(text) {
-	return requiredFunctions.write(text)
+	return requiredFunctions.write(text.replace(/\n/g, "\r\n"))
 }
 export async function clear() {
 	await write("c")

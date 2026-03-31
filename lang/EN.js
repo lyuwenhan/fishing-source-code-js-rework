@@ -1,4 +1,3 @@
-import main from "../main";
 export default {
 	functions: {
 		output_speed: 2,
