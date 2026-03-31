@@ -207,6 +207,7 @@ export async function choose() {
 		c = await getch()
 	} while (!/[1-3]/.test(c));
 	data.gameState.dataSaver.textSpeed = Number(c) - 1;
+	await clear();
 	for (let text of lang.current.functions.skills) {
 		await print(text)
 	}

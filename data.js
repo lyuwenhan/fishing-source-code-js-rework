@@ -19,7 +19,7 @@ export const getData = () => ({
 	cleanerCount: 0,
 	cleaningMultiplier: 1,
 	rodLevel: 1,
-	textSpeed: 2,
+	textSpeed: 1,
 	challengeLevel: 0,
 	ovenCount: 0,
 	hunger: 20,

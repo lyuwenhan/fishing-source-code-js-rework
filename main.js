@@ -17,10 +17,10 @@ export async function start(write, loadGame, saveGame, hasSave, giveOnInput, giv
 	}
 	await functions.clear();
 	if (await checkpoint.login()) {
-		await functions.sleep(1);
+		await functions.sleep(0.5);
 		await functions.choose()
 	}
-	await functions.sleep(1);
+	await functions.sleep(0.5);
 	while (true) {
 		await functions.clear();
 		await functions.print(functions.listToChoice(lang.current.main.main_menu));
@@ -50,6 +50,7 @@ export async function start(write, loadGame, saveGame, hasSave, giveOnInput, giv
 				break
 			} else if (type === "6") {
 				await functions.clear();
+				started = false;
 				return
 			}
 		}
