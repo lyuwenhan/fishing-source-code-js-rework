@@ -17,8 +17,11 @@ export default {
 		confirm_password: "请确认密码",
 		password_error: "用户名或密码错误",
 		invalid_username: "无效的用户名"
-	}
+	},
 	story: {
 		main_story: ["2136年, 全球冰山融化了", "海平面上升了许多", "大部分城市被海平面淹没了", "你待在一个小岛上, 等待救援", "你每天只能钓鱼度日"]
+	},
+	shop: {
+		max_level_reached: "等级已满",
 	}
 };

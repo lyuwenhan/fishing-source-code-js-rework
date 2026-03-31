@@ -13,12 +13,15 @@ export default {
 		username: "username",
 		password: "password",
 		api_error: "API error",
-		password_not_match: "the two passwords do not match",
-		confirm_password: "confirm password",
-		password_error: "username or password error",
-		invalid_username: "invalid username"
+		password_not_match: "The two passwords do not match.",
+		confirm_password: "Confirm password",
+		password_error: "Username or password error.",
+		invalid_username: "Invalid username."
 	},
 	story: {
-		main_story:["In the year 2136, the global icebergs had melted.", "Sea levels rose significantly.", "Most cities were submerged.", "You are now stranded on a small island, waiting for rescue.", "You survive each day by fishing."]
+		main_story: ["In the year 2136, the global icebergs had melted.", "Sea levels rose significantly.", "Most cities were submerged.", "You are now stranded on a small island, waiting for rescue.", "You survive each day by fishing."]
+	},
+	shop: {
+		max_level_reached: "Max level reached."
 	}
 };

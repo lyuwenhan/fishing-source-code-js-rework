@@ -4,18 +4,6 @@
 #define LANG EN
 #define m_main "1.Start fishing, 2.Enter shop, 3.Edit output speed, 4.Lucky Draw, 5.Challenging, 6.Exit."
 #define m_did "Challenge Completed"
-#define chp_suc "Load succeeded"
-#define chp_nouser "Incorrect username or password"
-#define chp_login "Login"
-#define chp_regi "Sign up"
-#define chp_un "Username: "
-#define chp_invalid "Invalid Username"
-#define chp_pwd "Password: "
-#define chp_repwd "Confirm password: "
-#define chp_pwdng "Passwords do not match"
-#define chp_yesuser "User already exists"
-#define chp_regigood "Successfully registered"
-#define chp_main "1.Login, 2.Sign up, 3.Exit"
 #define fi_wea {"Rain", "Snow", "Sunny     ", "Overcast  ", "Cloudy    ", "Fog       "}
 #define fi_big {"", "   Light ", "Moderate ", "   Heavy "}
 #define fi_type {"Rotten ", "Common ", "Amethyst ", "L.Lazuli ", "Gold ", "Emerald ", "Diamond "}
@@ -89,14 +77,12 @@
 #define fi_statuses {"Casting the rod", "Waiting", "Fish approaching", "Reeling in", "Fish got off"}
 #define fi_si "Press E to enter minimal mode"
 #define fi_nsi "Press E exit minimal mode"
-#define press_enter_to_continue "(Press Enter to continue)"
 #define pk_in "Do you want to enter parkour mode?"
 #define pk_tip1 "Use 'W' or Space to jump, press 'R' to respawn, press Backspace to exit."
 #define pk_ok "You have completed the challenge and earned $500!"
 #define pk_die "You died"
 #define pk_rb "Do you want to respawn?"
 #define pk_tip2 "Use 'WASD' to swim, press 'R' to respawn, press Backspace to exit."
-#define story_m {"In the year 2136, the global icebergs had melted.", "Sea levels rose significantly.", "Most cities were submerged.", "You are now stranded on a small island, waiting for rescue.", "You survive each day by fishing."}
 #define be_1 {{"Introduction", {"You are the hero of this world.", "You must defeat the evil dragon through your efforts.", "Along the way, you will meet many allies", "And many traps."}, {"Start"}, {""}, {1}},\
 {"", {"You wake up in your bed.", "What do you want to do?"}, {"Eat breakfast", "Go outside", "Sleep a bit more"}, {"You ate breakfast", "", "You lay back in bed"}, {-1, 2, -2}},\
 {"", {"You step outside onto the road.", "What do you want to do?"}, {"Go back and eat breakfast", "Go back to sleep", "Go to the blacksmith"}, {"You went back and ate breakfast", "You went back and lay in bed", "You headed to the blacksmith"}, {-1, -2, 3}},\
@@ -164,8 +150,6 @@
 #define sp_13 "Diamond Fish *1"
 #define sp_14 "Achievement Unlocked: Legendary Fish"
 #define sp_15 "Better luck next time!"
-#define to_1 "This is not the right place"
-#define to_2 "Please press enter to exit"
 #define sh_main1 "1. Upgrade Hook Speed, 2. Upgrade Fishing Profit, 3. Hook-off Probability, 4. Buy Cleaning Agent, 5. Upgrade Cleaning Agent, 6. Upgrade Aquarium Capacity, 7. Buy Oven, 8. Return."
 #define sh_mlr "    Max Level Reached"
 #define sh_cost "    Cost: $"
@@ -213,6 +197,4 @@
 #define sh_bf_a "    Current: "
 #define sh_bf_b "%, After Upgrade: "
 #define sh_cost30 "    Cost: $30, Current Gold: $"
-
-#define output_speed 2
 #endif

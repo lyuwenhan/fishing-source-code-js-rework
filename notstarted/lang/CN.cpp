@@ -4,18 +4,6 @@
 #define LANG ZH
 #define m_main "1.开始钓鱼, 2.进入商店, 3.更改输出速度, 4.抽奖, 5.挑战, 6.退出, 其他输入无效。"
 #define m_did "已完成挑战"
-#define chp_suc "读取成功"
-#define chp_nouser "用户名或密码错误"
-#define chp_login "登录"
-#define chp_regi "注册"
-#define chp_un "用户名: "
-#define chp_invalid "用户名不合法"
-#define chp_pwd "密码: "
-#define chp_repwd "请确认密码: "
-#define chp_pwdng "两次密码不一致"
-#define chp_yesuser "用户已存在"
-#define chp_regigood "注册成功"
-#define chp_main "1.登录, 2.注册, 3.退出"
 #define fi_wea {"雨  ", "雪  ", "晴    ", "阴    ", "多云  ", "雾    "}
 #define fi_big {"", "小", "中", "大"}
 #define fi_type {"腐烂的", "普通的", "紫水晶", "青金石", "金", "绿宝石", "钻石"}
@@ -89,14 +77,12 @@
 #define fi_statuses {"抛竿中", "等待中", "鱼正在靠近", "收杆中", "已脱钩"}
 #define fi_si "按 e 键退出简洁模式"
 #define fi_nsi "按 e 键进入简洁模式"
-#define press_enter_to_continue "(按Enter继续)"
 #define pk_in "是否进入跑酷"
 #define pk_tip1 "使用w或空格进行跳跃, 按r重生, 按backspace退出"
 #define pk_ok "完成挑战, 获得 $500"
 #define pk_die "你阵亡了"
 #define pk_rb "是否重生"
 #define pk_tip2 "使用wasd进行游泳, 按r重生, 按backspace退出"
-#define story_m {"2136年, 全球冰山融化了", "海平面上升了许多", "大部分城市被海平面淹没了", "你待在一个小岛上, 等待救援", "你每天只能钓鱼度日"}
 #define be_1 {{"简介", {"你是这个世界的勇者", "你需要经过你的努力打败恶龙", "过程中你会遇到很多的帮助", "以及很多的陷阱"}, {"开始"}, {""}, {1}},\
 {"", {"你从你的床上醒来", "你要干什么"}, {"吃早饭", "出去走走", "再睡一会"}, {"你吃了早饭", "", "你躺在了床上"}, {-1, 2, -2}},\
 {"", {"你来到了屋外的路上", "你要干什么"}, {"回家吃早饭", "回家再睡一会", "去铁匠铺"}, {"你回家吃了早饭", "你回家躺在了床上", "你走向了铁匠铺"}, {-1, -2, 3}},\
@@ -164,8 +150,6 @@
 #define sp_13 "钻石鱼*1"
 #define sp_14 "获得成就: 传说中的鱼"
 #define sp_15 "谢谢惠顾"
-#define to_1 "这里不是你该来的地方"
-#define to_2 "请按下回车以退出"
 #define sh_main1 "1.升级上钩速度, 2.升级钓鱼收益, 3.脱钩概率, 4.购买清洁剂, 5.升级清洁剂, 6.升级水族馆容量, 7.购买烤箱, 8.返回。"
 #define sh_mlr "    等级已满"
 #define sh_cost "    升级花费: $"
@@ -213,6 +197,4 @@
 #define sh_bf_a "    当前大鱼概率: "
 #define sh_bf_b "%, 升级后大鱼概率"
 #define sh_cost30 "    购买花费: $30, 当前金币数量: $"
-
-#define output_speed 1
 #endif

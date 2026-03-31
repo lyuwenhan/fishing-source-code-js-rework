@@ -43,7 +43,7 @@ export async function login() {
 			await functions.printnl(functions.capitalize(lang.current.checkpoint.confirm_password) + ": ");
 			var newPassword = await functions.getline(2);
 			if (newPassword !== password) {
-				await functions.print(functions.capitalize(lang.current.checkpoint.password_not_match));
+				await functions.print(lang.current.checkpoint.password_not_match);
 				await functions.sleep(1);
 				continue
 			}
@@ -53,19 +53,19 @@ export async function login() {
 		if (isNew) {
 			const saveState = await saveGame();
 			if (!saveState?.code) {
-				await functions.print(functions.capitalize(lang.current.checkpoint.api_error));
+				await functions.print(lang.current.checkpoint.api_error);
 				await functions.sleep(1);
 				continue
 			}
 			if (saveState.code === 2) {
-				await functions.print(functions.capitalize(lang.current.checkpoint.password_error));
+				await functions.print(lang.current.checkpoint.password_error);
 				await functions.sleep(1);
 				continue
 			}
 		} else {
 			const loadState = await loadGame();
 			if (!loadState?.code) {
-				await functions.print(functions.capitalize(lang.current.checkpoint.api_error));
+				await functions.print(lang.current.checkpoint.api_error);
 				await functions.sleep(1);
 				continue
 			}
