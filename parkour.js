@@ -116,12 +116,9 @@ function main(){
 	}
 	x = born[level][0];
 	y = born[level][1];
-	clear();
-	if(!printYn(pk_in)){
-		return;
-	}
-	int swcnt = 0;
-	bool ju = false;
+	await functions.clear();
+	let swcnt = 0;
+	let ju = false;
 	while(true){
 		if(x <= 0){
 			x = 1;
@@ -129,7 +126,7 @@ function main(){
 		if(y <= 0){
 			y = 1;
 		}
-		clear();
+		await functions.clear();
 		if(x === born[level + 1][0] && y === born[level + 1][1]){
 			level++;
 		}
