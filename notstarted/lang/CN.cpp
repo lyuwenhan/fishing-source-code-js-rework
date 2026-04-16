@@ -75,7 +75,6 @@
 #define fi_statuses {"抛竿中", "等待中", "鱼正在靠近", "收杆中", "已脱钩"}
 #define fi_si "按 e 键退出简洁模式"
 #define fi_nsi "按 e 键进入简洁模式"
-#define pk_in "是否进入跑酷"
 #define pk_tip1 "使用w或空格进行跳跃, 按r重生, 按backspace退出"
 #define pk_ok "完成挑战, 获得 $500"
 #define pk_die "你阵亡了"

@@ -34,12 +34,11 @@ export function setFunctions(write, loadGame, saveGame, hasSave) {
 export function listToChoice(...lists) {
 	return [lists].flat(2).map((name, index) => `${index+1}. ${capitalize(name)}`).join(", ")
 }
-
-function write(text) {
+export function write(text) {
 	return requiredFunctions.write(text.replace(/\n/g, "\r\n"))
 }
 export async function clear() {
-	await write("c")
+	await write("\x1bc")
 }
 export let consoleSize = {
 	rows: 100,
@@ -159,7 +158,7 @@ export function capitalize(text) {
 	return text[0].toUpperCase() + text.slice(1)
 }
 export async function printnl(text, time = .02) {
-	await write("[?25l");
+	await write("\x1b[?25l");
 	try {
 		if (!isNumberBetween(data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0) {
 			await write(text)
@@ -170,7 +169,7 @@ export async function printnl(text, time = .02) {
 			}
 		}
 	} finally {
-		await write("[m[?25h")
+		await write("\x1b[m\x1b[?25h")
 	}
 }
 export async function print(text, time = .02) {

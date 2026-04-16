@@ -75,7 +75,6 @@
 #define fi_statuses {"Casting the rod", "Waiting", "Fish approaching", "Reeling in", "Fish got off"}
 #define fi_si "Press E to enter minimal mode"
 #define fi_nsi "Press E exit minimal mode"
-#define pk_in "Do you want to enter parkour mode?"
 #define pk_tip1 "Use 'W' or Space to jump, press 'R' to respawn, press Backspace to exit."
 #define pk_ok "You have completed the challenge and earned $500!"
 #define pk_die "You died"
