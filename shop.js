@@ -1,398 +1,286 @@
 import lang from "./lang.js";
 import * as data from "./data.js";
 import * as functions from "./functions.js";
-async function shop0(){
-	if(data.gameState.dataSaver.aquariumCapacity > 30){
-		data.gameState.dataSaver.aquariumCapacity = 30;
+
+function avgText(minValue, maxValue) {
+	const sum = minValue + maxValue;
+	return sum % 2 === 0 ? String(sum / 2) : `${Math.floor(sum/2)}.5`
+}
+async function showResult(text) {
+	await functions.print(text);
+	await functions.sleep(.5)
+}
+async function shop0() {
+	while (true) {
+		await functions.clear();
+		await functions.print(lang.current.shop.mainMenu);
+		await functions.print(lang.current.shop.hookSpeedTitle);
+		if (data.gameState.dataSaver.catchSpeedLevel === data.constant.maxCatchSpeedLevel) {
+			await functions.print(lang.current.shop.levelMax)
+		} else {
+			await functions.print(lang.current.shop.hookSpeedCurrentPrefix + avgText(data.constant.minCatchSpeed[data.gameState.dataSaver.catchSpeedLevel], data.constant.maxCatchSpeed[data.gameState.dataSaver.catchSpeedLevel]) + lang.current.shop.hookSpeedNextPrefix + avgText(data.constant.minCatchSpeed[data.gameState.dataSaver.catchSpeedLevel + 1], data.constant.maxCatchSpeed[data.gameState.dataSaver.catchSpeedLevel + 1]));
+			await functions.print(lang.current.shop.upgradeCostPrefix + data.constant.catchSpeedUpgradeCost[data.gameState.dataSaver.catchSpeedLevel + 1] + lang.current.shop.currentGoldPrefix + data.gameState.dataSaver.money)
+		}
+		await functions.print(lang.current.shop.fishingIncomeTitle);
+		if (data.gameState.dataSaver.incomeLevel === data.constant.maxIncomeLevel) {
+			await functions.print(lang.current.shop.levelMax)
+		} else {
+			await functions.print(lang.current.shop.fishingIncomeCurrentPrefix + avgText(data.constant.minIncome[data.gameState.dataSaver.incomeLevel], data.constant.maxIncome[data.gameState.dataSaver.incomeLevel]) + lang.current.shop.fishingIncomeNextPrefix + avgText(data.constant.minIncome[data.gameState.dataSaver.incomeLevel + 1], data.constant.maxIncome[data.gameState.dataSaver.incomeLevel + 1]));
+			await functions.print(lang.current.shop.upgradeCostPrefix + data.constant.incomeLevelUpgradeCost[data.gameState.dataSaver.incomeLevel + 1] + lang.current.shop.currentGoldPrefix + data.gameState.dataSaver.money)
+		}
+		await functions.print(lang.current.shop.hookOffTitle);
+		if (data.gameState.dataSaver.slipOffChance === 0) {
+			await functions.print(lang.current.shop.levelMax)
+		} else if (data.gameState.dataSaver.slipOffChance > 10) {
+			data.gameState.dataSaver.slipOffChance = Math.floor(data.gameState.dataSaver.slipOffChance / 10) * 10;
+			await functions.print(lang.current.shop.hookOffCurrentPrefix + data.gameState.dataSaver.slipOffChance + lang.current.shop.hookOffNextPrefix + (data.gameState.dataSaver.slipOffChance - 10) + "%");
+			await functions.print(lang.current.shop.hookOffCost100Prefix + data.gameState.dataSaver.money)
+		} else if (data.gameState.dataSaver.slipOffChance > 5) {
+			data.gameState.dataSaver.slipOffChance = 10;
+			await functions.print(lang.current.shop.hookOffPreset10To5);
+			await functions.print(lang.current.shop.hookOffCost100Prefix + data.gameState.dataSaver.money)
+		} else if (data.gameState.dataSaver.slipOffChance > 1) {
+			await functions.print(lang.current.shop.hookOffCurrentPrefix + data.gameState.dataSaver.slipOffChance + lang.current.shop.hookOffNextPrefix + (data.gameState.dataSaver.slipOffChance - 1) + "%");
+			await functions.print(lang.current.shop.hookOffCost100Prefix + data.gameState.dataSaver.money)
+		} else {
+			await functions.print(lang.current.shop.hookOffPreset1To0);
+			await functions.print(lang.current.shop.hookOffCost500Prefix + data.gameState.dataSaver.money)
+		}
+		await functions.print(lang.current.shop.cleanerCountPrefix + data.gameState.dataSaver.cleanerCount);
+		await functions.print(lang.current.shop.cleanerBuyCostPrefix + data.gameState.dataSaver.money);
+		await functions.print(lang.current.shop.cleanEfficiencyTitle);
+		if (data.gameState.dataSaver.cleaningMultiplier >= 10) {
+			await functions.print(lang.current.shop.levelMax)
+		} else {
+			await functions.print(lang.current.shop.cleanEfficiencyCurrentPrefix + data.gameState.dataSaver.cleaningMultiplier + lang.current.shop.cleanEfficiencyNextPrefix + (data.gameState.dataSaver.cleaningMultiplier + 1) + lang.current.shop.cleanEfficiencySuffix);
+			await functions.print(lang.current.shop.superCost30Prefix + data.gameState.dataSaver.money)
+		}
+		await functions.print(lang.current.shop.aquariumCapacityTitle);
+		if (data.gameState.dataSaver.aquariumCapacity >= 30) {
+			await functions.print(lang.current.shop.levelMax)
+		} else {
+			await functions.print(lang.current.shop.aquariumCurrentPrefix + data.gameState.dataSaver.aquariumCapacity + lang.current.shop.aquariumNextPrefix + (data.gameState.dataSaver.aquariumCapacity + 2) + lang.current.shop.aquariumSuffix);
+			await functions.print(lang.current.shop.purchaseCostPrefix + (data.gameState.dataSaver.aquariumCapacity + 2) * 100 + lang.current.shop.currentGoldPrefix + data.gameState.dataSaver.money)
+		}
+		await functions.print(lang.current.shop.ovenCountTitle);
+		if (data.gameState.dataSaver.ovenCount >= 3) {
+			await functions.print(lang.current.shop.ovenMaxCount)
+		} else {
+			await functions.print(lang.current.shop.ovenCurrentPrefix + data.gameState.dataSaver.ovenCount);
+			if (data.gameState.dataSaver.ovenCount < 1) {
+				await functions.print(lang.current.shop.ovenCost50Prefix + data.gameState.dataSaver.money)
+			} else if (data.gameState.dataSaver.ovenCount === 1) {
+				await functions.print(lang.current.shop.ovenCost1000Prefix + data.gameState.dataSaver.money)
+			} else {
+				await functions.print(lang.current.shop.ovenCost2000Prefix + data.gameState.dataSaver.money)
+			}
+		}
+		while (true) {
+			const type = await functions.getch();
+			if (type === "1") {
+				if (data.gameState.dataSaver.catchSpeedLevel === data.constant.maxCatchSpeedLevel) {
+					await showResult(lang.current.shop.levelMax);
+					break
+				} else if (data.gameState.dataSaver.money < data.constant.catchSpeedUpgradeCost[data.gameState.dataSaver.catchSpeedLevel + 1]) {
+					await showResult(lang.current.shop.notEnoughMoney);
+					break
+				} else {
+					data.gameState.dataSaver.money -= data.constant.catchSpeedUpgradeCost[++data.gameState.dataSaver.catchSpeedLevel];
+					await showResult(lang.current.shop.purchaseSuccess);
+					break
+				}
+			} else if (type === "2") {
+				if (data.gameState.dataSaver.incomeLevel === data.constant.maxIncomeLevel) {
+					await showResult(lang.current.shop.levelMax);
+					break
+				} else if (data.gameState.dataSaver.money < data.constant.incomeLevelUpgradeCost[data.gameState.dataSaver.incomeLevel + 1]) {
+					await showResult(lang.current.shop.notEnoughMoney);
+					break
+				} else {
+					data.gameState.dataSaver.money -= data.constant.incomeLevelUpgradeCost[++data.gameState.dataSaver.incomeLevel];
+					await showResult(lang.current.shop.purchaseSuccess);
+					break
+				}
+			} else if (type === "3") {
+				if (data.gameState.dataSaver.slipOffChance === 0) {
+					await showResult(lang.current.shop.levelMax);
+					break
+				} else if (data.gameState.dataSaver.slipOffChance === 1) {
+					if (data.gameState.dataSaver.money < 500) {
+						await showResult(lang.current.shop.notEnoughMoney);
+						break
+					} else {
+						data.gameState.dataSaver.money -= 500;
+						data.gameState.dataSaver.slipOffChance = 0;
+						await showResult(lang.current.shop.purchaseSuccess);
+						break
+					}
+				} else {
+					if (data.gameState.dataSaver.money < 100) {
+						await showResult(lang.current.shop.notEnoughMoney);
+						break
+					} else {
+						data.gameState.dataSaver.money -= 100;
+						if (data.gameState.dataSaver.slipOffChance > 10) {
+							data.gameState.dataSaver.slipOffChance -= 10
+						} else if (data.gameState.dataSaver.slipOffChance > 5) {
+							data.gameState.dataSaver.slipOffChance = 5
+						} else if (data.gameState.dataSaver.slipOffChance > 0) {
+							data.gameState.dataSaver.slipOffChance -= 1
+						}
+						await showResult(lang.current.shop.purchaseSuccess);
+						break
+					}
+				}
+			} else if (type === "4") {
+				if (data.gameState.dataSaver.money < 10) {
+					await showResult(lang.current.shop.notEnoughMoney);
+					break
+				} else {
+					data.gameState.dataSaver.cleanerCount++;
+					data.gameState.dataSaver.money -= 10;
+					await showResult(lang.current.shop.purchaseSuccess);
+					break
+				}
+			} else if (type === "5") {
+				if (data.gameState.dataSaver.cleaningMultiplier === 10) {
+					await showResult(lang.current.shop.levelMax);
+					break
+				} else if (data.gameState.dataSaver.money < 30) {
+					await showResult(lang.current.shop.notEnoughMoney);
+					break
+				} else {
+					data.gameState.dataSaver.money -= 30;
+					data.gameState.dataSaver.cleaningMultiplier++;
+					await showResult(lang.current.shop.purchaseSuccess);
+					break
+				}
+			} else if (type === "6") {
+				if (data.gameState.dataSaver.aquariumCapacity === 30) {
+					await showResult(lang.current.shop.levelMax);
+					break
+				} else if (data.gameState.dataSaver.money < (data.gameState.dataSaver.aquariumCapacity + 2) * 100) {
+					await showResult(lang.current.shop.notEnoughMoney);
+					break
+				} else {
+					data.gameState.dataSaver.money -= (data.gameState.dataSaver.aquariumCapacity + 2) * 100;
+					data.gameState.dataSaver.aquariumCapacity += 2;
+					await showResult(lang.current.shop.purchaseSuccess);
+					break
+				}
+			} else if (type === "7") {
+				if (data.gameState.dataSaver.ovenCount >= 3) {
+					await showResult(lang.current.shop.ovenMaxCount);
+					break
+				} else {
+					if (data.gameState.dataSaver.ovenCount < 1) {
+						if (data.gameState.dataSaver.money < 50) {
+							await showResult(lang.current.shop.notEnoughMoney);
+							break
+						} else {
+							data.gameState.dataSaver.money -= 50;
+							data.gameState.dataSaver.ovenCount = 1;
+							await showResult(lang.current.shop.purchaseSuccess);
+							break
+						}
+					} else if (data.gameState.dataSaver.ovenCount === 1) {
+						if (data.gameState.dataSaver.money < 1e3) {
+							await showResult(lang.current.shop.notEnoughMoney);
+							break
+						} else {
+							data.gameState.dataSaver.money -= 1e3;
+							data.gameState.dataSaver.ovenCount = 2;
+							await showResult(lang.current.shop.purchaseSuccess);
+							break
+						}
+					} else {
+						if (data.gameState.dataSaver.money < 2e3) {
+							await showResult(lang.current.shop.notEnoughMoney);
+							break
+						} else {
+							data.gameState.dataSaver.money -= 2e3;
+							data.gameState.dataSaver.ovenCount = 3;
+							await showResult(lang.current.shop.purchaseSuccess);
+							break
+						}
+					}
+				}
+			} else if (type === "8") {
+				return
+			}
+		}
 	}
+}
+async function shop1() {
 	await functions.clear();
-	await functions.print(sh_main1);
-	await functions.print(sh_hook);
-	if(data.gameState.dataSaver.level === data.constant.max_level){
-		await functions.print("    " + lang.current.shop.max_level_reached);
-	}else{
-		await functions.print(sh_hook1 + to_string((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level]) >> 1) + (((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level]) & 1) ? ".5" : "") + sh_hook2 + to_string((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level + 1] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level + 1]) >> 1) + (((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level + 1] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level + 1]) & 1) ? ".5" : ""));
-		await functions.print(sh_cost + to_string(data.gameState.dataSaver.cost[data.gameState.dataSaver.data_saver.level + 1]) + sh_curgold + to_string(data.gameState.dataSaver.data_saver.money));
-	}
-	await functions.print(sh_get);
-	if(data.gameState.dataSaver.data_saver.get_level === data.gameState.dataSaver.max_level2){
-		print(sh_mlr);
-	}else{
-		print(sh_get1 + to_string((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level]) >> 1) + (((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level]) & 1) ? ".5" : "") + sh_get2 + to_string((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level + 1] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level + 1]) >> 1) + (((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level + 1] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level + 1]) & 1) ? ".5" : ""));
-		print(sh_cost + to_string(data.gameState.dataSaver.cost2[data.gameState.dataSaver.data_saver.get_level + 1]) + sh_curgold + to_string(data.gameState.dataSaver.data_saver.money));
-	}
-	print(sh_hoff);
-	if(data.gameState.dataSaver.data_saver.slip === 0){
-		print(sh_mlr);
-	}else{
-		if(data.gameState.dataSaver.data_saver.slip > 10){
-			data.gameState.dataSaver.data_saver.slip /= 10;
-			data.gameState.dataSaver.data_saver.slip *= 10;
-			print(sh_slip_cur_a + to_string(data.gameState.dataSaver.data_saver.slip) + sh_slip_cur_b + to_string(data.gameState.dataSaver.data_saver.slip - 10) + "%");
-			print(sh_slip_cost100 + to_string(data.gameState.dataSaver.data_saver.money));
-		}else if(data.gameState.dataSaver.data_saver.slip > 5){
-			data.gameState.dataSaver.data_saver.slip = 10;
-			print(sh_slip_lit_10_5);
-			print(sh_slip_cost100 + to_string(data.gameState.dataSaver.data_saver.money));
-		}else if(data.gameState.dataSaver.data_saver.slip > 1){
-			print(sh_slip_cur_a + to_string(data.gameState.dataSaver.data_saver.slip) + sh_slip_cur_b + to_string(data.gameState.dataSaver.data_saver.slip - 1) + "%");
-			print(sh_slip_cost100 + to_string(data.gameState.dataSaver.data_saver.money));
-		}else{
-			print(sh_slip_lit_1_0);
-			print(sh_slip_cost500 + to_string(data.gameState.dataSaver.data_saver.money));
+	await functions.printa(lang.current.shop.superShopWelcome);
+	while (true) {
+		await functions.clear();
+		await functions.print(lang.current.shop.superShopMainMenu);
+		await functions.print(lang.current.shop.superCastSpeedTitle);
+		if (data.gameState.dataSaver.actionSpeedMultiplier >= 10) {
+			await functions.print(lang.current.shop.levelMax)
+		} else {
+			await functions.print(lang.current.shop.superCurrentPrefix + data.gameState.dataSaver.actionSpeedMultiplier + lang.current.shop.superNextPrefix + (data.gameState.dataSaver.actionSpeedMultiplier + 1) + lang.current.shop.superSpeedSuffix);
+			await functions.print(lang.current.shop.ovenCost1000Prefix + data.gameState.dataSaver.money)
 		}
-	}
-	print(fi_clji);
-	print(sh_cl_qty + to_string(data.gameState.dataSaver.data_saver.cleaning_ball));
-	print(sh_cost10 + to_string(data.gameState.dataSaver.data_saver.money));
-	print(sh_cl_eff_title);
-	if(data.gameState.dataSaver.data_saver.cleaning_sub >= 10){
-		print(sh_mlr);
-	}else{
-		print(sh_cl_sub_a + to_string(data.gameState.dataSaver.data_saver.cleaning_sub) + sh_cl_sub_b + to_string(data.gameState.dataSaver.data_saver.cleaning_sub + 1) + sh_cl_sub_c);
-		print(sh_cost30 + to_string(data.gameState.dataSaver.data_saver.money));
-	}
-	print(sh_aq_title);
-	if(data.gameState.dataSaver.data_saver.aqcnt >= 30){
-		print(sh_mlr);
-	}else{
-		print(sh_aq_cap_a + to_string(data.gameState.dataSaver.data_saver.aqcnt) + sh_aq_cap_b + to_string(data.gameState.dataSaver.data_saver.aqcnt + 2) + sh_aq_cap_c);
-		print(sh_purchase_cost + to_string((data.gameState.dataSaver.data_saver.aqcnt + 2) * 100) + sh_curgold + to_string(data.gameState.dataSaver.data_saver.money));
-	}
-	print(sh_oven_title);
-	if(data.gameState.dataSaver.data_saver.roast >= 3){
-		print(sh_oven_max);
-	}else{
-		print(sh_oven_cur + to_string(data.gameState.dataSaver.data_saver.roast));
-		if(data.gameState.dataSaver.data_saver.roast < 1){
-			print(sh_oven_c50 + to_string(data.gameState.dataSaver.data_saver.money));
-		}else if(data.gameState.dataSaver.data_saver.roast === 1){
-			print(sh_oven_c1000 + to_string(data.gameState.dataSaver.data_saver.money));
-		}else{
-			print(sh_oven_c2000 + to_string(data.gameState.dataSaver.data_saver.money));
+		await functions.print(lang.current.shop.superBigFishTitle);
+		if (data.gameState.dataSaver.bigFishChance >= 60) {
+			await functions.print(lang.current.shop.levelMax)
+		} else {
+			await functions.print(lang.current.shop.superBigFishCurrentPrefix + data.gameState.dataSaver.bigFishChance + lang.current.shop.superBigFishNextPrefix + (data.gameState.dataSaver.bigFishChance + 5) + "%");
+			await functions.print(lang.current.shop.ovenCost1000Prefix + data.gameState.dataSaver.money)
 		}
-	}
-	while(true){
-		while(true){
-			char type = getch();
-			if(type === '1'){
-				if(data.gameState.dataSaver.data_saver.level === data.gameState.dataSaver.max_level){
-					print(sh_msg_max);
-					sleep(0.5);
-					break;
-				}else if(data.gameState.dataSaver.data_saver.money < data.gameState.dataSaver.cost[data.gameState.dataSaver.data_saver.level + 1]){
-					print(fi_mnng);
-					sleep(0.5);
-					break;
-				}else{
-					data.gameState.dataSaver.data_saver.money -= data.gameState.dataSaver.cost[++data.gameState.dataSaver.data_saver.level];
-					print(sh_msg_ok);
-					sleep(0.5);
-					break;
+		while (true) {
+			const type = await functions.getch();
+			if (type === "1") {
+				if (data.gameState.dataSaver.actionSpeedMultiplier >= 10) {
+					await showResult(lang.current.shop.levelMax);
+					break
+				} else if (data.gameState.dataSaver.money < 1e3) {
+					await showResult(lang.current.shop.notEnoughMoney);
+					break
+				} else {
+					data.gameState.dataSaver.money -= 1e3;
+					data.gameState.dataSaver.actionSpeedMultiplier++;
+					await showResult(lang.current.shop.purchaseSuccess);
+					break
 				}
-			}else if(type === '2'){
-				if(data.gameState.dataSaver.data_saver.get_level === data.gameState.dataSaver.max_level2){
-					print(sh_msg_max);
-					sleep(0.5);
-					break;
-				}else if(data.gameState.dataSaver.data_saver.money < data.gameState.dataSaver.cost2[data.gameState.dataSaver.data_saver.get_level + 1]){
-					print(fi_mnng);
-					sleep(0.5);
-					break;
-				}else{
-					data.gameState.dataSaver.data_saver.money -= data.gameState.dataSaver.cost2[++data.gameState.dataSaver.data_saver.get_level];
-					print(sh_msg_ok);
-					sleep(0.5);
-					break;
+			} else if (type === "2") {
+				if (data.gameState.dataSaver.bigFishChance >= 60) {
+					await showResult(lang.current.shop.levelMax);
+					break
+				} else if (data.gameState.dataSaver.money < 1e3) {
+					await showResult(lang.current.shop.notEnoughMoney);
+					break
+				} else {
+					data.gameState.dataSaver.money -= 1e3;
+					data.gameState.dataSaver.bigFishChance += 5;
+					await showResult(lang.current.shop.purchaseSuccess);
+					break
 				}
-			}else if(type === '3'){
-				if(data.gameState.dataSaver.data_saver.slip === 0){
-					print(sh_msg_max);
-					sleep(0.5);
-					break;
-				}else if(data.gameState.dataSaver.data_saver.slip === 1){
-					if(data.gameState.dataSaver.data_saver.money < 500){
-						print(fi_mnng);
-						sleep(0.5);
-						break;
-					}else{
-						data.gameState.dataSaver.data_saver.money -= 500;
-						data.gameState.dataSaver.data_saver.slip = 0;
-						print(sh_msg_ok);
-						sleep(0.5);
-						break;
-					}
-				}else{
-					if(data.gameState.dataSaver.data_saver.money < 100){
-						print(fi_mnng);
-						sleep(0.5);
-						break;
-					}else{
-						data.gameState.dataSaver.data_saver.money -= 100;
-						if(data.gameState.dataSaver.data_saver.slip > 10){
-							data.gameState.dataSaver.data_saver.slip -= 10;
-						}else if(data.gameState.dataSaver.data_saver.slip > 5){
-							data.gameState.dataSaver.data_saver.slip = 5;
-						}else if(data.gameState.dataSaver.data_saver.slip > 0){
-							data.gameState.dataSaver.data_saver.slip -= 1;
-						}
-						print(sh_msg_ok);
-						sleep(0.5);
-						break;
-					}
-				}
-			}else if(type === '4'){
-				if(data.gameState.dataSaver.data_saver.money < 10){
-					print(fi_mnng);
-					sleep(0.5);
-					break;
-				}else{
-					data.gameState.dataSaver.data_saver.cleaning_ball++;
-					print(sh_msg_ok);
-					data.gameState.dataSaver.data_saver.money -= 10;
-					break;
-				}
-			}else if(type === '5'){
-				if(data.gameState.dataSaver.data_saver.cleaning_sub === 10){
-					print(sh_msg_max);
-					sleep(0.5);
-					break;
-				}else if(data.gameState.dataSaver.data_saver.money < 30){
-					print(fi_mnng);
-					sleep(0.5);
-					break;
-				}else{
-					data.gameState.dataSaver.data_saver.money -= 30;
-					data.gameState.dataSaver.data_saver.cleaning_sub++;
-					print(sh_msg_ok);
-					sleep(0.5);
-					break;
-				}
-			}else if(type === '6'){
-				if(data.gameState.dataSaver.data_saver.aqcnt === 30){
-					print(sh_msg_max);
-					sleep(0.5);
-					break;
-				}else if(data.gameState.dataSaver.data_saver.money < (data.gameState.dataSaver.data_saver.aqcnt + 2) * 100){
-					print(fi_mnng);
-					sleep(0.5);
-					break;
-				}else{
-					data.gameState.dataSaver.data_saver.money -= (data.gameState.dataSaver.data_saver.aqcnt + 2) * 100;
-					data.gameState.dataSaver.data_saver.aqcnt += 2;
-					print(sh_msg_ok);
-					sleep(0.5);
-					break;
-				}
-			}else if(type === '7'){
-				if(data.gameState.dataSaver.data_saver.roast >= 3){
-					print(sh_oven_max);
-					sleep(0.5);
-					break;
-				}else{
-					if(data.gameState.dataSaver.data_saver.roast < 1){
-						if(data.gameState.dataSaver.data_saver.money < 50){
-							print(fi_mnng);
-							sleep(0.5);
-							break;
-						}else{
-							data.gameState.dataSaver.data_saver.money -= 50;
-							data.gameState.dataSaver.data_saver.roast = 1;
-							print(sh_msg_ok);
-							sleep(0.5);
-							break;
-						}
-					}else if(data.gameState.dataSaver.data_saver.roast === 1){
-						if(data.gameState.dataSaver.data_saver.money < 1000){
-							print(fi_mnng);
-							sleep(0.5);
-							break;
-						}else{
-							data.gameState.dataSaver.data_saver.money -= 1000;
-							data.gameState.dataSaver.data_saver.roast = 2;
-							print(sh_msg_ok);
-							sleep(0.5);
-							break;
-						}
-					}else{
-						if(data.gameState.dataSaver.data_saver.money < 2000){
-							print(fi_mnng);
-							sleep(0.5);
-							break;
-						}else{
-							data.gameState.dataSaver.data_saver.money -= 2000;
-							data.gameState.dataSaver.data_saver.roast = 3;
-							print(sh_msg_ok);
-							sleep(0.5);
-							break;
-						}
-					}
-				}
-			}else if(type === '8'){
-				return;
-			}
-		}
-		clear();
-		cout << sh_main1 << endl;
-		cout << sh_hook << endl;
-		if(data.gameState.dataSaver.data_saver.level === data.gameState.dataSaver.max_level){
-			cout << sh_mlr << endl;
-		}else{
-			cout << sh_hook1 << to_string((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level]) >> 1) << (((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level]) & 1) ? ".5" : "") << sh_hook2 << to_string((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level + 1] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level + 1]) >> 1) << (((data.gameState.dataSaver.mintime[data.gameState.dataSaver.data_saver.level + 1] + data.gameState.dataSaver.maxtime[data.gameState.dataSaver.data_saver.level + 1]) & 1) ? ".5" : "") << endl;
-			cout << sh_cost << to_string(data.gameState.dataSaver.cost[data.gameState.dataSaver.data_saver.level + 1]) << sh_curgold << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-		}
-		cout << sh_get << endl;
-		if(data.gameState.dataSaver.data_saver.get_level === data.gameState.dataSaver.max_level2){
-			cout << sh_mlr << endl;
-		}else{
-			cout << sh_get1 << to_string((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level]) >> 1) << (((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level]) & 1) ? ".5" : "") << sh_get2 << to_string((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level + 1] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level + 1]) >> 1) << (((data.gameState.dataSaver.minget[data.gameState.dataSaver.data_saver.get_level + 1] + data.gameState.dataSaver.maxget[data.gameState.dataSaver.data_saver.get_level + 1]) & 1) ? ".5" : "") << endl;
-			cout << sh_cost << to_string(data.gameState.dataSaver.cost2[data.gameState.dataSaver.data_saver.get_level + 1]) << sh_curgold << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-		}
-		cout << sh_hoff << endl;
-		if(data.gameState.dataSaver.data_saver.slip === 0){
-			cout << sh_mlr << endl;
-		}else{
-			if(data.gameState.dataSaver.data_saver.slip > 10){
-				data.gameState.dataSaver.data_saver.slip /= 10;
-				data.gameState.dataSaver.data_saver.slip *= 10;
-				cout << sh_slip_cur_a << to_string(data.gameState.dataSaver.data_saver.slip) << sh_slip_cur_b << to_string(data.gameState.dataSaver.data_saver.slip - 10) << "%" << endl;
-				cout << sh_slip_cost100 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-			}else if(data.gameState.dataSaver.data_saver.slip > 5){
-				data.gameState.dataSaver.data_saver.slip = 10;
-				cout << sh_slip_lit_10_5 << endl;
-				cout << sh_slip_cost100 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-			}else if(data.gameState.dataSaver.data_saver.slip > 1){
-				cout << sh_slip_cur_a << to_string(data.gameState.dataSaver.data_saver.slip) << sh_slip_cur_b << to_string(data.gameState.dataSaver.data_saver.slip - 1) << "%" << endl;
-				cout << sh_slip_cost100 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-			}else{
-				cout << sh_slip_lit_1_0 << endl;
-				cout << sh_slip_cost500 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-			}
-		}
-		cout << fi_clji << endl;
-		cout << sh_cl_qty << to_string(data.gameState.dataSaver.data_saver.cleaning_ball) << endl;
-		cout << sh_cost10 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-		cout << sh_cl_eff_title << endl;
-		if(data.gameState.dataSaver.data_saver.cleaning_sub >= 10){
-			cout << sh_mlr << endl;
-		}else{
-			cout << sh_cl_sub_a << to_string(data.gameState.dataSaver.data_saver.cleaning_sub) << sh_cl_sub_b << to_string(data.gameState.dataSaver.data_saver.cleaning_sub + 1) << sh_cl_sub_c << endl;
-			cout << sh_cost30 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-		}
-		cout << sh_aq_title << endl;
-		if(data.gameState.dataSaver.data_saver.aqcnt >= 30){
-			cout << sh_mlr << endl;
-		}else{
-			cout << sh_aq_cap_a << to_string(data.gameState.dataSaver.data_saver.aqcnt) << sh_aq_cap_b << to_string(data.gameState.dataSaver.data_saver.aqcnt + 2) << sh_aq_cap_c << endl;
-			cout << sh_purchase_cost << to_string((data.gameState.dataSaver.data_saver.aqcnt + 2) * 100) << sh_curgold << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-		}
-		cout << sh_oven_title << endl;
-		if(data.gameState.dataSaver.data_saver.roast >= 3){
-			cout << sh_oven_max << endl;
-		}else{
-			cout << sh_oven_cur << to_string(data.gameState.dataSaver.data_saver.roast) << endl;
-			if(data.gameState.dataSaver.data_saver.roast < 1){
-				cout << sh_oven_c50 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-			}else if(data.gameState.dataSaver.data_saver.roast === 1){
-				cout << sh_oven_c1000 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
-			}else{
-				cout << sh_oven_c2000 << to_string(data.gameState.dataSaver.data_saver.money) << endl;
+			} else if (type === "3") {
+				await functions.sleep(.5);
+				return
 			}
 		}
 	}
 }
-inline void shop1(){
-	clear();
-	printa(sh_su_welcome);
-	clear();
-	print(sh_su_main);
-	print(sh_su_cast_title);
-	if(data.gameState.dataSaver.data_saver.stime >= 10){
-		print(sh_mlr);
-	}else{
-		print(sh_stime_a + to_string(data.gameState.dataSaver.data_saver.stime) + sh_stime_b + to_string(data.gameState.dataSaver.data_saver.stime + 1) + sh_stime_c);
-		print(sh_oven_c1000 + to_string(data.gameState.dataSaver.data_saver.money));
-	}
-	print(sh_su_bf_title);
-	if(data.gameState.dataSaver.data_saver.bf >= 60){
-		print(sh_mlr);
-	}else{
-		print(sh_bf_a + to_string(data.gameState.dataSaver.data_saver.bf) + sh_bf_b + to_string(data.gameState.dataSaver.data_saver.bf + 5) + "%");
-		print(sh_oven_c1000 + to_string(data.gameState.dataSaver.data_saver.money));
-	}
-	while(true){
-		while(true){
-			char type = getch();
-			if(type === '1'){
-				if(data.gameState.dataSaver.data_saver.stime >= 10){
-					print(sh_msg_max);
-					sleep(0.5);
-					break;
-				}else if(data.gameState.dataSaver.data_saver.money < 1000){
-					print(fi_mnng);
-					sleep(0.5);
-					break;
-				}else{
-					data.gameState.dataSaver.data_saver.money -= 1000;
-					data.gameState.dataSaver.data_saver.stime++;
-					print(sh_msg_ok);
-					sleep(0.5);
-					break;
-				}
-			}else if(type === '2'){
-				if(data.gameState.dataSaver.data_saver.bf >= 60){
-					print(sh_msg_max);
-					sleep(0.5);
-					break;
-				}else if(data.gameState.dataSaver.data_saver.money < 1000){
-					print(fi_mnng);
-					sleep(0.5);
-					break;
-				}else{
-					data.gameState.dataSaver.data_saver.money -= 1000;
-					data.gameState.dataSaver.data_saver.bf += 5;
-					print(sh_msg_ok);
-					sleep(0.5);
-					break;
-				}
-			}else if(type === '3'){
-				sleep(0.5);
-				return;
-			}
-		}
-		clear();
-		cout << sh_su_main << endl;
-		cout << sh_su_cast_title << endl;
-		if(data.gameState.dataSaver.data_saver.stime >= 10){
-			cout << sh_mlr << endl;
-		}else{
-			cout << sh_stime_a + to_string(data.gameState.dataSaver.data_saver.stime) + sh_stime_b + to_string(data.gameState.dataSaver.data_saver.stime + 1) + sh_stime_c << endl;
-			cout << sh_oven_c1000 + to_string(data.gameState.dataSaver.data_saver.money) << endl;
-		}
-		cout << sh_su_bf_title << endl;
-		if(data.gameState.dataSaver.data_saver.bf >= 60){
-			cout << sh_mlr << endl;
-		}else{
-			cout << sh_bf_a + to_string(data.gameState.dataSaver.data_saver.bf) + sh_bf_b + to_string(data.gameState.dataSaver.data_saver.bf + 5) + "%" << endl;
-			cout << sh_oven_c1000 + to_string(data.gameState.dataSaver.data_saver.money) << endl;
-		}
-	}
-}
-inline void shop(){
-	while(true){
-		clear();
-		print(sh_shop_sel);
-		char type;
-		while(true){
-			type = getch();
-			if(type === '1'){
-				shop0();
-				break;
-			}else if(type === '2'){
-				shop1();
-				break;
-			}else if(type === '3'){
-				return;
+export default async function shop() {
+	while (true) {
+		await functions.clear();
+		await functions.print(lang.current.shop.shopSelectMenu);
+		let type;
+		while (true) {
+			type = await functions.getch();
+			if (type === "1") {
+				await shop0();
+				break
+			} else if (type === "2") {
+				await shop1();
+				break
+			} else if (type === "3") {
+				return
 			}
 		}
 	}
