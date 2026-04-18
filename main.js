@@ -5,25 +5,26 @@ import * as checkpoint from "./checkpoint.js";
 import shop from "./shop.js";
 import parkour from "./parkour.js";
 import lottery from "./lottery.js";
+import adventure from "./adventure.js";
+export const onInput = functions.onInput;
+export const setConsoleSize = functions.setConsoleSize;
+export const languages = functions.deepCopy(lang);
 let started = false;
-export async function start(write, loadGame, saveGame, hasSave, giveOnInput, giveSetConsoleSize, giveSetLanguage) {
+export async function start(write, loadGame, saveGame, hasSave) {
 	if (started) {
 		return
 	}
 	started = true;
 	functions.setFunctions(write, loadGame, saveGame, hasSave);
-	giveOnInput?.(functions.onInput);
-	giveSetConsoleSize?.(functions.setConsoleSize);
-	giveSetLanguage?.(lang);
 	await functions.clear();
 	for (let text of lang.current.main.story) {
 		await functions.printa(text)
 	}
 	if (await checkpoint.login()) {
-		await functions.sleep(0.5);
+		await functions.sleep(.5);
 		await functions.choose()
 	}
-	await functions.sleep(0.5);
+	await functions.sleep(.5);
 	while (true) {
 		await functions.clear();
 		await functions.print(functions.listToChoice(lang.current.main.main_menu));
@@ -45,7 +46,7 @@ export async function start(write, loadGame, saveGame, hasSave, giveOnInput, giv
 				if (data.gameState.dataSaver.challengeLevel === 0) {
 					await parkour()
 				} else if (data.gameState.dataSaver.challengeLevel === 1) {
-					await beat()
+					await adventure()
 				} else {
 					await functions.clear();
 					await functions.printa(lang.current.main.challenge_completed)

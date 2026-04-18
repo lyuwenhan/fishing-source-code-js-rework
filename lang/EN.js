@@ -1,3 +1,4 @@
+import adventureStory from "./EN/adventureStory.js";
 export default {
 	functions: {
 		output_speed: 2,
@@ -120,25 +121,26 @@ export default {
 		noneWord: "None",
 		exitOption: "7.Exit"
 	},
-	beat: {
-		achievementAllRoadsToRome: "Hidden reward unlocked: All roads lead to Rome",
-		achievementWrongWay: "Hidden reward unlocked: Lost on the way",
-		achievementVoyage: "Hidden reward unlocked: Columbus's voyage",
-		achievementSurprise: "Hidden reward unlocked: Pleasant surprise",
-		achievementArchaeologist: "Hidden reward unlocked: Archaeologist",
-		achievementBuddhism: "Hidden reward unlocked: Devoted to Buddhism",
-		achievementAscend: "Hidden reward unlocked: Ascended to immortality",
-		achievementDragonMeal: "Hidden reward unlocked: Delicious indeed",
-		achievementOriginalAspiration: "Hidden reward unlocked: Stay true to your original aspiration",
-		achievementMission: "Hidden reward unlocked: Keep the mission in mind",
-		achievementSoftBed: "Hidden reward unlocked: That bed is so soft",
-		achievementSleepComfort: "Hidden reward unlocked: Sleeping feels better",
-		achievementNeedFood: "Hidden reward unlocked: People need food to live",
-		achievementHungryGhost: "Hidden reward unlocked: Escaped from starvation",
-		achievementVirtuousHui: "Hidden reward unlocked: Living simply and happily despite hardship",
-		achievementReadyAfterSleep: "Hidden reward unlocked: You need sleep before setting out",
-		achievementBedComfort: "Hidden reward unlocked: The bed feels great",
-		achievementSleepGod: "Hidden reward unlocked: Blessed by the god of sleep",
-		missionComplete: "Mission completed"
+	adventure: {
+		story: adventureStory,
+		achievementAllRoadsToRome: "Bonus: First time reaching Rome - here's a little gold.",
+		achievementWrongWay: "Bonus: You've looped through Rome so many times the road feels cursed.",
+		achievementVoyage: "Bonus: First time washing up after that odd sea voyage.",
+		achievementSurprise: "Bonus: The cave dig paid off - unexpected find.",
+		achievementArchaeologist: "Bonus: Sixth time in that cave - you're basically on the research team.",
+		achievementBuddhism: "Bonus: First time you really committed to the temple path.",
+		achievementAscend: "Bonus: Sixth temple visit - you went all in on peace and quiet.",
+		achievementDragonMeal: "Bonus: You ate enough times to earn the hatchling's respect (or fear).",
+		achievementOriginalAspiration: "Bonus: You went home for food often enough - discipline pays.",
+		achievementMission: "Bonus: Sixth food run home - you never forgot the quest.",
+		achievementSoftBed: "Bonus: First long rest streak at home.",
+		achievementSleepComfort: "Bonus: Sixth long rest - you've mastered the nap.",
+		achievementNeedFood: "Bonus: Fifth meal at home - fuel for the road.",
+		achievementHungryGhost: "Bonus: Tenth meal - you won't starve on this playthrough.",
+		achievementVirtuousHui: "Bonus: Thirtieth meal - simple habits, steady hero.",
+		achievementReadyAfterSleep: "Bonus: Fifth good night's sleep - you're actually rested.",
+		achievementBedComfort: "Bonus: Tenth sleep - you and that bed are friends now.",
+		achievementSleepGod: "Bonus: Thirtieth sleep - you could sleep through a dragon raid.",
+		missionComplete: "Quest complete. The dragon story is done - here's your reward."
 	}
 };

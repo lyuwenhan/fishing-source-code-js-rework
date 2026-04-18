@@ -1,3 +1,4 @@
+import adventureStory from "./CN/adventureStory.js";
 export default {
 	functions: {
 		output_speed: 1,
@@ -120,7 +121,8 @@ export default {
 		noneWord: "暂无",
 		exitOption: "7.退出"
 	},
-	beat: {
+	adventure: {
+		story: adventureStory,
 		achievementAllRoadsToRome: "获得彩蛋: 条条大路通罗马",
 		achievementWrongWay: "获得彩蛋: 误入歧途",
 		achievementVoyage: "获得彩蛋: 哥伦布大航海",
