@@ -20,8 +20,8 @@ export default {
 		invalid_username: "Invalid username."
 	},
 	main: {
-		story: ["In the year 2136, the global icebergs had melted.", "Sea levels rose significantly.", "Most cities were submerged.", "You are now stranded on a small island, waiting for rescue.", "You survive each day by fishing."],
-		main_menu: ["Start fishing", "Enter shop", "Edit output speed", "Lucky Draw", "Challenging", "Exit"],
+		story: ["2136. The ice is gone, and the sea has taken the old coastlines with it.", "Cities sleep under the waves; you woke on a speck of rock with no name.", "The radio hisses. No ship answers. Your supplies won't last.", "Rescue is a rumor. Survival is whatever gets you to sunrise.", "So you cast your line - the water is cold, but it still answers."],
+		main_menu: ["Start fishing", "Enter shop", "Edit output speed", "Lucky Draw", "Adventure", "Exit"],
 		challenge_completed: "You have completed all challenges."
 	},
 	shop: {
