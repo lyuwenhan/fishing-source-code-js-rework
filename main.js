@@ -1,4 +1,5 @@
 import lang from "./lang.js";
+import deepCopy from "./deepCopy.js";
 import * as data from "./data.js";
 import * as functions from "./functions.js";
 import * as checkpoint from "./checkpoint.js";
@@ -8,7 +9,10 @@ import lottery from "./lottery.js";
 import adventure from "./adventure.js";
 export const onInput = functions.onInput;
 export const setConsoleSize = functions.setConsoleSize;
-export const languages = functions.deepCopy(lang);
+export const languages = {
+	lang: deepCopy(lang.langs),
+	setLanguage: lang.setLanguage
+};
 export const settings = data.gameState.settings;
 let started = false;
 export async function start(write, loadGame, saveGame, hasSave) {
