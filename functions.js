@@ -147,7 +147,7 @@ export function capitalize(text) {
 export async function printnl(text, time = .02) {
 	await write("\x1b[?25l");
 	try {
-		if (!isNumberBetween(data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0) {
+		if (!isNumberBetween(data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0 || data.gameState.forceInstantOutput) {
 			await write(text)
 		} else {
 			for (const char of text) {
@@ -187,13 +187,15 @@ export function random(l, r) {
 }
 export async function choose() {
 	await clear();
-	await print(lang.current.functions.chooseSpeed);
-	await print(listToChoice(lang.current.functions.speedName));
-	let c;
-	do {
-		c = await getch()
-	} while (!/[1-3]/.test(c));
-	data.gameState.dataSaver.textSpeed = Number(c) - 1;
+	if (!data.gameState.settings.forceInstantOutput) {
+		await print(lang.current.functions.chooseSpeed);
+		await print(listToChoice(lang.current.functions.speedName));
+		let c;
+		do {
+			c = await getch()
+		} while (!/[1-3]/.test(c));
+		data.gameState.dataSaver.textSpeed = Number(c) - 1
+	}
 	await clear();
 	for (let text of lang.current.functions.skills) {
 		await print(text)

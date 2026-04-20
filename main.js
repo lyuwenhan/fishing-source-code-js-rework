@@ -16,9 +16,6 @@ export const languages = {
 export const settings = data.gameState.settings;
 let started = false;
 export async function start(write, loadGame, saveGame, hasSave) {
-	if (settings.forceInstantOutput) {
-		data.gameState.dataSaver.textSpeed = 2
-	}
 	if (started) {
 		return
 	}
@@ -33,9 +30,6 @@ export async function start(write, loadGame, saveGame, hasSave) {
 	if (await checkpoint.login()) {
 		await functions.sleep(.5);
 		await functions.choose()
-	}
-	if (settings.forceInstantOutput) {
-		data.gameState.dataSaver.textSpeed = 2
 	}
 	await functions.sleep(.5);
 	while (true) {
