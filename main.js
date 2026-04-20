@@ -6,13 +6,15 @@ import shop from "./shop.js";
 import parkour from "./parkour.js";
 import lottery from "./lottery.js";
 import adventure from "./adventure.js";
-// import fishing from "./fishing.js";
 export const onInput = functions.onInput;
 export const setConsoleSize = functions.setConsoleSize;
 export const languages = functions.deepCopy(lang);
 export const settings = data.settings;
 let started = false;
 export async function start(write, loadGame, saveGame, hasSave) {
+	if (settings.forceInstantOutput) {
+		data.gameState.dataSaver.textSpeed = 2
+	}
 	if (started) {
 		return
 	}
@@ -27,6 +29,9 @@ export async function start(write, loadGame, saveGame, hasSave) {
 	if (await checkpoint.login()) {
 		await functions.sleep(.5);
 		await functions.choose()
+	}
+	if (settings.forceInstantOutput) {
+		data.gameState.dataSaver.textSpeed = 2
 	}
 	await functions.sleep(.5);
 	while (true) {

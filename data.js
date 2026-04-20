@@ -64,6 +64,7 @@ export const settings = {
 	developerMode: false,
 	skipStory: false,
 	forceUsername: "",
-	forceBlancPassword: false
+	forceBlancPassword: false,
+	forceInstantOutput: false
 };
 export const gameState = getGameState();
