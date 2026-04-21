@@ -638,14 +638,14 @@ namespace fishing{
 	}
 	inline void chooseFishingOutcome(){
 		bool b = (random(1, 100) <= variate::data_saver.bf);
-		if(variate::big){
+		if(variate::bigFish){
 			b = true;
-			variate::big--;
+			variate::bigFish--;
 		}
 		int type = chooseFishType();
-		if(variate::diamond){
+		if(variate::diamondFish){
 			type = 6;
-			variate::diamond--;
+			variate::diamondFish--;
 		}
 		startFishingSequence(b, type);
 	}

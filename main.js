@@ -22,18 +22,18 @@ export async function start(write, loadGame, saveGame, hasSave) {
 	started = true;
 	functions.setFunctions(write, loadGame, saveGame, hasSave);
 	await functions.clear();
-	if (!settings.skipStory) {
+	if (!data.gameState.settings.skipStory) {
 		for (let text of lang.current.main.story) {
 			await functions.printa(text)
 		}
 	}
 	if (await checkpoint.login()) {
-		if (!settings.forceUsername || !settings.forceBlancPassword || !settings.forceInstantOutput) {
+		if (!data.gameState.settings.forceUsername || !data.gameState.settings.forceBlancPassword || !data.gameState.settings.forceInstantOutput) {
 			await functions.sleep(.5)
 		}
 		await functions.choose()
 	}
-	if (!settings.forceUsername || !settings.forceBlancPassword || !settings.forceInstantOutput) {
+	if (!data.gameState.settings.forceUsername || !data.gameState.settings.forceBlancPassword || !data.gameState.settings.forceInstantOutput) {
 		await functions.sleep(.5)
 	}
 	while (true) {

@@ -1,11 +1,12 @@
 import adventureStory from "./EN/adventureStoryEN.js";
+const exit = "exit";
 export default {
 	functions: {
 		outputSpeed: 2,
 		speedName: ["slow mode", "normal mode", "instant mode"],
 		chooseSpeed: "Please choose output speed.",
 		skills: ["Please choose a starting skill", "1. Delicious Bait, 2. Rare Treasures, 3. Secure Safety Rope, 4. Powerful Cleaner, 5. Popeye the Sailor, 6. Long Line for Big Fish, 7. Poor Family", "Delicious Bait:", "    Hooking speed increases to 1.5x", "Rare Treasures:", "    Fish prices increase to 2x", "Secure Safety Rope:", "    Slip-off chance greatly reduced (50% -> 10%)", "Powerful Cleaner:", "    Start with 1 cleaner, and its effectiveness is doubled", "Popeye the Sailor:", "    Casting and reeling speed increase to 2x", "Long Line for Big Fish:", "    Big fish chance increases (20% -> 40%)", "Poor Family:", "    No additional bonuses"],
-		exit: "exit",
+		exit,
 		pressEnterToContinue: "press Enter to continue"
 	},
 	checkpoint: {
@@ -20,7 +21,7 @@ export default {
 	},
 	main: {
 		story: ["2136. The ice is gone, and the sea has taken the old coastlines with it.", "Cities sleep under the waves; you woke on a speck of rock with no name.", "The radio hisses. No ship answers. Your supplies won't last.", "Rescue is a rumor. Survival is whatever gets you to sunrise.", "So you cast your line - the water is cold, but it still answers."],
-		mainMenu: ["Start fishing", "Enter shop", "Edit output speed", "Lucky Draw", "Adventure", "Exit"],
+		mainMenu: ["Start fishing", "Enter shop", "Edit output speed", "Lucky Draw", "Adventure", exit],
 		challengeCompleted: "You have completed all challenges."
 	},
 	shop: {
@@ -55,7 +56,7 @@ export default {
 		ovenCurrentPrefix: "Current oven count",
 		notEnoughMoney: "Not enough money",
 		purchaseSuccess: "Purchase successful",
-		shopSelectMenu: ["Normal shop", "Super shop", "Exit"],
+		shopSelectMenu: ["Normal shop", "Super shop", exit],
 		superShopMainMenu: ["Cast speed multiplier", "Upgrade big fish chance", "Back"],
 		superCastSpeedTitle: "Cast Speed Multiplier",
 		superBigFishTitle: "Big Fish Chance",
@@ -66,7 +67,7 @@ export default {
 		superBigFishNextPrefix: "Big fish chance after upgrade"
 	},
 	lottery: {
-		menu: ["Spin", "Exit"],
+		menu: ["Spin", exit],
 		costPrefix: "Spin cost: 100 total fish count + 1000 coins. Current fish count: ",
 		currentMoneyPrefix: " Current coins: ",
 		oddsHeader: "Prize odds (each spin, 1-100):",

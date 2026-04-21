@@ -1,4 +1,5 @@
 import adventureStory from "./CN/adventureStoryCN.js";
+const exit = "退出";
 export default {
 	functions: {
 		outputSpeed: 1,
@@ -6,7 +7,7 @@ export default {
 		this_is: "这是",
 		chooseSpeed: "请选择输出速度",
 		skills: ["请选择开局技能", "1. 美味诱饵, 2. 稀世珍宝, 3. 牢靠安全绳, 4. 强效清洁剂, 5. 大力水手, 6. 放长线钓大鱼, 7. 孤苦人家", "美味诱饵:", "    上钩速度变为原先的1.5倍", "稀世珍宝:", "    鱼的价格变为原先的2倍", "牢靠安全绳:", "    脱钩概率大幅降低 (50% -> 10%)", "强效清洁剂:", "    初始获得1个清洁剂，且其效果翻倍", "大力水手:", "    抛竿与收线速度变为2倍", "放长线钓大鱼:", "    大鱼概率由20%变为40%", "孤苦人家:", "    无额外加成"],
-		exit: "退出",
+		exit,
 		pressEnterToContinue: "按Enter继续"
 	},
 	checkpoint: {
@@ -21,7 +22,7 @@ export default {
 	},
 	main: {
 		story: ["2136 年，最后的冰川也化进了海里。", "潮水上涨，旧日的城市沉在水下，只剩浪与盐。", "你困在这座无名小岛上，收音机里只有断断续续的沙响。", "补给见底，救援迟迟未至。", "能指望的，只有把钓竿一次次甩进同一片海。"],
-		mainMenu: ["开始钓鱼", "进入商店", "更改输出速度", "抽奖", "挑战", "退出"],
+		mainMenu: ["开始钓鱼", "进入商店", "更改输出速度", "抽奖", "挑战", exit],
 		challengeCompleted: "您已经完成所有挑战"
 	},
 	shop: {
@@ -56,7 +57,7 @@ export default {
 		ovenCurrentPrefix: "当前烤箱数量",
 		notEnoughMoney: "金币不足",
 		purchaseSuccess: "购买成功",
-		shopSelectMenu: ["普通商店", "超级商店", "退出"],
+		shopSelectMenu: ["普通商店", "超级商店", exit],
 		superShopMainMenu: ["甩杆倍速", "升级大鱼概率", "返回"],
 		superCastSpeedTitle: "甩杆倍速",
 		superBigFishTitle: "大鱼概率",
@@ -67,7 +68,7 @@ export default {
 		superBigFishNextPrefix: "升级后大鱼概率"
 	},
 	lottery: {
-		menu: ["转盘", "退出"],
+		menu: ["转盘", exit],
 		costPrefix: "转盘消耗: 100累积钓鱼数量+1000金币 当前钓鱼数量: ",
 		currentMoneyPrefix: " 当前金币数量: ",
 		oddsHeader: "奖品概率 (每次抽奖在 1-100 中随机):",

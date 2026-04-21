@@ -53,10 +53,8 @@ export const getData = () => ({
 export const getGameState = () => ({
 	username: "",
 	fishMan: false,
-	big: 0,
-	diamond: 0,
-	aqnow: 0,
-	aqother: 0,
+	bigFish: 0,
+	diamondFish: 0,
 	password: "",
 	dataSaver: getData(),
 	settings: {

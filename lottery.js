@@ -33,10 +33,10 @@ export default async function lottery() {
 				const ran = functions.random(1, 100);
 				if (ran <= 2) {
 					await functions.print(lang.current.lottery.rewardDiamondFish + "x1");
-					data.gameState.diamond++
+					data.gameState.diamondFish++
 				} else if (ran <= 20) {
 					await functions.print(lang.current.lottery.rewardBigFishBait + "x1");
-					data.gameState.big++
+					data.gameState.bigFish++
 				} else if (ran <= 28) {
 					await functions.print(lang.current.lottery.rewardAprilFoolsEgg + "x1");
 					data.gameState.fishMan = true
@@ -47,7 +47,7 @@ export default async function lottery() {
 					data.gameState.dataSaver.money += 200;
 					await functions.print(lang.current.lottery.rewardGoldText + 200)
 				} else if (ran <= 80) {
-					data.gameState.big += 2;
+					data.gameState.bigFish += 2;
 					await functions.print(lang.current.lottery.rewardBigFishBait + "x2")
 				} else {
 					await functions.print(lang.current.lottery.thanks)
