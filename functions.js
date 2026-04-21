@@ -147,7 +147,7 @@ export function capitalize(text) {
 export async function printnl(text, time = .02) {
 	await write("\x1b[?25l");
 	try {
-		if (!isNumberBetween(data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0 || data.gameState.forceInstantOutput) {
+		if (!isNumberBetween(data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0 || data.gameState.settings.forceInstantOutput) {
 			await write(text)
 		} else {
 			for (const char of text) {

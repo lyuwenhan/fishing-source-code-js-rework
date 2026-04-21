@@ -28,10 +28,14 @@ export async function start(write, loadGame, saveGame, hasSave) {
 		}
 	}
 	if (await checkpoint.login()) {
-		await functions.sleep(.5);
+		if (!settings.forceUsername || !settings.forceBlancPassword || !settings.forceInstantOutput) {
+			await functions.sleep(.5)
+		}
 		await functions.choose()
 	}
-	await functions.sleep(.5);
+	if (!settings.forceUsername || !settings.forceBlancPassword || !settings.forceInstantOutput) {
+		await functions.sleep(.5)
+	}
 	while (true) {
 		await functions.clear();
 		await functions.print(functions.listToChoice(lang.current.main.mainMenu));

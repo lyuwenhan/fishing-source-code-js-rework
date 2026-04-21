@@ -23,7 +23,6 @@ export async function saveGame() {
 }
 export async function login() {
 	while (true) {
-		await functions.clear();
 		let username, password = "";
 		await functions.clear();
 		await functions.print(functions.capitalize(lang.current.checkpoint.login));
@@ -47,7 +46,9 @@ export async function login() {
 		}
 		const isNew = userState.code === 2;
 		await functions.printnl(functions.capitalize(lang.current.checkpoint.password) + ": ");
-		if (!data.gameState.settings.forceBlancPassword) {
+		if (data.gameState.settings.forceBlancPassword) {
+			await functions.write("\n")
+		} else {
 			password = await functions.getline(2);
 			if (isNew) {
 				await functions.printnl(functions.capitalize(lang.current.checkpoint.confirmPassword) + ": ");
