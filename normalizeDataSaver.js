@@ -1,12 +1,8 @@
 export default class NormalizeDataSaver {
 	#data = undefined;
 	#functions = undefined;
-	constructor(data, functions) {
-		this.#data = data;
-		this.#functions = functions;
-		Object.freeze(this)
-	}
-	run() {
+	run;
+	#run() {
 		const fallback = this.#data.getData();
 		const source = this.#functions.isPlainObject(this.#data.gameState.dataSaver) ? this.#data.gameState.dataSaver : {};
 		const normalized = {
@@ -58,5 +54,11 @@ export default class NormalizeDataSaver {
 		normalized.foodFish = foodFish.map(pair => [this.#functions.clampInt(pair?.[0], 0, Number.MAX_SAFE_INTEGER, 0), this.#functions.clampInt(pair?.[1], 0, Number.MAX_SAFE_INTEGER, 0)]);
 		normalized.compactMode = typeof source.compactMode === "boolean" ? source.compactMode : fallback.compactMode;
 		this.#data.gameState.dataSaver = normalized
+	}
+	constructor(data, functions) {
+		this.#data = data;
+		this.#functions = functions;
+		this.run = this.#run.bind(this);
+		Object.freeze(this)
 	}
 }

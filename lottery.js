@@ -2,13 +2,8 @@ export default class Lottery {
 	#lang = undefined;
 	#data = undefined;
 	#functions = undefined;
-	constructor(lang, data, functions) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		Object.freeze(this)
-	}
-	async run() {
+	run;
+	async #run() {
 		while (true) {
 			await this.#functions.clear();
 			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.lottery.menu));
@@ -66,5 +61,12 @@ export default class Lottery {
 				}
 			}
 		}
+	}
+	constructor(lang, data, functions) {
+		this.#lang = lang;
+		this.#data = data;
+		this.#functions = functions;
+		this.run = this.#run.bind(this);
+		Object.freeze(this)
 	}
 }

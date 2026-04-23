@@ -3,13 +3,9 @@ export default class Checkpoint {
 	#data = undefined;
 	#functions = undefined;
 	#normalizeDataSaver = undefined;
-	constructor(lang, data, functions, normalizeDataSaver) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		this.#normalizeDataSaver = normalizeDataSaver;
-		Object.freeze(this)
-	}
+	login;
+	load;
+	save;
 	async #loadGame() {
 		const loadState = await this.#data.gameState.requiredFunctions.loadGame(this.#data.gameState.username, this.#data.gameState.password);
 		if (loadState?.code === 1) {
@@ -25,7 +21,7 @@ export default class Checkpoint {
 		this.#normalizeDataSaver.run();
 		return this.#data.gameState.requiredFunctions.saveGame(this.#data.gameState.username, this.#data.gameState.password, this.#data.gameState.dataSaver)
 	}
-	async login() {
+	async #login() {
 		while (true) {
 			let username, password = "";
 			await this.#functions.clear();
@@ -89,18 +85,28 @@ export default class Checkpoint {
 			return isNew
 		}
 	}
-	async load() {
+	async #load() {
 		const loadState = await this.#loadGame();
 		if (loadState?.code !== 1) {
 			await this.#functions.printa(this.#lang.current.checkpoint.apiError)
 		}
 	}
-	async save() {
+	async #save() {
 		const saveState = await this.#saveGame();
 		if (!saveState?.code) {
 			await this.#functions.printa(this.#lang.current.checkpoint.apiError)
 		} else if (saveState.code === 2) {
 			await this.#functions.printa(this.#lang.current.checkpoint.passwordError)
 		}
+	}
+	constructor(lang, data, functions, normalizeDataSaver) {
+		this.#lang = lang;
+		this.#data = data;
+		this.#functions = functions;
+		this.#normalizeDataSaver = normalizeDataSaver;
+		this.login = this.#login.bind(this);
+		this.load = this.#load.bind(this);
+		this.save = this.#save.bind(this);
+		Object.freeze(this)
 	}
 }

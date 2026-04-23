@@ -1,6 +1,10 @@
 import deepFreeze from "./deepFreeze.js";
 export default class Data {
-	getData() {
+	constant;
+	gameState;
+	getData;
+	getGameState;
+	#getData() {
 		return {
 			money: 20,
 			catchSpeedLevel: 0,
@@ -31,14 +35,14 @@ export default class Data {
 			compactMode: false
 		}
 	}
-	getGameState() {
+	#getGameState() {
 		const gameState = {
 			username: "",
 			fishMan: false,
 			bigFish: 0,
 			diamondFish: 0,
 			password: "",
-			dataSaver: this.getData(),
+			dataSaver: this.#getData(),
 			consoleSize: {
 				rows: 100,
 				cols: 100
@@ -103,7 +107,9 @@ export default class Data {
 			configurable: false,
 			enumerable: true
 		});
-		this.gameState = this.getGameState();
+		this.gameState = this.#getGameState();
+		this.getData = this.#getData.bind(this);
+		this.getGameState = this.#getGameState.bind(this);
 		Object.seal(this)
 	}
 }

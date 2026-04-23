@@ -2,12 +2,7 @@ export default class Shop {
 	#lang = undefined;
 	#data = undefined;
 	#functions = undefined;
-	constructor(lang, data, functions) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		Object.freeze(this)
-	}
+	run;
 	#avgText(minValue, maxValue) {
 		const sum = minValue + maxValue;
 		return sum % 2 === 0 ? String(sum / 2) : `${Math.floor(sum/2)}.5`
@@ -267,7 +262,7 @@ export default class Shop {
 			}
 		}
 	}
-	async run() {
+	async #run() {
 		await this.#functions.clear();
 		await this.#functions.print(this.#functions.listToChoice(this.#lang.current.shop.shopSelectMenu));
 		let type;
@@ -283,5 +278,12 @@ export default class Shop {
 				return
 			}
 		}
+	}
+	constructor(lang, data, functions) {
+		this.#lang = lang;
+		this.#data = data;
+		this.#functions = functions;
+		this.run = this.#run.bind(this);
+		Object.freeze(this)
 	}
 }

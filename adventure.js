@@ -14,19 +14,7 @@ export default class Adventure {
 	#lang = undefined;
 	#data = undefined;
 	#functions = undefined;
-	constructor(lang, data, functions) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		for (let i = 1; i <= 9; i++) {
-			this.#m2.push(String(i))
-		}
-		for (let i = 0; i < 26; i++) {
-			this.#m2.push(String.fromCharCode(97 + i))
-		}
-		this.#m1 = new Map(this.#m2.map((ch, i) => [ch, i]));
-		Object.seal(this)
-	}
+	run;
 	#reset() {
 		this.#america = this.#sleepcnt = this.#eatcnt = this.#e2 = this.#s2 = this.#temple = this.#romar = this.#headbone = this.#drafood = 0;
 		this.#now = 0
@@ -168,7 +156,7 @@ export default class Adventure {
 		}
 		await this.#functions.sleep(.5)
 	}
-	async run() {
+	async #run() {
 		if (this.#data.gameState.dataSaver.challengeLevel !== 1) {
 			return
 		}
@@ -184,5 +172,19 @@ export default class Adventure {
 			await this.#functions.clear();
 			await this.#runTurn(things)
 		}
+	}
+	constructor(lang, data, functions) {
+		this.#lang = lang;
+		this.#data = data;
+		this.#functions = functions;
+		for (let i = 1; i <= 9; i++) {
+			this.#m2.push(String(i))
+		}
+		for (let i = 0; i < 26; i++) {
+			this.#m2.push(String.fromCharCode(97 + i))
+		}
+		this.#m1 = new Map(this.#m2.map((ch, i) => [ch, i]));
+		this.run = this.#run.bind(this);
+		Object.seal(this)
 	}
 }

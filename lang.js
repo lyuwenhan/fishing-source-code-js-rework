@@ -1,7 +1,8 @@
 import * as EN from "./lang/EN.js";
 import * as CN from "./lang/CN.js";
 export default class Lang {
-	setLanguage(lang) {
+	setLanguage;
+	#setLanguage(lang) {
 		if (this.langs[lang]) {
 			this.langCode = lang;
 			this.current = {
@@ -19,8 +20,9 @@ export default class Lang {
 		this.langCode = "EN";
 		this.current = this.langs.EN;
 		if (code) {
-			this.setLanguage(code)
+			this.#setLanguage(code)
 		}
+		this.setLanguage = this.#setLanguage.bind(this);
 		Object.seal(this)
 	}
 }

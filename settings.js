@@ -2,13 +2,9 @@ export default class Settings {
 	#lang = undefined;
 	#data = undefined;
 	#functions = undefined;
-	constructor(lang, data, functions) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		Object.freeze(this)
-	}
-	async choose() {
+	choose;
+	setTextSpeed;
+	async #choose() {
 		await this.#functions.clear();
 		if (!this.#data.gameState.settings.forceInstantOutput) {
 			await this.#functions.print(this.#lang.current.functions.chooseSpeed);
@@ -49,7 +45,7 @@ export default class Settings {
 			}
 		}
 	}
-	async setTextSpeed() {
+	async #setTextSpeed() {
 		await this.#functions.clear();
 		await this.#functions.print(this.#lang.current.functions.chooseSpeed);
 		await this.#functions.print(this.#functions.listToChoice(this.#lang.current.functions.speedName, this.#lang.current.functions.exit));
@@ -60,5 +56,13 @@ export default class Settings {
 		if (c <= 3) {
 			this.#data.gameState.dataSaver.textSpeed = c - 1
 		}
+	}
+	constructor(lang, data, functions) {
+		this.#lang = lang;
+		this.#data = data;
+		this.#functions = functions;
+		this.choose = this.#choose.bind(this);
+		this.setTextSpeed = this.#setTextSpeed.bind(this);
+		Object.freeze(this)
 	}
 }
