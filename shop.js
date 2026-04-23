@@ -38,11 +38,9 @@ export default class Shop {
 			if (this.#data.gameState.dataSaver.slipOffChance === 0) {
 				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
 			} else if (this.#data.gameState.dataSaver.slipOffChance > 10) {
-				this.#data.gameState.dataSaver.slipOffChance = Math.floor(this.#data.gameState.dataSaver.slipOffChance / 10) * 10;
 				await this.#functions.print("    " + this.#lang.current.shop.hookOffCurrentPrefix + ": " + this.#data.gameState.dataSaver.slipOffChance + "%, " + this.#lang.current.shop.hookOffNextPrefix + ": " + (this.#data.gameState.dataSaver.slipOffChance - 10) + "%");
 				await this.#functions.print("    " + this.#lang.current.shop.hookOffCostPrefix + " $100, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
 			} else if (this.#data.gameState.dataSaver.slipOffChance > 5) {
-				this.#data.gameState.dataSaver.slipOffChance = 10;
 				await this.#functions.print("    " + this.#lang.current.shop.hookOffPresetCurrent + " 10% " + this.#lang.current.shop.hookOffPresetNext + " 5%");
 				await this.#functions.print("    " + this.#lang.current.shop.hookOffCostPrefix + " $100, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
 			} else if (this.#data.gameState.dataSaver.slipOffChance > 1) {
