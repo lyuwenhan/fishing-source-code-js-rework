@@ -1,4 +1,4 @@
-export default [{
+export const getCopy = () => [{
 	title: "Prologue",
 	lines: ["The dragon has terrorized the kingdom for years.", "You are the one people speak of - the hero who will face it.", "Help and danger will both find you.", "Your choices write the story."],
 	choose: ["Begin"],

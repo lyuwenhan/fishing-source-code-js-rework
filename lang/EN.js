@@ -1,6 +1,6 @@
-import adventureStory from "./EN/adventureStoryEN.js";
+import * as adventureStory from "./EN/adventureStoryEN.js";
 const exit = "exit";
-export default {
+export const getCopy = () => ({
 	functions: {
 		outputSpeed: 2,
 		speedName: ["slow mode", "normal mode", "instant mode"],
@@ -90,7 +90,7 @@ export default {
 	},
 	fishing: {},
 	adventure: {
-		story: adventureStory,
+		story: adventureStory.getCopy(),
 		achievementAllRoadsToRome: "Bonus: First time reaching Rome - here's a little gold.",
 		achievementWrongWay: "Bonus: You've looped through Rome so many times the road feels cursed.",
 		achievementVoyage: "Bonus: First time washing up after that odd sea voyage.",
@@ -111,4 +111,4 @@ export default {
 		achievementSleepGod: "Bonus: Thirtieth sleep - you could sleep through a dragon raid.",
 		missionComplete: "Quest complete. The dragon story is done - here's your reward."
 	}
-};
+});

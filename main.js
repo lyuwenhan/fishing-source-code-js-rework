@@ -1,83 +1,97 @@
-import lang from "./lang.js";
+import Lang from "./lang.js";
+import Data from "./data.js";
+import Functions from "./functions.js";
+import NormalizeDataSaver from "./normalizeDataSaver.js";
+import Checkpoint from "./checkpoint.js";
+import Shop from "./shop.js";
+import Parkour from "./parkour.js";
+import Lottery from "./lottery.js";
+import Adventure from "./adventure.js";
+import Settings from "./settings.js";
 import deepCopy from "./deepCopy.js";
-import * as data from "./data.js";
-import * as functions from "./functions.js";
-import * as checkpoint from "./checkpoint.js";
-import shop from "./shop.js";
-import parkour from "./parkour.js";
-import lottery from "./lottery.js";
-import adventure from "./adventure.js";
-export const onInput = functions.onInput;
-export const setConsoleSize = functions.setConsoleSize;
-export const languages = {
-	lang: deepCopy(lang.langs),
-	setLanguage: lang.setLanguage
-};
-export const settings = data.gameState.settings;
-let started = false;
-export async function start(write, loadGame, saveGame, hasSave) {
-	if (started) {
-		return
-	}
-	started = true;
-	functions.setFunctions(write, loadGame, saveGame, hasSave);
-	await functions.clear();
-	if (!data.gameState.settings.skipStory) {
-		for (let text of lang.current.main.story) {
-			await functions.printa(text)
+export function createGameInstance(write, loadGame, saveGame, hasSave, languageCode) {
+	const data = new Data;
+	const lang = new Lang(languageCode);
+	const functions = new Functions(data, lang);
+	const normalizeDataSaver = new NormalizeDataSaver(data, functions);
+	const checkpoint = new Checkpoint(lang, data, functions, normalizeDataSaver);
+	const shop = new Shop(lang, data, functions);
+	const parkour = new Parkour(lang, data, functions);
+	const lottery = new Lottery(lang, data, functions);
+	const adventure = new Adventure(lang, data, functions);
+	const settings = new Settings(lang, data, functions);
+	data.gameState.setRequiredFunctions(write, loadGame, saveGame, hasSave);
+	let launchCount = 0;
+	async function launch() {
+		launchCount++;
+		if (launchCount > 1) {
+			return
 		}
-	}
-	if (await checkpoint.login()) {
+		await functions.clear();
+		if (!data.gameState.settings.skipStory) {
+			for (let text of lang.current.main.story) {
+				await functions.printa(text)
+			}
+		}
+		if (await checkpoint.login()) {
+			if (!data.gameState.settings.forceUsername || !data.gameState.settings.forceBlancPassword || !data.gameState.settings.forceInstantOutput) {
+				await functions.sleep(.5)
+			}
+			await settings.choose()
+		}
 		if (!data.gameState.settings.forceUsername || !data.gameState.settings.forceBlancPassword || !data.gameState.settings.forceInstantOutput) {
 			await functions.sleep(.5)
 		}
-		await functions.choose()
-	}
-	if (!data.gameState.settings.forceUsername || !data.gameState.settings.forceBlancPassword || !data.gameState.settings.forceInstantOutput) {
-		await functions.sleep(.5)
-	}
-	while (true) {
-		await functions.clear();
-		await functions.print(functions.listToChoice(lang.current.main.mainMenu));
 		while (true) {
-			let type = await functions.getch();
-			if (type === "1") {
-				await fishing();
-				break
-			} else if (type === "2") {
-				await shop();
-				break
-			} else if (type === "3") {
-				await functions.setTextSpeed();
-				break
-			} else if (type === "4") {
-				await lottery();
-				break
-			} else if (type === "5") {
-				if (data.gameState.dataSaver.challengeLevel === 0) {
-					await parkour()
-				} else if (data.gameState.dataSaver.challengeLevel === 1) {
-					await adventure()
-				} else {
+			await functions.clear();
+			await functions.print(functions.listToChoice(lang.current.main.mainMenu));
+			while (true) {
+				let type = await functions.getch();
+				if (type === "1") {
+					await fishing();
+					break
+				} else if (type === "2") {
+					await shop.run();
+					break
+				} else if (type === "3") {
+					await settings.setTextSpeed();
+					break
+				} else if (type === "4") {
+					await lottery.run();
+					break
+				} else if (type === "5") {
+					if (data.gameState.dataSaver.challengeLevel === 0) {
+						await parkour.run()
+					} else if (data.gameState.dataSaver.challengeLevel === 1) {
+						await adventure.run()
+					} else {
+						await functions.clear();
+						await functions.printa(lang.current.main.challengeCompleted)
+					}
+					break
+				} else if (type === "6") {
 					await functions.clear();
-					await functions.printa(lang.current.main.challengeCompleted)
+					return
 				}
-				break
-			} else if (type === "6") {
-				await functions.clear();
-				started = false;
-				return
 			}
+			await checkpoint.save();
+			await functions.sleep(.5)
 		}
-		const saveState = await checkpoint.saveGame();
-		if (!saveState?.code) {
-			await functions.printa(lang.current.checkpoint.apiError);
-			continue
-		}
-		if (saveState.code === 2) {
-			await functions.printa(lang.current.checkpoint.passwordError);
-			continue
-		}
-		await functions.sleep(.5)
+	}
+	return {
+		setConsoleSize: size => {
+			data.gameState.setConsoleSize(size)
+		},
+		onInput: str => {
+			functions.onInput(str)
+		},
+		languages: {
+			langs: deepCopy(lang.langs),
+			setLanguage: code => {
+				lang.setLanguage(code)
+			}
+		},
+		settings: data.gameState.settings,
+		launch
 	}
 }

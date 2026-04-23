@@ -1,27 +1,26 @@
-import EN from "./lang/EN.js";
-import CN from "./lang/CN.js";
-const allLangs = {
-	EN,
-	CN
-};
-const langs = {
-	langs: allLangs,
-	langCodes: "",
-	langCode: "EN",
-	current: allLangs.EN,
-	setLanguage
-};
-langs.langCodes = Object.keys(allLangs);
-langs.langCode = langs.langCodes?.[0] || "EN";
-langs.current = allLangs[langs.langCode] || {};
-
-function setLanguage(lang) {
-	if (allLangs[lang]) {
-		langs.langCode = lang;
-		langs.current = {
-			...allLangs["EN"],
-			...allLangs[lang]
+import * as EN from "./lang/EN.js";
+import * as CN from "./lang/CN.js";
+export default class Lang {
+	setLanguage(lang) {
+		if (this.langs[lang]) {
+			this.langCode = lang;
+			this.current = {
+				...this.langs["EN"],
+				...this.langs[lang]
+			}
 		}
 	}
+	constructor(code) {
+		this.langs = {
+			EN: EN.getCopy(),
+			CN: CN.getCopy()
+		};
+		this.langCodes = Object.keys(this.langs);
+		this.langCode = "EN";
+		this.current = this.langs.EN;
+		if (code) {
+			this.setLanguage(code)
+		}
+		Object.seal(this)
+	}
 }
-export default langs;

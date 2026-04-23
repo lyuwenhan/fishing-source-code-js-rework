@@ -265,23 +265,21 @@
 			let langs = {
 				setLanguage: () => {}
 			};
-			let settings = {};
 			import("./main.js").then(async fishing => {
-				let setConsoleSize = fishing.setConsoleSize,
-					onInput = fishing.onInput;
-				langs = fishing.languages;
-				settings = fishing.settings;
-				settings.developerMode = true;
-				settings.skipStory = true;
-				settings.forceUsername = "USERNAME_FOR_TEST";
-				settings.forceBlancPassword = true;
-				settings.forceInstantOutput = true;
-				term.onData(data => {
-					onInput(data)
-				});
-				term.onResize(size => setConsoleSize(size));
 				while (true) {
-					await fishing.start(text => term.write(text), loadGame, saveGame, hasSave)
+					const gameInstance = fishing.createGameInstance(text => term.write(text), loadGame, saveGame, hasSave);
+					const settings = gameInstance.settings;
+					settings.developerMode = true;
+					settings.skipStory = true;
+					settings.forceUsername = "USERNAME_FOR_TEST";
+					settings.forceBlancPassword = true;
+					settings.forceInstantOutput = true;
+					langs = gameInstance.languages;
+					term.onData(data => {
+						gameInstance.onInput(data)
+					});
+					term.onResize(size => gameInstance.setConsoleSize(size));
+					await gameInstance.launch()
 				}
 			}).catch(e => {
 				term.write(`\n\n\x1b[m${e.stack}\n`.replace(/\n/g, "\r\n"));

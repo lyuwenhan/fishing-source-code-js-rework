@@ -1,4 +1,4 @@
-export default [{
+export const getCopy = () => [{
 	title: "简介",
 	lines: ["你是这个世界的勇者", "你需要经过你的努力打败恶龙", "过程中你会遇到很多的帮助", "以及很多的陷阱"],
 	choose: ["开始"],

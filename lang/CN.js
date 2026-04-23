@@ -1,12 +1,12 @@
-import adventureStory from "./CN/adventureStoryCN.js";
+import * as adventureStory from "./CN/adventureStoryCN.js";
 const exit = "退出";
-export default {
+export const getCopy = () => ({
 	functions: {
 		outputSpeed: 1,
 		speedName: ["慢速", "普通", "及时"],
 		this_is: "这是",
 		chooseSpeed: "请选择输出速度",
-		skills: ["请选择开局技能", "1. 美味诱饵, 2. 稀世珍宝, 3. 牢靠安全绳, 4. 强效清洁剂, 5. 大力水手, 6. 放长线钓大鱼, 7. 孤苦人家", "美味诱饵:", "    上钩速度变为原先的1.5倍", "稀世珍宝:", "    鱼的价格变为原先的2倍", "牢靠安全绳:", "    脱钩概率大幅降低 (50% -> 10%)", "强效清洁剂:", "    初始获得1个清洁剂，且其效果翻倍", "大力水手:", "    抛竿与收线速度变为2倍", "放长线钓大鱼:", "    大鱼概率由20%变为40%", "孤苦人家:", "    无额外加成"],
+		skills: ["请选择开局技能", "1. 美味诱饵, 2. 稀世珍宝, 3. 牢靠安全绳, 4. 强效清洁剂, 5. 大力水手, 6. 放长线钓大鱼, 7. 孤苦人家", "美味诱饵:", "    上钩速度变为原先的1.5倍", "稀世珍宝:", "    鱼的价格变为原先的2倍", "牢靠安全绳:", "    脱钩概率大幅降低 (50% -> 10%)", "强效清洁剂:", "    初始获得1个清洁剂, 且其效果翻倍", "大力水手:", "    抛竿与收线速度变为2倍", "放长线钓大鱼:", "    大鱼概率由20%变为40%", "孤苦人家:", "    无额外加成"],
 		exit,
 		pressEnterToContinue: "按Enter继续"
 	},
@@ -21,7 +21,7 @@ export default {
 		invalidUsername: "无效的用户名"
 	},
 	main: {
-		story: ["2136 年，最后的冰川也化进了海里。", "潮水上涨，旧日的城市沉在水下，只剩浪与盐。", "你困在这座无名小岛上，收音机里只有断断续续的沙响。", "补给见底，救援迟迟未至。", "能指望的，只有把钓竿一次次甩进同一片海。"],
+		story: ["2136 年, 最后的冰川融化进入大海。", "潮水上涨, 旧日的城市沉在水下, 只剩浪与盐。", "你困在这座无名小岛上, 收音机里只有断断续续的沙响。", "补给见底, 救援迟迟未至。", "能指望的, 只有把钓竿一次次甩进同一片海。"],
 		mainMenu: ["开始钓鱼", "进入商店", "更改输出速度", "抽奖", "挑战", exit],
 		challengeCompleted: "您已经完成所有挑战"
 	},
@@ -80,7 +80,7 @@ export default {
 		rewardBigFishBait: "大鱼诱饵",
 		rewardDiamondFish: "钻石鱼",
 		rewardGoldText: "额外金币",
-		thanks: "本次未获得额外奖励，谢谢参与！"
+		thanks: "本次未获得额外奖励, 谢谢参与！"
 	},
 	parkour: {
 		jumpTip: "使用w或空格进行跳跃, 按r重生, 按backspace退出",
@@ -91,7 +91,7 @@ export default {
 	},
 	fishing: {},
 	adventure: {
-		story: adventureStory,
+		story: adventureStory.getCopy(),
 		achievementAllRoadsToRome: "获得彩蛋: 条条大路通罗马",
 		achievementWrongWay: "获得彩蛋: 误入歧途",
 		achievementVoyage: "获得彩蛋: 哥伦布大航海",
@@ -112,4 +112,4 @@ export default {
 		achievementSleepGod: "获得彩蛋: 睡神赋体",
 		missionComplete: "任务完成"
 	}
-};
+});
