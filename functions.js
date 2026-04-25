@@ -21,7 +21,7 @@ export default class Functions {
 		return [lists].flat(2).map((name, index) => `${index+1}. ${this.capitalize(name)}`).join(", ")
 	}
 	#write(text) {
-		return this.#data.gameState.requiredFunctions.write(text.replace(/\n/g, "\r\n"))
+		return this.#data.gameState.requiredFunctions.write(String(text || "").replace(/\n/g, "\r\n"))
 	}
 	async #clear() {
 		await this.#write("\x1bc")
@@ -139,7 +139,7 @@ export default class Functions {
 			if (!this.isNumberBetween(this.#data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0 || this.#data.gameState.settings.forceInstantOutput) {
 				await this.#write(text)
 			} else {
-				for (const char of text) {
+				for (const char of String(text || "")) {
 					await this.#write(char);
 					await this.sleep(time / (this.#data.gameState.dataSaver.textSpeed + 1) / this.#lang.current.functions.outputSpeed)
 				}

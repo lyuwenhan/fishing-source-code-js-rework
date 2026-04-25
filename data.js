@@ -13,16 +13,12 @@ export default class Data {
 			bigFishChance: 20,
 			actionSpeedMultiplier: 1,
 			slipOffChance: 50,
-			cleanerCount: 0,
-			cleaningMultiplier: 1,
 			rodLevel: 1,
 			textSpeed: 1,
 			challengeLevel: 0,
 			ovenCount: 0,
 			hunger: 20,
 			pollution: 0,
-			aquariumCapacity: 0,
-			aquariumFishCounts: [0, 0, 0, 0, 0, 0, 0],
 			foodFish: [
 				[0, 0],
 				[0, 0],
@@ -99,7 +95,6 @@ export default class Data {
 					[900, 6e3, 1700, 700, 390, 309, 1],
 					[0, 6600, 1700, 700, 390, 309, 301]
 				],
-				aquariumIncomeByFishType: [1, 10, 20, 30, 40, 50, 100],
 				fishValueMultipliers: [0, 1, 2, 5, 10, 50, 100],
 				precipitationDensityByIntensity: [0, 11, 20, 40]
 			}),

@@ -45,22 +45,7 @@ export default class Shop {
 				await this.#functions.print("    " + this.#lang.current.shop.hookOffPresetCurrent + " 1% " + this.#lang.current.shop.hookOffPresetNext + " 0%");
 				await this.#functions.print("    " + this.#lang.current.shop.hookOffCostPrefix + " $500, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
 			}
-			await this.#functions.print("    " + this.#lang.current.shop.cleanerCountPrefix + ": " + this.#data.gameState.dataSaver.cleanerCount);
 			await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $10, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money);
-			await this.#functions.print(this.#lang.current.shop.cleanEfficiencyTitle + ": ");
-			if (this.#data.gameState.dataSaver.cleaningMultiplier >= 10) {
-				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
-			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.cleanEfficiencyCurrentPrefix + " " + this.#data.gameState.dataSaver.cleaningMultiplier + " " + this.#lang.current.shop.cleanEfficiencyNextPrefix + " " + (this.#data.gameState.dataSaver.cleaningMultiplier + 1) + " " + this.#lang.current.shop.cleanEfficiencySuffix);
-				await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $30, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
-			}
-			await this.#functions.print(this.#lang.current.shop.aquariumCapacityTitle + ": ");
-			if (this.#data.gameState.dataSaver.aquariumCapacity >= 30) {
-				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
-			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.aquariumCurrentPrefix + " " + this.#data.gameState.dataSaver.aquariumCapacity + " " + this.#lang.current.shop.aquariumNextPrefix + " " + (this.#data.gameState.dataSaver.aquariumCapacity + 2) + " " + this.#lang.current.shop.aquariumSuffix);
-				await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " " + (this.#data.gameState.dataSaver.aquariumCapacity + 2) * 100 + ", " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
-			}
 			await this.#functions.print(this.#lang.current.shop.ovenCountTitle + ": ");
 			if (this.#data.gameState.dataSaver.ovenCount >= 3) {
 				await this.#functions.print("    " + this.#lang.current.shop.ovenMaxCount)
@@ -132,42 +117,6 @@ export default class Shop {
 						}
 					}
 				} else if (type === "4") {
-					if (this.#data.gameState.dataSaver.money < 10) {
-						await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
-						break
-					} else {
-						this.#data.gameState.dataSaver.cleanerCount++;
-						this.#data.gameState.dataSaver.money -= 10;
-						await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
-						break
-					}
-				} else if (type === "5") {
-					if (this.#data.gameState.dataSaver.cleaningMultiplier === 10) {
-						await this.#showResult("    " + this.#lang.current.shop.maxLevelReached);
-						break
-					} else if (this.#data.gameState.dataSaver.money < 30) {
-						await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
-						break
-					} else {
-						this.#data.gameState.dataSaver.money -= 30;
-						this.#data.gameState.dataSaver.cleaningMultiplier++;
-						await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
-						break
-					}
-				} else if (type === "6") {
-					if (this.#data.gameState.dataSaver.aquariumCapacity === 30) {
-						await this.#showResult("    " + this.#lang.current.shop.maxLevelReached);
-						break
-					} else if (this.#data.gameState.dataSaver.money < (this.#data.gameState.dataSaver.aquariumCapacity + 2) * 100) {
-						await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
-						break
-					} else {
-						this.#data.gameState.dataSaver.money -= (this.#data.gameState.dataSaver.aquariumCapacity + 2) * 100;
-						this.#data.gameState.dataSaver.aquariumCapacity += 2;
-						await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
-						break
-					}
-				} else if (type === "7") {
 					if (this.#data.gameState.dataSaver.ovenCount >= 3) {
 						await this.#showResult("    " + this.#lang.current.shop.ovenMaxCount);
 						break
@@ -204,7 +153,7 @@ export default class Shop {
 							}
 						}
 					}
-				} else if (type === "8") {
+				} else if (type === "5") {
 					return
 				}
 			}

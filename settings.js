@@ -31,16 +31,12 @@ export default class Settings {
 				this.#data.gameState.dataSaver.slipOffChance = 10;
 				break
 			} else if (c === "4") {
-				this.#data.gameState.dataSaver.cleanerCount = 1;
-				this.#data.gameState.dataSaver.cleaningMultiplier = 2;
-				break
-			} else if (c === "5") {
 				this.#data.gameState.dataSaver.actionSpeedMultiplier = 2;
 				break
-			} else if (c === "6") {
+			} else if (c === "5") {
 				this.#data.gameState.dataSaver.bigFishChance = 40;
 				break
-			} else if (c === "7") {
+			} else if (c === "6") {
 				break
 			}
 		}

@@ -1,1294 +1,1114 @@
-#ifndef fishing_defined
-#define fishing_defined
-#include<hashtable.h>
-#include<iostream>
-#include<iomanip>
-#include<vector>
-using std::to_string;
-using std::ostream;
-using std::string;
-using std::vector;
-using std::hash;
-using std::pair;
-using std::cout;
-using std::setw;
-using std::min;
-using std::max;
-#include"variate.h"
-#include"function.h"
-#include"saving.h"
-#include"checkpoint.h"
-namespace fishing{
-/*
-\033[1;31m腐烂的 * 0   1%
-\033[1;37m普通   * 1   80%
-\033[1;35m紫水晶 * 2   14%
-\033[1;34m青金石 * 5   4%
-\033[1;33m金     * 10  0.9%
-\033[1;32m绿宝石 * 50  0.09%
-\033[1;36m钻石   * 100 0.01%
-*/
-	const int fishProbabilityTable[7][7] = {
-{0, 8100, 1400, 400, 90, 9, 1},
-{100, 8000, 1400, 400, 90, 9, 1},
-{300, 7500, 1700, 400, 90, 9, 1},
-{500, 7000, 1700, 700, 90, 9, 1},
-{700, 6500, 1700, 700, 390, 9, 1},
-{900, 6000, 1700, 700, 390, 309, 1},
-{0, 6600, 1700, 700, 390, 309, 301},
-	};
-	const int aquariumYield[7] = {1, 10, 20, 30, 40, 50, 100};
-	const char backgroundGrid[15][45] = {
-	"                                            ",
-	"                                            ",
-	"                                            ",
-	"                                            ",
-	"                                            ",
-	"                                            ",
-	"                                            ",
-	"                                            ",
-	"                         o                  ",
-	"                        /|\\--------         ",
-	"                        /_\\___              ",
-	"~~~~~~~~~~~~~~~~~~~~~~~|      |~~~~~~~~~~~~|",
-	"                              |            |",
-	"                              |            |",
-	"                              |____________|"};
-	int lastUpdateTime = 0;
-	double renderTimer = 0;
-	const string weatherNames[6] = langWeatherNames; // weatherNames[0]: level - 5s * currentWeather.second, weatherNames[1]: level + 5s * currentWeather.second, weatherNames[5]: slip + 10
-	const string weatherIntensityLabels[4] = langWeatherIntensityLabels;
-	const string weatherAsciiArt[3][4] = {{
-	"     \033[33;1m_____\033[m                                  ",
-	"    \033[33;1m|     |\033[m                                 ",
-	"    \033[33;1m|     |\033[m                                 ",
-	"    \033[33;1m|_____|\033[m                                 "},
-	{"         _______      ___________           ",
-	"     ___/       \\____/           \\___       ",
-	"    (                                )      ",
-	"     \\______________________________/       "},
-	{"         \033[33;1m_____\033[m       ___________            ",
-	"     ___\033[33;1m|_____|\033[m_____/           \\____       ",
-	"    (                                )      ",
-	"     \\______________________________/       "}};
-	const int weatherSpawnCounts[4] = {0, 11, 20, 40};
-	const char waterTrailChars[6] = {'.', '*', ' ', ' ', ' ', ' '};
-	const string waterTrailColors[6] = {"\033[1;34m", "\033[1;36m", "", "", "", ""};
-	pair<int, int> currentWeather = {2, 0};
-	int waterTrailIndex = 0;
-	vector<pair<int, int>> rainPoints;
-	char screenBuffer[15][45] = {};
-	char previousScreenBuffer[15][45] = {};
-	string screenColor[15][45];
-	vector<int> caughtFishStacks[7];
-	int pollutionLevel = 0;
-	const string fishTypeLabels[7] = langFishTypeNames;
-	const string fishColorCodes[7] = {"\033[1;31m", "\033[1;37m", "\033[1;35m", "\033[1;34m", "\033[1;33m", "\033[1;32m", "\033[1;36m"};
-	int currentStatus = 0;
-	const string statusLabels[5] = langStatusLabels;
-	const int fishSizeBonus[7] = {0, 1, 2, 5, 10, 50, 100};
-	pair<int, int> terminalSize;
-	pair<int, int> updateWeather(pair<int, int> weatherPair){
-		if(weatherPair.first < 0 || weatherPair.first > 5 || weatherPair.second < 0 || weatherPair.second > 3){
-			return {3, 0};
+import deepFreeze from "./deepFreeze.js";
+export default class Fishing {
+	#lang = undefined;
+	#data = undefined;
+	#functions = undefined;
+	#fish_gai;
+	#old;
+	#la;
+	#la2;
+	#weatherpcr;
+	#macnt;
+	#fu;
+	#fucolor;
+	#weather;
+	#lw;
+	#weapoint;
+	#paint;
+	#color;
+	#last;
+	#fish;
+	#dirty;
+	#fish_color;
+	#now_status;
+	#fish_add;
+	#ter_big;
+	run;
+	#change(wea) {
+		if (wea[0] < 0 || wea[0] > 5 || wea[1] < 0 || wea[1] > 3) {
+			return [3, 0]
 		}
-		if(weatherPair.first == 0 || weatherPair.first == 1){
-			if(weatherPair.second < 2){
-				int ra = random(1, 20);
-				if(ra <= 9){
-					return weatherPair;
-				}else if(ra <= 15){
-					return {weatherPair.first, random(1, 3)};
-				}else if(ra <= 18){
-					return {random(0, 1), weatherPair.second};
-				}else{
-					return {random(2, 4), 0};
+		if (wea[0] === 0 || wea[0] === 1) {
+			if (wea[1] < 2) {
+				let ra = this.#functions.random(1, 20);
+				if (ra <= 9) {
+					return wea
+				} else if (ra <= 15) {
+					return [wea[0], this.#functions.random(1, 3)]
+				} else if (ra <= 18) {
+					return [this.#functions.random(0, 1), wea[1]]
+				} else {
+					return [this.#functions.random(2, 4), 0]
 				}
-			}else{
-				int ra = random(1, 2);
-				if(ra <= 1){
-					return {weatherPair.first, random(1, 3)};
-				}else if(ra <= 15){
-					return weatherPair;
+			} else {
+				let ra = this.#functions.random(1, 2);
+				if (ra <= 1) {
+					return [wea[0], this.#functions.random(1, 3)]
+				} else if (ra <= 15) {
+					return wea
 				}
 			}
-		}else if(weatherPair.first == 2 || weatherPair.first == 3 || weatherPair.first == 4){
-			int ra = random(1, 10);
-			if(ra <= 1){
-				return {5, weatherPair.second};
-			}else if(ra <= 3){
-				return {random(0, 1), random(1, 2)};
-			}else if(ra <= 6){
-				return {random(2, 4), weatherPair.second};
-			}else{
-				return weatherPair;
+		} else if (wea[0] === 2 || wea[0] === 3 || wea[0] === 4) {
+			let ra = this.#functions.random(1, 10);
+			if (ra <= 1) {
+				return [5, wea[1]]
+			} else if (ra <= 3) {
+				return [this.#functions.random(0, 1), this.#functions.random(1, 2)]
+			} else if (ra <= 6) {
+				return [this.#functions.random(2, 4), wea[1]]
+			} else {
+				return wea
 			}
-		}else{
-			int ra = random(1, 10);
-			if(ra <= 3){
-				return {random(2, 4), weatherPair.second};
-			}else{
-				return weatherPair;
+		} else {
+			let ra = this.#functions.random(1, 10);
+			if (ra <= 3) {
+				return [this.#functions.random(2, 4), wea[1]]
+			} else {
+				return wea
 			}
 		}
-		return weatherPair;
+		return wea
 	}
-	inline int getFishingWaitTime(int level = variate::data_saver.level){
-		return random(variate::mintime[level], variate::maxtime[level]);
+	#rand_time(l = this.#data.gameState.dataSaver.catchSpeedLevel) {
+		return this.#functions.random(this.#data.constant.minCatchSpeed[l], this.#data.constant.maxCatchSpeed[l])
 	}
-	inline int getFishPrice(int level = variate::data_saver.get_level, int multiplier = 1){
-		return random(multiplier * variate::minget[level], multiplier * variate::maxget[level]);
+	#gr(l = this.#data.gameState.dataSaver.incomeLevel, bei = 1) {
+		return this.#functions.random(bei * this.#data.constant.minIncome[l], bei * this.#data.constant.maxIncome[l])
 	}
-	inline int chooseFishType(){
-		int ty = random(1, 10000);
-		for(int i = 0; i <= 6; i++){
-			ty -= fish_gai[variate::data_saver.gan][i];
-			if(ty <= 0){
-				return i;
+	#gettype() {
+		let ty = this.#functions.random(1, 1e4);
+		for (let i = 0; i <= 6; i++) {
+			ty -= this.#fish_gai[this.#data.gameState.dataSaver.rodLevel][i];
+			if (ty <= 0) {
+				return i
 			}
 		}
-		return 0;
+		return 0
 	}
-	inline void processCatch(bool isBig, int fishType){
-		clear();
-		if(variate::data_saver.hungry <= 2){
-			printa((string)caughtFishText + fish_color[fishType] + fish_name[fishType] + (isBig ? bigFishPrefix : "") + eatenBecauseHungryText);
-			variate::data_saver.hungry += fishType + 3;
-			return;
+	async #get(is_big, type) {
+		await this.#functions.clear();
+		if (this.#data.gameState.dataSaver.hunger <= 2) {
+			await this.#functions.printa(this.#lang.current.fishing.youCaughtA + this.#fish_color[type] + this.#lang.current.fishing.fishName[type] + (is_big ? this.#lang.current.fishing.big : "") + this.#lang.current.fishing.fish + "\x1b[m, " + this.#lang.current.fishing.eaten);
+			this.#data.gameState.dataSaver.hunger += type + 3;
+			return
 		}
-		int pri = getFishPrice(variate::data_saver.get_level, (isBig + 1) * fishSizeBonus[fishType]);
-		if(fishType == 4 && isBig){
-			clear();
-			printa((string)caughtFishText + fish_color[fishType] + eggFishValueText + to_string(pri));
-		}else{
-			printa((string)caughtFishText + fish_color[fishType] + fishDescription((isBig ? bigFishPrefix : ""), fish_name[fishType]) + fishPriceSuffix + to_string(pri));
+		let pri = this.#gr(this.#data.gameState.dataSaver.incomeLevel, (is_big + 1) * this.#fish_add[type]);
+		if (type === 4 && is_big) {
+			await this.#functions.printa(this.#lang.current.fishing.youCaughtA + this.#fish_color[type] + this.#lang.current.fishing.egg + ", " + this.#lang.current.fishing.worth + "$" + pri)
+		} else {
+			await this.#functions.printa(this.#lang.current.fishing.youCaughtA + this.#fish_color[type] + this.#lang.current.fishing.fish + (is_big ? this.#lang.current.fishing.bf : "", this.#lang.current.fishing.fishName[type]) + ", " + this.#lang.current.fishing.worth + "$" + pri)
 		}
-		int cnt = 0;
-		for(int i = 0; i <= 6; i++){
-			cnt += variate::data_saver.aqfish_cnt[i];
-		}
-		int i;
-		for(i = 0; i < type; i++){
-			if(variate::data_saver.aqfish_cnt[i]){
-				break;
-			}
-		}
-		if(variate::data_saver.aqcnt && (cnt < variate::data_saver.aqcnt || !variate::data_saver.aqfish_cnt[i] || i == fishType)){
-			if(printYn(aquariumPrompt)){
-				variate::data_saver.aqfish_cnt[fishType]++;
-				if(cnt >= variate::data_saver.aqcnt){
-					variate::data_saver.aqfish_cnt[i]--;
-				}
-				return;
-			}
-		}
-		caughtFishStacks[fishType].push_back(10);
-		variate::data_saver.cnt++;
+		this.#fish[type].push(10);
+		this.#data.gameState.dataSaver.totalFishCaught++
 	}
-	int lastMin = 0;
-	int lastMax = 0;
-	int lastStatus = 0;
-	bool simpleMode = false;
-	inline void renderScreen(int minWait = 0, int maxWait = 0){
-		variate::data_saver.simple = (variate::data_saver.simple != simpleMode);
-		bool wcg = false, wcgd = false;
-		const int now = time(0);
-		while(now - la > 10){
-			auto nweather = updateWeather(currentWeather);
-			if(nweather != currentWeather){
-				wcg = true;
+	#lmi = 0;
+	#lma = 0;
+	#lst = 0;
+	#swp = false;
+	async #draw(mi = 0, ma = 0) {
+		this.#data.gameState.dataSaver.compactMode = this.#data.gameState.dataSaver.compactMode != this.#swp;
+		let wcg = false,
+			wcgd = false;
+		const now = Math.floor(Date.now() / 1e3);
+		while (now - this.#la > 10) {
+			let nweather = this.#change(this.#weather);
+			if (nweather != this.#weather) {
+				wcg = true
 			}
-			currentWeather = nweather;
-			if(currentWeather.first <= 1){
-				lw = currentWeather.first;
+			this.#weather = nweather;
+			if (this.#weather[0] <= 1) {
+				this.#lw = this.#weather[0]
 			}
-			if(now - la > 100){
-				la = now - 100;
+			if (now - this.#la > 100) {
+				this.#la = now - 100
 			}
-			la += 10;
+			this.#la += 10
 		}
-		bool need_cl = simpleMode;
-		if(lmi != mi || lma != ma){
-			lmi = mi;
-			lma = ma;
+		let need_cl = this.#swp;
+		if (this.#lmi != mi || this.#lma != ma) {
+			this.#lmi = mi;
+			this.#lma = ma;
 			wcg = true;
-			need_cl = true;
+			need_cl = true
 		}
-		if(lst != now_status){
-			lst = now_status;
+		if (this.#lst != this.#now_status) {
+			this.#lst = this.#now_status;
 			wcg = true;
-			need_cl = true;
+			need_cl = true
 		}
-		while(la2 > 0.2){
-			la2 -= 0.2;
-			for(int i = rainPoints.size() - 1; i >= 0; i--){
-				rainPoints[i].first += 1;
+		while (this.#la2 > .2) {
+			this.#la2 -= .2;
+			for (let i = this.#weapoint.length - 1; i >= 0; i--) {
+				this.#weapoint[i][0] += 1;
 				wcgd = true;
-				if(rainPoints[i].first > 10){
-					swap(rainPoints[i], rainPoints[rainPoints.size() - 1]);
-					rainPoints.pop_back();
+				if (this.#weapoint[i][0] > 10) {
+					[this.#weapoint[i], this.#weapoint[this.#weapoint.length - 1]] = [this.#weapoint[this.#weapoint.length - 1], this.#weapoint[i]];
+					this.#weapoint.pop()
 				}
 			}
-			if(weatherSpawnCounts[currentWeather.second]){
+			if (this.#macnt[this.#weather[1]]) {
 				wcgd = true;
-				rainPoints.push_back({0, random(0, 44)});
+				this.#weapoint.push([0, this.#functions.random(0, 44)])
 			}
-			for(int i = 1; i <= weatherSpawnCounts[currentWeather.second] / 6 - 1 && rainPoints.size() < weatherSpawnCounts[currentWeather.second]; i++){
-				if(rainPoints.size() < weatherSpawnCounts[currentWeather.second] && random(1, 2) <= 1){
+			for (let i = 1; i <= this.#macnt[this.#weather[1]] / 6 - 1 && this.#weapoint.length < this.#macnt[this.#weather[1]]; i++) {
+				if (this.#weapoint.length < this.#macnt[this.#weather[1]] && this.#functions.random(1, 2) <= 1) {
 					wcgd = true;
-					rainPoints.push_back({0, random(0, 44)});
+					this.#weapoint.push([0, this.#functions.random(0, 44)])
 				}
 			}
 		}
-		int start = 0;
-		auto nowsize = getConsoleSize();
-		const bool size_ok1 = nowsize.second < 20, size_ok2 = nowsize.first < 51;
-		if(std::memcmp(screenBuffer, previousScreenBuffer, sizeof(screenBuffer))){
+		let start = 0;
+		let nowsize = this.#data.gameState.consoleSize;
+		const notEnoughRows = nowsize.rows < 20,
+			notEnoughCols = nowsize.cols < 51;
+		const paintStr = JSON.stringify(this.#paint);
+		if (this.#last !== paintStr) {
 			wcgd = true;
-			std::memcpy(previousScreenBuffer, screenBuffer, sizeof(screenBuffer));
+			this.#last = paintStr
 		}
-		if(terminalSize != nowsize){
-			ter_big = nowsize;
-			need_cl = true;
+		if (this.#ter_big != nowsize) {
+			this.#ter_big = nowsize;
+			need_cl = true
 		}
-		if(variate::data_saver.simple || size_ok1 || size_ok2){
-			if(need_cl){
-				cout << "\033c\033[?25l" << flush;
-			}else if(variate::data_saver.simple || wcg){
-				cout << "\033[H" << flush;
-			}else{
-				return;
+		if (this.#data.gameState.dataSaver.compactMode || notEnoughRows || notEnoughCols) {
+			if (need_cl) {
+				await this.#functions.write("\x1bc\x1b[?25l")
+			} else if (this.#data.gameState.dataSaver.compactMode || wcg) {
+				await this.#functions.write("\x1b[H")
+			} else {
+				return
 			}
-			if(!variate::data_saver.simple){
-				if(size_ok1){
-					cout << screenHeightMinText << endl;
-					cout << currentSizeText << nowsize.second << rowsSuffix << endl;
+			if (!this.#data.gameState.dataSaver.compactMode) {
+				if (notEnoughRows) {
+					await this.#functions.write(this.#lang.current.fishing.notEnoughRows + "\n");
+					await this.#functions.write(this.#lang.current.fishing.currentSize + ": " + nowsize.rows + this.#lang.current.fishing.rows + "\n")
 				}
-				if(size_ok2){
-					cout << screenWidthMinText << endl;
-					cout << currentSizeText << nowsize.first << columnsSuffix << endl;
+				if (notEnoughCols) {
+					await this.#functions.write(this.#lang.current.fishing.notEnoughCols + "\n");
+					await this.#functions.write(this.#lang.current.fishing.currentSize + ": " + nowsize.cols + this.#lang.current.fishing.cols + "\n")
 				}
 			}
-		}else{
-			if(need_cl){
-				cout << "\033c\033[?25l" << flush;
-			}else if(wcg || wcgd){
-				cout << "\033[H" << flush;
-			}else{
-				return;
+		} else {
+			if (need_cl) {
+				await this.#functions.write("\x1bc\x1b[?25l")
+			} else if (wcg || wcgd) {
+				await this.#functions.write("\x1b[H")
+			} else {
+				return
 			}
-			if(currentWeather.first == 3 || currentWeather.first == 4 || currentWeather.first == 2){
+			if (this.#weather[0] >= 2 && this.#weather[0] <= 4) {
 				start = 4;
-				for(int i = 0; i < 4; i++){
-					cout << weatherAsciiArt[currentWeather.first - 2][i] << endl;
+				for (let i = 0; i < 4; i++) {
+					await this.#functions.write(this.#weatherpcr[this.#weather[0] - 2][i] + "\n")
 				}
 			}
-			for(int i = start; i < 15; i++){
-				for(int j = 0; j < 45; j++){
-					bool b = false;
-					for(auto p : rainPoints){
-						if(p.first == i && p.second == j){
+			for (let i = start; i < 15; i++) {
+				for (let j = 0; j < 44; j++) {
+					let b = false;
+					for (const p of this.#weapoint) {
+						if (p[0] === i && p[1] === j) {
 							b = true;
-							break;
+							break
 						}
 					}
-					if(screenBuffer[i][j] == ' ' && b){
-						cout << "\033[m" << waterTrailColors[lw] << waterTrailChars[lw];
-					}else{
-						cout << "\033[m" << screenColor[i][j] << screenBuffer[i][j];
+					if (this.#paint[i][j] === " " && b) {
+						await this.#functions.write("\x1b[m" + this.#fucolor[this.#lw] + this.#fu[this.#lw])
+					} else {
+						await this.#functions.write("\x1b[m" + this.#color[i][j] + this.#paint[i][j])
 					}
 				}
-				cout << endl;
+				await this.#functions.write("\n")
 			}
 		}
-		cout << currentStatusLabelText << statuses[now_status] << endl;
-		cout << totalFishCaughtText << variate::data_saver.cnt << currentWeatherText << weatherPhrases[currentWeather.second] << weatherNames[currentWeather.first] << endl;
-		if(ma){
-			if(mi){
-				cout << remainingTimeLabelText << ": " << mi / 2. << " min ~ " << ma / 2. << " min" << endl;
-			}else{
-				cout << remainingTimeLabelText << ": < " << ma / 2. << " min" << endl;
+		await this.#functions.write(this.#lang.current.fishing.currentStatus + ": " + this.#lang.current.fishing.waitingStatus[this.#now_status] + "\n");
+		await this.#functions.write(this.#lang.current.fishing.totalFishCaught + ": " + this.#data.gameState.dataSaver.totalFishCaught + " " + this.#lang.current.fishing.currentWeather + ": " + this.#lang.current.fishing.rainSize[this.#weather[1]] + this.#lang.current.fishing.weatherNames[this.#weather[0]] + "\n");
+		if (ma) {
+			if (mi) {
+				await this.#functions.write(this.#lang.current.fishing.remainingTime + ": " + mi / 2 + " min ~ " + ma / 2 + " min\n")
+			} else {
+				await this.#functions.write(this.#lang.current.fishing.remainingTime + ": < " + ma / 2 + " min\n")
 			}
 		}
-		cout << (variate::data_saver.simple ? enterMinimalModeText : exitMinimalModeText) << endl;
-		simpleMode = false;
+		await this.#functions.write((this.#data.gameState.dataSaver.compactMode ? this.#lang.current.fishing.exitCompactMode : this.#lang.current.fishing.enterCompactMode) + "\n");
+		this.#swp = false
 	}
-	void checkSleepInput(double seconds){
-		for(char c : getch2s()){
-			if(c == 'e'){
-				simpleMode = !simpleMode;
+	async #sleepck(s) {
+		for (const c of await this.#functions.getch2s()) {
+			if (c === "e") {
+				this.#swp = !this.#swp
 			}
 		}
-		sleep2(seconds);
+		await this.#functions.sleep(s)
 	}
-	void sleepAndRender(double seconds){
-		seconds = (int)(seconds * 100 + 0.5) / 100.;
-		if(s < 0.01){
-			s = 0.01;
+	async #slep(s) {
+		s = Math.round(s * 100) / 100;
+		if (s < .01) {
+			s = .01
 		}
-		while(s > 0.1){
-			checkSleepInput(0.1);
-			renderScreen();
-			s -= 0.1;
-			la2 += 0.1;
+		while (s > .1) {
+			await this.#sleepck(.1);
+			await this.#draw();
+			s -= .1;
+			this.#la2 += .1
 		}
-		checkSleepInput(s);
-		renderScreen();
-		la2 += s;
+		await this.#sleepck(s);
+		await this.#draw();
+		this.#la2 += s
 	}
-	void waitForEvent(double seconds){
-		s = (int)(s * 100 + 0.5) / 100.;
-		int mi = variate::mintime[variate::data_saver.level] * 10, ma = variate::maxtime[variate::data_saver.level] * 10;
-		if(s && s < 0.01){
-			s = 0.01;
+	async #wait(s) {
+		s = Math.round(s * 100) / 100;
+		let mi = this.#data.constant.minCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel] * 10,
+			ma = this.#data.constant.maxCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel] * 10;
+		if (s && s < .01) {
+			s = .01
 		}
-		while(s > 0.1){
-			checkSleepInput(0.1);
-			if(mi > 0){
-				mi -= 1;
+		while (s > .1) {
+			await this.#sleepck(.1);
+			if (mi > 0) {
+				mi -= 1
 			}
-			if(ma > 10){
-				ma -= 1;
+			if (ma > 10) {
+				ma -= 1
 			}
-			s -= 0.1;
-			la2 += 0.1;
-			renderScreen((mi - 10) / 300, max((ma + 290) / 300, 1));
+			s -= .1;
+			this.#la2 += .1;
+			await this.#draw(Math.floor((mi - 10) / 300), Math.ceil(Math.max((ma + 290) / 300, 1)))
 		}
-		if(s){
-			checkSleepInput(s);
-			renderScreen((mi - 10) / 300, max((ma + 290) / 300, 1));
+		if (s) {
+			await this.#sleepck(s);
+			await this.#draw(Math.floor((mi - 10) / 300), Math.ceil(Math.max((ma + 290) / 300, 1)))
 		}
-		la2 += s;
+		this.#la2 += s
 	}
-	inline void animateFishing(bool isBig, int fishType){
-		const double hung_speed = (variate::data_saver.hungry < 5 ? 3 : (variate::data_saver.hungry < 10 ? 2 : (variate::data_saver.hungry < 30 ? 1 : variate::data_saver.hungry < 35 ? 0.8 : 0.5)));
-		cout << "\033[?25l" << flush;
-		screenColor[11][18] = "\033[1;34m";
-		screenBuffer[11][18] = '~';
-		screenColor[10][19] = fish_color[type];
-		screenBuffer[11][19] = '^';
-		screenBuffer[10][19] = 'O';
-		sleepAndRender(0.5 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenColor[11][19] = "\033[1;34m";
-		screenBuffer[11][19] = '~';
-		screenColor[9][19] = fish_color[type];
-		screenBuffer[10][19] = '^';
-		screenBuffer[9][19] = 'O';
-		sleepAndRender(0.5 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		for(int i = 8; i >= 5; i--){
-			screenColor[i + 2][19] = "";
-			screenBuffer[i + 2][19] = ' ';
-			screenColor[i][19] = fish_color[type];
-			screenBuffer[i + 1][19] = '^';
-			screenBuffer[i][19] = 'O';
-			sleepAndRender(0.5 * hung_speed * (is_big + 1) / variate::data_saver.stime);
+	async #fishing(is_big, type) {
+		const hung_speed = this.#data.gameState.dataSaver.hunger < 5 ? 3 : this.#data.gameState.dataSaver.hunger < 10 ? 2 : this.#data.gameState.dataSaver.hunger < 30 ? 1 : this.#data.gameState.dataSaver.hunger < 35 ? .8 : .5;
+		await this.#functions.write("\x1b[?25l");
+		this.#color[11][18] = "\x1b[1;34m";
+		this.#paint[11][18] = "~";
+		this.#color[10][19] = this.#fish_color[type];
+		this.#paint[11][19] = "^";
+		this.#paint[10][19] = "O";
+		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#color[11][19] = "\x1b[1;34m";
+		this.#paint[11][19] = "~";
+		this.#color[9][19] = this.#fish_color[type];
+		this.#paint[10][19] = "^";
+		this.#paint[9][19] = "O";
+		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		for (let i = 8; i >= 5; i--) {
+			this.#color[i + 2][19] = "";
+			this.#paint[i + 2][19] = " ";
+			this.#color[i][19] = this.#fish_color[type];
+			this.#paint[i + 1][19] = "^";
+			this.#paint[i][19] = "O";
+			await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		screenBuffer[9][24] = screenBuffer[8][24] = screenBuffer[7][24] = screenBuffer[6][24] = '|';
-		screenBuffer[8][23] = screenBuffer[7][22] = screenBuffer[6][21] = screenBuffer[5][20] = screenBuffer[5][19] = screenBuffer[6][19] = ' ';
-		screenColor[5][19] = screenColor[6][19] = "";
-		screenBuffer[5][23] = '>';
-		screenBuffer[5][24] = 'O';
-		screenColor[5][23] = screenColor[5][24] = fish_color[type];
-		sleepAndRender(0.5 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[9][26] = 'V';
-		screenBuffer[8][24] = screenBuffer[7][24] = screenBuffer[6][24] = screenBuffer[5][23] = screenBuffer[5][24] = ' ';
-		screenColor[5][23] = screenColor[5][24] = "";
-		screenBuffer[9][26] = screenBuffer[8][26] = screenBuffer[7][26] = screenBuffer[6][26] = '|';
-		screenBuffer[9][24] = '/';
-		screenBuffer[5][25] = '>';
-		screenBuffer[5][26] = 'O';
-		screenColor[5][25] = screenColor[5][26] = fish_color[type];
-		sleepAndRender(0.5 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[9][26] = screenBuffer[8][27] = screenBuffer[7][28] = screenBuffer[6][29] = '/';
-		screenColor[5][25] = screenColor[5][26] = "";
-		screenBuffer[8][26] = screenBuffer[7][26] = screenBuffer[6][26] = screenBuffer[5][25] = screenBuffer[5][26] = ' ';
-		screenBuffer[5][29] = '>';
-		screenBuffer[5][30] = 'O';
-		screenColor[5][29] = screenColor[5][30] = fish_color[type];
-		sleepAndRender(0.5 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[8][27] = screenBuffer[7][28] = screenBuffer[6][29] = screenBuffer[5][29] = screenBuffer[5][30] = ' ';
-		screenBuffer[9][26] = '\\';
-		screenBuffer[9][27] = screenBuffer[9][28] = screenBuffer[9][29] = screenBuffer[9][30] = screenBuffer[9][31] = screenBuffer[9][32] = screenBuffer[9][33] = screenBuffer[9][34] = '-';
-		screenBuffer[8][35] = 'V';
-		screenBuffer[9][35] = 'O';
-		screenColor[9][35] = screenColor[8][35] = fish_color[type];
-		screenColor[5][29] = screenColor[5][30] = "";
-		sleepAndRender(0.5 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[10][35] = 'O';
-		screenBuffer[8][35] = ' ';
-		screenBuffer[9][35] = 'V';
-		screenColor[10][35] = fish_color[type];
-		screenColor[8][35] = "";
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[11][34] = '\\';
-		screenBuffer[11][36] = '/';
-		for(int i = 11; i <= 12; i++){
-			screenBuffer[i][35] = 'O';
-			screenBuffer[i - 2][35] = ' ';
-			screenBuffer[i - 1][35] = 'V';
-			screenColor[i][35] = fish_color[type];
-			screenColor[i - 2][35] = "";
-			sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
+		this.#paint[9][24] = this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = "|";
+		this.#paint[8][23] = this.#paint[7][22] = this.#paint[6][21] = this.#paint[5][20] = this.#paint[5][19] = this.#paint[6][19] = " ";
+		this.#color[5][19] = this.#color[6][19] = "";
+		this.#paint[5][23] = ">";
+		this.#paint[5][24] = "O";
+		this.#color[5][23] = this.#color[5][24] = this.#fish_color[type];
+		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[9][26] = "V";
+		this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = this.#paint[5][23] = this.#paint[5][24] = " ";
+		this.#color[5][23] = this.#color[5][24] = "";
+		this.#paint[9][26] = this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = "|";
+		this.#paint[9][24] = "/";
+		this.#paint[5][25] = ">";
+		this.#paint[5][26] = "O";
+		this.#color[5][25] = this.#color[5][26] = this.#fish_color[type];
+		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[9][26] = this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = "/";
+		this.#color[5][25] = this.#color[5][26] = "";
+		this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = this.#paint[5][25] = this.#paint[5][26] = " ";
+		this.#paint[5][29] = ">";
+		this.#paint[5][30] = "O";
+		this.#color[5][29] = this.#color[5][30] = this.#fish_color[type];
+		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = this.#paint[5][29] = this.#paint[5][30] = " ";
+		this.#paint[9][26] = "\\";
+		this.#paint[9][27] = this.#paint[9][28] = this.#paint[9][29] = this.#paint[9][30] = this.#paint[9][31] = this.#paint[9][32] = this.#paint[9][33] = this.#paint[9][34] = "-";
+		this.#paint[8][35] = "V";
+		this.#paint[9][35] = "O";
+		this.#color[9][35] = this.#color[8][35] = this.#fish_color[type];
+		this.#color[5][29] = this.#color[5][30] = "";
+		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[10][35] = "O";
+		this.#paint[8][35] = " ";
+		this.#paint[9][35] = "V";
+		this.#color[10][35] = this.#fish_color[type];
+		this.#color[8][35] = "";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[11][34] = "\\";
+		this.#paint[11][36] = "/";
+		for (let i = 11; i <= 12; i++) {
+			this.#paint[i][35] = "O";
+			this.#paint[i - 2][35] = " ";
+			this.#paint[i - 1][35] = "V";
+			this.#color[i][35] = this.#fish_color[type];
+			this.#color[i - 2][35] = "";
+			await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		screenBuffer[11][34] = screenBuffer[11][35] = screenBuffer[11][36] = '~';
-		screenBuffer[13][35] = 'O';
-		screenBuffer[12][35] = 'V';
-		screenColor[13][35] = fish_color[type];
-		screenColor[11][35] = "\033[1;34m";
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[13][36] = 'O';
-		screenBuffer[12][35] = ' ';
-		screenBuffer[13][35] = '>';
-		screenColor[13][36] = fish_color[type];
-		screenColor[12][35] = "";
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		for(int i = 37; i <= 38; i++){
-			screenBuffer[13][i] = 'O';
-			screenBuffer[13][i - 2] = ' ';
-			screenBuffer[13][i - 1] = '>';
-			screenColor[13][i] = fish_color[type];
-			screenColor[13][i - 2] = "";
-			sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
+		this.#paint[11][34] = this.#paint[11][35] = this.#paint[11][36] = "~";
+		this.#paint[13][35] = "O";
+		this.#paint[12][35] = "V";
+		this.#color[13][35] = this.#fish_color[type];
+		this.#color[11][35] = "\x1b[1;34m";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[13][36] = "O";
+		this.#paint[12][35] = " ";
+		this.#paint[13][35] = ">";
+		this.#color[13][36] = this.#fish_color[type];
+		this.#color[12][35] = "";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		for (let i = 37; i <= 38; i++) {
+			this.#paint[13][i] = "O";
+			this.#paint[13][i - 2] = " ";
+			this.#paint[13][i - 1] = ">";
+			this.#color[13][i] = this.#fish_color[type];
+			this.#color[13][i - 2] = "";
+			await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		screenBuffer[13][38] = screenBuffer[13][37] = ' ';
-		screenColor[13][38] = screenColor[13][37] = "";
-		cout << "\033[?25h" << flush;
-		processCatch(is_big, type);
+		this.#paint[13][38] = this.#paint[13][37] = " ";
+		this.#color[13][38] = this.#color[13][37] = "";
+		await this.#functions.write("\x1b[?25h");
+		await this.#get(is_big, type)
 	}
-	inline void animateFishingSlip(bool isBig, int fishType){
-		const double hung_speed = (variate::data_saver.hungry < 5 ? 3 : (variate::data_saver.hungry < 10 ? 2 : (variate::data_saver.hungry < 30 ? 1 : variate::data_saver.hungry < 35 ? 0.8 : 0.5)));
-		cout << "\033[?25l" << flush;
-		screenColor[11][18] = "\033[1;34m";
-		screenBuffer[11][18] = '~';
-		screenColor[10][19] = fish_color[type];
-		screenBuffer[11][19] = '^';
-		screenBuffer[10][19] = 'O';
-		sleepAndRender(0.3 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		now_status = 4;
-		screenColor[11][19] = "\033[1;34m";
-		screenBuffer[11][19] = '~';
-		screenColor[10][19] = "";
-		screenBuffer[10][19] = ' ';
-		screenBuffer[10][20] = '^';
-		screenBuffer[9][19] = 'O';
-		screenColor[10][20] = screenColor[9][19] = fish_color[type];
-		sleepAndRender(0.3 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[10][20] = screenBuffer[9][19] = ' ';
-		screenColor[10][20] = screenColor[9][19] = "";
-		screenBuffer[9][18] = '^';
-		screenBuffer[8][19] = 'O';
-		screenColor[9][18] = screenColor[8][19] = fish_color[type];
-		sleepAndRender(0.3 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[9][18] = screenBuffer[8][19] = ' ';
-		screenColor[9][18] = screenColor[8][19] = "";
-		screenBuffer[8][20] = '^';
-		screenBuffer[7][19] = 'O';
-		screenColor[8][20] = screenColor[7][19] = fish_color[type];
-		sleepAndRender(0.3 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[6][19] = 'j';
-		screenColor[8][20] = "";
-		screenBuffer[8][20] = ' ';
-		screenColor[7][20] = fish_color[type];
-		screenBuffer[7][20] = '<';
-		sleepAndRender(0.3 * hung_speed * (is_big + 1) / variate::data_saver.stime);
-		screenColor[7][20] = "";
-		screenBuffer[5][19] = 'j';
-		screenBuffer[7][20] = screenBuffer[6][19] = ' ';
-		screenColor[8][19] = fish_color[type];
-		screenBuffer[7][19] = 'V';
-		screenBuffer[8][19] = 'O';
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		screenColor[7][19] = "";
-		screenColor[9][19] = fish_color[type];
-		screenBuffer[7][19] = ' ';
-		screenBuffer[8][19] = 'V';
-		screenBuffer[9][19] = 'O';
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		screenColor[8][19] = "";
-		screenColor[10][19] = fish_color[type];
-		screenBuffer[8][19] = ' ';
-		screenBuffer[9][19] = 'V';
-		screenBuffer[10][19] = 'O';
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[11][18] = '\\';
-		screenBuffer[11][20] = '/';
-		for(int i = 11; i <= 12; i++){
-			screenColor[i - 2][19] = "";
-			screenColor[i][19] = fish_color[type];
-			screenBuffer[i - 2][19] = ' ';
-			screenBuffer[i - 1][19] = 'V';
-			screenBuffer[i][19] = 'O';
-			sleepAndRender(0.5 / (is_big + 1) / variate::data_saver.stime);
+	async #fishingslip(is_big, type) {
+		const hung_speed = this.#data.gameState.dataSaver.hunger < 5 ? 3 : this.#data.gameState.dataSaver.hunger < 10 ? 2 : this.#data.gameState.dataSaver.hunger < 30 ? 1 : this.#data.gameState.dataSaver.hunger < 35 ? .8 : .5;
+		await this.#functions.write("\x1b[?25l");
+		this.#color[11][18] = "\x1b[1;34m";
+		this.#paint[11][18] = "~";
+		this.#color[10][19] = this.#fish_color[type];
+		this.#paint[11][19] = "^";
+		this.#paint[10][19] = "O";
+		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#now_status = 4;
+		this.#color[11][19] = "\x1b[1;34m";
+		this.#paint[11][19] = "~";
+		this.#color[10][19] = "";
+		this.#paint[10][19] = " ";
+		this.#paint[10][20] = "^";
+		this.#paint[9][19] = "O";
+		this.#color[10][20] = this.#color[9][19] = this.#fish_color[type];
+		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[10][20] = this.#paint[9][19] = " ";
+		this.#color[10][20] = this.#color[9][19] = "";
+		this.#paint[9][18] = "^";
+		this.#paint[8][19] = "O";
+		this.#color[9][18] = this.#color[8][19] = this.#fish_color[type];
+		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[9][18] = this.#paint[8][19] = " ";
+		this.#color[9][18] = this.#color[8][19] = "";
+		this.#paint[8][20] = "^";
+		this.#paint[7][19] = "O";
+		this.#color[8][20] = this.#color[7][19] = this.#fish_color[type];
+		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[6][19] = "j";
+		this.#color[8][20] = "";
+		this.#paint[8][20] = " ";
+		this.#color[7][20] = this.#fish_color[type];
+		this.#paint[7][20] = "<";
+		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#color[7][20] = "";
+		this.#paint[5][19] = "j";
+		this.#paint[7][20] = this.#paint[6][19] = " ";
+		this.#color[8][19] = this.#fish_color[type];
+		this.#paint[7][19] = "V";
+		this.#paint[8][19] = "O";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#color[7][19] = "";
+		this.#color[9][19] = this.#fish_color[type];
+		this.#paint[7][19] = " ";
+		this.#paint[8][19] = "V";
+		this.#paint[9][19] = "O";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#color[8][19] = "";
+		this.#color[10][19] = this.#fish_color[type];
+		this.#paint[8][19] = " ";
+		this.#paint[9][19] = "V";
+		this.#paint[10][19] = "O";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[11][18] = "\\";
+		this.#paint[11][20] = "/";
+		for (let i = 11; i <= 12; i++) {
+			this.#color[i - 2][19] = "";
+			this.#color[i][19] = this.#fish_color[type];
+			this.#paint[i - 2][19] = " ";
+			this.#paint[i - 1][19] = "V";
+			this.#paint[i][19] = "O";
+			await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		screenBuffer[11][18] = screenBuffer[11][20] = screenBuffer[11][19] = '~';
-		screenColor[11][19] = "\033[1;34m";
-		screenColor[13][19] = fish_color[type];
-		screenBuffer[12][19] = 'V';
-		screenBuffer[13][19] = 'O';
-		sleepAndRender(0.5 / (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[12][19] = ' ';
-		screenColor[12][19] = "";
-		screenColor[14][19] = fish_color[type];
-		screenBuffer[13][19] = 'V';
-		screenBuffer[14][19] = 'O';
-		sleepAndRender(0.5 / (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[13][19] = ' ';
-		screenColor[13][19] = "";
-		screenBuffer[14][19] = 'V';
-		sleepAndRender(0.5 / (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[14][19] = ' ';
-		screenColor[14][19] = "";
-		sleepAndRender(0.5 / (is_big + 1) / variate::data_saver.stime);
-		screenBuffer[8][23] = screenBuffer[7][22] = screenBuffer[6][21] = screenBuffer[5][20] = screenBuffer[5][19] = ' ';
-		screenBuffer[9][24] = '/';
-		cout << "\033[?25h" << flush;
+		this.#paint[11][18] = this.#paint[11][20] = this.#paint[11][19] = "~";
+		this.#color[11][19] = "\x1b[1;34m";
+		this.#color[13][19] = this.#fish_color[type];
+		this.#paint[12][19] = "V";
+		this.#paint[13][19] = "O";
+		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[12][19] = " ";
+		this.#color[12][19] = "";
+		this.#color[14][19] = this.#fish_color[type];
+		this.#paint[13][19] = "V";
+		this.#paint[14][19] = "O";
+		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[13][19] = " ";
+		this.#color[13][19] = "";
+		this.#paint[14][19] = "V";
+		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[14][19] = " ";
+		this.#color[14][19] = "";
+		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[8][23] = this.#paint[7][22] = this.#paint[6][21] = this.#paint[5][20] = this.#paint[5][19] = " ";
+		this.#paint[9][24] = "/";
+		await this.#functions.write("\x1b[?25h")
 	}
-	inline void startFishingSequence(bool isBig, int fishType){
-		std::memset(previousScreenBuffer, 0, sizeof(previousScreenBuffer));
-		ter_big = {0, 0};
-		la = time(0);
-
-		const double hung_speed = (variate::data_saver.hungry < 5 ? 3 : (variate::data_saver.hungry < 10 ? 2 : (variate::data_saver.hungry < 30 ? 1 : variate::data_saver.hungry < 35 ? 0.8 : 0.5)));
-		now_status = 0;
-		cout << "\033[?25l" << flush;
-		for(int i = 0; i < 15; i++){
-			for(int j = 0; j < 45; j++){
-				screenColor[i][j] = "";
-				screenBuffer[i][j] = old[i][j];
+	async #front_fishing(is_big, type) {
+		this.#last = "";
+		this.#ter_big = [0, 0];
+		this.#la = Math.floor(Date.now() / 1e3);
+		const hung_speed = this.#data.gameState.dataSaver.hunger < 5 ? 3 : this.#data.gameState.dataSaver.hunger < 10 ? 2 : this.#data.gameState.dataSaver.hunger < 30 ? 1 : this.#data.gameState.dataSaver.hunger < 35 ? .8 : .5;
+		this.#now_status = 0;
+		await this.#functions.write("\x1b[?25l");
+		for (let i = 0; i < 15; i++) {
+			for (let j = 0; j < 44; j++) {
+				this.#color[i][j] = "";
+				this.#paint[i][j] = this.#old[i][j]
 			}
 		}
-		for(int i = 0; i <= 22; i++){
-			screenColor[11][i] = "\033[1;34m";
+		for (let i = 0; i <= 22; i++) {
+			this.#color[11][i] = "\x1b[1;34m"
 		}
-		for(int i = 31; i <= 42; i++){
-			screenColor[11][i] = "\033[1;34m";
+		for (let i = 31; i <= 42; i++) {
+			this.#color[11][i] = "\x1b[1;34m"
 		}
-		if(variate::fish_man){
-			screenBuffer[8][25] = ' ';
-			screenBuffer[9][25] = 'O';
-			screenColor[9][25] = screenColor[10][24] = screenColor[10][26] = fish_color[6];
-			variate::fish_man = false;
+		if (this.#data.gameState.fishMan) {
+			this.#paint[8][25] = " ";
+			this.#paint[9][25] = "O";
+			this.#color[9][25] = this.#color[10][24] = this.#color[10][26] = this.#fish_color[6];
+			this.#data.gameState.fishMan = false
 		}
-		sleepAndRender(0.5 * hung_speed / variate::data_saver.stime);
-		for(int i = 27; i <= 34; i++){
-			screenBuffer[9][i] = ' ';
+		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		for (let i = 27; i <= 34; i++) {
+			this.#paint[9][i] = " "
 		}
-		screenBuffer[9][26] = 'V';
-		screenBuffer[8][27] = screenBuffer[7][28] = screenBuffer[6][29] = screenBuffer[5][30] = '/';
-		sleepAndRender(0.5 * hung_speed / variate::data_saver.stime);
-		screenBuffer[8][27] = screenBuffer[7][28] = screenBuffer[6][29] = screenBuffer[5][30] = ' ';
-		screenBuffer[9][26] = screenBuffer[8][26] = screenBuffer[7][26] = screenBuffer[6][26] = screenBuffer[5][26] = '|';
-		sleepAndRender(0.5 * hung_speed / variate::data_saver.stime);
-		screenBuffer[9][26] = '\\';
-		screenBuffer[8][26] = screenBuffer[7][26] = screenBuffer[6][26] = screenBuffer[5][26] = ' ';
-		screenBuffer[9][24] = screenBuffer[8][24] = screenBuffer[7][24] = screenBuffer[6][24] = screenBuffer[5][24] = '|';
-		sleepAndRender(0.5 * hung_speed / variate::data_saver.stime);
-		screenBuffer[8][24] = screenBuffer[7][24] = screenBuffer[6][24] = screenBuffer[5][24] = ' ';
-		screenBuffer[9][24] = 'V';
-		screenBuffer[8][23] = screenBuffer[7][22] = screenBuffer[6][21] = screenBuffer[5][20] = '\\';
-		sleepAndRender(0.5 * hung_speed / variate::data_saver.stime);
-		screenBuffer[5][19] = 'j';
-		sleepAndRender(0.5 * hung_speed / variate::data_saver.stime);
-		for(int i = 6; i <= 10; i++){
-			screenBuffer[i - 1][19] = '|';
-			screenBuffer[i][19] = 'j';
-			sleepAndRender(0.5 * hung_speed / variate::data_saver.stime);
+		this.#paint[9][26] = "V";
+		this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = this.#paint[5][30] = "/";
+		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = this.#paint[5][30] = " ";
+		this.#paint[9][26] = this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = this.#paint[5][26] = "|";
+		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[9][26] = "\\";
+		this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = this.#paint[5][26] = " ";
+		this.#paint[9][24] = this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = this.#paint[5][24] = "|";
+		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = this.#paint[5][24] = " ";
+		this.#paint[9][24] = "V";
+		this.#paint[8][23] = this.#paint[7][22] = this.#paint[6][21] = this.#paint[5][20] = "\\";
+		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#paint[5][19] = "j";
+		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		for (let i = 6; i <= 10; i++) {
+			this.#paint[i - 1][19] = "|";
+			this.#paint[i][19] = "j";
+			await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		screenBuffer[10][19] = '|';
-		screenBuffer[11][19] = 'j';
-		screenColor[11][19] = "";
-		int stime = getFishingWaitTime();
-		if(currentWeather.first == 0){
-			stime = max(0, stime - 5 * currentWeather.second);
+		this.#paint[10][19] = "|";
+		this.#paint[11][19] = "j";
+		this.#color[11][19] = "";
+		let stime = this.#rand_time();
+		if (this.#weather[0] === 0) {
+			stime = Math.max(0, stime - 5 * this.#weather[1])
 		}
-		if(currentWeather.first == 1){
-			stime = max(0, stime + 5 * currentWeather.second);
+		if (this.#weather[0] === 1) {
+			stime = Math.max(0, stime + 5 * this.#weather[1])
 		}
-		now_status = 1;
-		waitForEvent(stime);
-		now_status = 2;
-		screenColor[11][0] = fish_color[type];
-		screenBuffer[11][0] = 'O';
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		screenColor[11][1] = fish_color[type];
-		screenBuffer[11][0] = '>';
-		screenBuffer[11][1] = 'O';
-		sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
-		for(int i = 2; i <= 19; i++){
-			if(i == 19){
-				now_status = 3;
+		this.#now_status = 1;
+		await this.#wait(stime);
+		this.#now_status = 2;
+		this.#color[11][0] = this.#fish_color[type];
+		this.#paint[11][0] = "O";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		this.#color[11][1] = this.#fish_color[type];
+		this.#paint[11][0] = ">";
+		this.#paint[11][1] = "O";
+		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		for (let i = 2; i <= 19; i++) {
+			if (i === 19) {
+				this.#now_status = 3
 			}
-			screenColor[11][i - 2] = "\033[1;34m";
-			screenBuffer[11][i - 2] = '~';
-			screenColor[11][i] = fish_color[type];
-			screenBuffer[11][i - 1] = '>';
-			screenBuffer[11][i] = 'O';
-			sleepAndRender(0.5 * (is_big + 1) / variate::data_saver.stime);
+			this.#color[11][i - 2] = "\x1b[1;34m";
+			this.#paint[11][i - 2] = "~";
+			this.#color[11][i] = this.#fish_color[type];
+			this.#paint[11][i - 1] = ">";
+			this.#paint[11][i] = "O";
+			await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		cout << "\033[?25h" << flush;
-		bool slip = (random(1, 100) <= (variate::data_saver.slip + (currentWeather.first == 5) * 10));
-		if(slip){
-			animateFishingSlip(is_big, type);
-		}else{
-			fishing(is_big, type);
+		await this.#functions.write("\x1b[?25h");
+		let slip = this.#functions.random(1, 100) <= this.#data.gameState.dataSaver.slipOffChance + (this.#weather[0] === 5) * 10;
+		if (slip) {
+			await this.#fishingslip(is_big, type)
+		} else {
+			await this.#fishing(is_big, type)
 		}
-		while(!rainPoints.empty()){
-			rainPoints.pop_back();
+		while (this.#weapoint.length !== 0) {
+			this.#weapoint.pop()
 		}
 	}
-	inline void chooseFishingOutcome(){
-		bool b = (random(1, 100) <= variate::data_saver.bf);
-		if(variate::bigFish){
+	async #fishing_choose() {
+		let b = this.#functions.random(1, 100) <= this.#data.gameState.dataSaver.bigFishChance;
+		if (this.#data.gameState.bigFish) {
 			b = true;
-			variate::bigFish--;
+			this.#data.gameState.bigFish--
 		}
-		int type = chooseFishType();
-		if(variate::diamondFish){
+		let type = this.#gettype();
+		if (this.#data.gameState.diamondFish) {
 			type = 6;
-			variate::diamondFish--;
+			this.#data.gameState.diamondFish--
 		}
-		startFishingSequence(b, type);
+		await this.#front_fishing(b, type)
 	}
-	inline double freshnessMultiplier(int freshness){
-		if(a >= 8){
-			return 1.25;
-		}else if(a <= 2){
-			return 0.8;
-		}else{
-			return 1;
+	#fresh(a) {
+		if (a >= 8) {
+			return 1.25
+		} else if (a <= 2) {
+			return .8
+		} else {
+			return 1
 		}
 	}
-	inline void chooseRod(){
-		clear();
-		print(rodShopText);
-		print(currentRodText + fish_name[variate::data_saver.gan] + rodText);
-		bool b[8] = {};
-		string s = "";
-		for(int i = 0; i <= 6; i++){
-			b[i] = !caughtFishStacks[i].empty();
-			if(b[i]){
-				s += to_string(i);
-				s += ". ";
-				s += fish_name[i];
-				s += rodText;
-				s += ", ";
+	async makeFishingRod() {
+		await this.#functions.clear();
+		await this.#functions.print(this.#lang.current.fishing.makeFishingRod);
+		await this.#functions.print(this.#lang.current.fishing.currentFishingRod + this.#lang.current.fishing.fishName[this.#data.gameState.dataSaver.rodLevel] + this.#lang.current.fishing.fishingRod);
+		let b = Array(8).fill(false);
+		let s = "";
+		for (let i = 0; i <= 6; i++) {
+			b[i] = this.#fish[i].length !== 0;
+			if (b[i]) {
+				s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fishingRod + ", "
 			}
 		}
 		b[7] = true;
-		if(s.empty()){
-			print(noneText);
-			return;
+		if (s.length === 0) {
+			await this.#functions.print(this.#lang.current.fishing.none);
+			return
 		}
-		s += exitOptionText;
-		print(s);
-		int d;
-		while(true){
-			int c = getch();
-			c -= '0';
-			if(c >= 0 && c <= 7){
-				if(b[c]){
-					d = c;
-					break;
-				}
+		s += this.#lang.current.functions.exit;
+		await this.#functions.print(s);
+		let d;
+		while (true) {
+			let c = await this.#functions.getch();
+			c -= "0";
+			if (c >= 0 && c <= 7 && b[c]) {
+				d = c;
+				break
 			}
 		}
-		if(d == 7){
-			return;
+		if (d === 7) {
+			return
 		}
-		if(!caughtFishStacks[d].empty()){
-			caughtFishStacks[d].pop_back();
+		if (this.#fish[d].length !== 0) {
+			this.#fish[d].pop()
 		}
-		variate::data_saver.gan = d;
+		this.#data.gameState.dataSaver.rodLevel = d
 	}
-	void showAquarium(){
-		{
-			int cnt = 0;
-			for(int i = 0; i <= 6; i++){
-				cnt += variate::data_saver.aqfish_cnt[i];
-			}
-			for(int i = 6; i >= 1 && cnt > 0; i--){
-				if(variate::data_saver.aqfish_cnt[i]){
-					variate::data_saver.aqfish_cnt[i]--;
-				}
-			}
-		}
-		clear();
-		print(aquariumText);
-		print(aquariumTipText);
-		print(aquariumExitText);
-		variate::aqnow = time(0);
-		for(int i = 0; i <= 6; i++){
-			cout << fishing::fish_color[i] << fishing::fish_name[i] << fishLabel << variate::data_saver.aqfish_cnt[i] << fishUnitText << endl;
-		}
-		while(getch() != '1');
-		int cnt = 0;
-		for(int i = 0; i <= 6; i++){
-			cnt += aqua_get[i] * variate::data_saver.aqfish_cnt[i];
-		}
-		variate::aqother += time(0) - variate::aqnow;
-		variate::aqnow = 0;
-		cnt *= variate::aqother / 60;
-		variate::aqother %= 60;
-		variate::data_saver.money += cnt;
-		print(profitPrefixText + to_string(cnt) + profitSuffixText);
-	}
-	void prepareFood(){
-		while(true){
-			clear();
-			print(rawFishText);
-			print(currentAmountText);
-			bool b[8] = {};
-			string s = "";
-			for(int i = 0; i <= 6; i++){
-				b[i] = !caughtFishStacks[i].empty();
-				if(b[i]){
-					s += to_string(i);
-					s += ". ";
-					s += fish_name[i];
-					s += fishLabel;
-					s += ", ";
+	async #makeFood() {
+		while (true) {
+			await this.#functions.clear();
+			await this.#functions.print(this.#lang.current.fishing.rawFish);
+			await this.#functions.print(this.#lang.current.fishing.currentAmount);
+			let b = Array(8).fill(false);
+			let s = "";
+			for (let i = 0; i <= 6; i++) {
+				b[i] = this.#fish[i].length !== 0;
+				if (b[i]) {
+					s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + ", "
 				}
 			}
 			b[7] = true;
-			if(s.empty()){
-				print(noneText);
-				sleept(0.5);
-				return;
+			if (s.length === 0) {
+				await this.#functions.print(this.#lang.current.fishing.none);
+				await this.#functions.sleep(.5);
+				return
 			}
-			s += exitOptionText;
-			for(int i = 1; i <= 6; i++){
-				cout << fish_color[i] << fish_name[i] + fishLabel << "\033[m" << endl;
-				if(caughtFishStacks[i].size()){
-					cout << fishPondText << caughtFishStacks[i].size() << fishCountSuffix << endl;
+			s += this.#lang.current.functions.exit;
+			for (let i = 1; i <= 6; i++) {
+				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
+				if (this.#fish[i].length) {
+					await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(variate::data_saver.caughtFishStacks[i][0]){
-					cout << rawFishLinePrefix << variate::data_saver.caughtFishStacks[i][0] << fishCountSuffix << endl;
+				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(variate::data_saver.caughtFishStacks[i][1]){
-					cout << roastedFishLinePrefix << variate::data_saver.caughtFishStacks[i][1] << fishCountSuffix << endl;
+				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(caughtFishStacks[i].empty() && !variate::data_saver.caughtFishStacks[i][0] && !variate::data_saver.caughtFishStacks[i][1]){
-					cout << noneIndentedText << endl;
-				}
-			}
-			cout << endl;
-			print(s);
-			int d;
-			while(true){
-				int c = getch();
-				c -= '0';
-				if(c >= 0 && c <= 7){
-					if(b[c]){
-						d = c;
-						break;
-					}
+				if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
 				}
 			}
-			if(d == 7){
-				break;
+			await this.#functions.write("\n");
+			await this.#functions.print(s);
+			let d;
+			while (true) {
+				let c = await this.#functions.getch();
+				c -= "0";
+				if (c >= 0 && c <= 7 && b[c]) {
+					d = c;
+					break
+				}
 			}
-			if(caughtFishStacks[d].empty()){
-				continue;
+			if (d === 7) {
+				break
 			}
-			caughtFishStacks[d].pop_back();
-			variate::data_saver.caughtFishStacks[d][0]++;
+			if (this.#fish[d].length === 0) {
+				continue
+			}
+			this.#fish[d].pop();
+			this.#data.gameState.dataSaver.foodFish[d][0]++
 		}
 	}
-	void roastFood(){
-		clear();
-		print(prepareRoastedFishText);
-		print(currentAmountText);
-		bool b[8] = {};
-		string s = "";
-		for(int i = 0; i <= 6; i++){
-			b[i] = variate::data_saver.caughtFishStacks[i][0];
-			if(b[i]){
-				s += to_string(i);
-				s += ". ";
-				s += fish_name[i];
-				s += fishLabel;
-				s += ", ";
+	async #roastedFish() {
+		await this.#functions.clear();
+		await this.#functions.print(this.#lang.current.fishing.roastedFish);
+		await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
+		let b = Array(8).fill(false);
+		let s = "";
+		for (let i = 0; i <= 6; i++) {
+			b[i] = this.#data.gameState.dataSaver.foodFish[i][0];
+			if (b[i]) {
+				s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + ", "
 			}
 		}
 		b[7] = true;
-		if(s.empty()){
-			print(noneText);
-			sleept(0.5);
-			return;
+		if (s.length === 0) {
+			await this.#functions.print(this.#lang.current.fishing.none);
+			await this.#functions.sleep(.5);
+			return
 		}
-		s += exitOptionText;
-		for(int i = 1; i <= 6; i++){
-			cout << fish_color[i] << fish_name[i] + fishLabel << "\033[m" << endl;
-			if(caughtFishStacks[i].size()){
-				cout << fishPondText << caughtFishStacks[i].size() << fishCountSuffix << endl;
+		s += this.#lang.current.functions.exit;
+		for (let i = 1; i <= 6; i++) {
+			await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
+			if (this.#fish[i].length) {
+				await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
 			}
-			if(variate::data_saver.caughtFishStacks[i][0]){
-				cout << rawFishLinePrefix << variate::data_saver.caughtFishStacks[i][0] << fishCountSuffix << endl;
+			if (this.#data.gameState.dataSaver.foodFish[i][0]) {
+				await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
 			}
-			if(variate::data_saver.caughtFishStacks[i][1]){
-				cout << roastedFishLinePrefix << variate::data_saver.caughtFishStacks[i][1] << fishCountSuffix << endl;
+			if (this.#data.gameState.dataSaver.foodFish[i][1]) {
+				await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
 			}
-			if(caughtFishStacks[i].empty() && !variate::data_saver.caughtFishStacks[i][0] && !variate::data_saver.caughtFishStacks[i][1]){
-				cout << noneIndentedText << endl;
-			}
-		}
-		cout << endl;
-		print(s);
-		int d;
-		while(true){
-			int c = getch();
-			c -= '0';
-			if(c >= 0 && c <= 7){
-				if(b[c]){
-					d = c;
-					break;
-				}
+			if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
+				await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
 			}
 		}
-		if(d == 7){
-			sleept(0.5);
-			return;
+		await this.#functions.write("\n");
+		await this.#functions.print(s);
+		let d;
+		while (true) {
+			let c = await this.#functions.getch();
+			c -= "0";
+			if (c >= 0 && c <= 7 && b[c]) {
+				d = c;
+				break
+			}
 		}
-		if(!variate::data_saver.caughtFishStacks[d][0]){
-			return;
+		if (d === 7) {
+			await this.#functions.sleep(.5);
+			return
 		}
-		const int l = 0, r = variate::data_saver.caughtFishStacks[d][0];
-		int a = 0;
-		clear();
-		cout << roastingInstructionsText << endl << roastingLineText << fish_color[d] << fish_name[d] + fishLabel << "\033[m" << endl;
-		cout << (a == l ? "\033[1;31m" : "\033[1m") << " < \033[m" << a << fishCountSuffix << (a == r ? "\033[1;31m" : "\033[1m") << " > \033[m" << endl;
-		while(true){
-			char c = getch();
-			if(c == 'a' || c == 'A'){
+		if (!this.#data.gameState.dataSaver.foodFish[d][0]) {
+			return
+		}
+		const l = 0,
+			r = this.#data.gameState.dataSaver.foodFish[d][0];
+		let a = 0;
+		while (true) {
+			await this.#functions.clear();
+			await this.#functions.write(this.#lang.current.fishing.makeFoodAction + "\n" + this.#lang.current.fishing.makeRoastedFish + ": " + this.#fish_color[d] + this.#lang.current.fishing.fishName[d] + this.#lang.current.fishing.fish + "\x1b[m\n");
+			await this.#functions.write((a === l ? "\x1b[1;31m" : "\x1b[1m") + " < \x1b[m" + a + this.#lang.current.fishing.fishNumber + (a === r ? "\x1b[1;31m" : "\x1b[1m") + " > \x1b[m\n");
+			let c = await this.#functions.getch();
+			if (c === "a" || c === "A") {
 				a--;
-				if(a < l){
-					a = l;
+				if (a < l) {
+					a = l
 				}
-			}else if(c == 'd' || c == 'D'){
+			} else if (c === "d" || c === "D") {
 				a++;
-				if(a > r){
-					a = r;
+				if (a > r) {
+					a = r
 				}
-			}else if(c == '\r'){
-				if(a > variate::data_saver.caughtFishStacks[d][0] || a < 0 || !variate::data_saver.roast){
-					clear();
-					return;
+			} else if (c === "\r") {
+				if (a > this.#data.gameState.dataSaver.foodFish[d][0] || a < 0 || !this.#data.gameState.dataSaver.ovenCount) {
+					await this.#functions.clear();
+					return
 				}
-				variate::data_saver.caughtFishStacks[d][0] -= a;
-				variate::data_saver.caughtFishStacks[d][1] += a;
-				clear();
-				int time = (a + variate::data_saver.roast - 1) / variate::data_saver.roast;
-				for(int i = 0; i < time; i++){
-					for(int j = 0; j < 20; j++){
-						clear();
-						cout << roastingText << endl;
-						int ok = i * 20 + j, all = time;
-						int done = int((double)ok / all * 3);
-						bool d2 = done & 1;
+				this.#data.gameState.dataSaver.foodFish[d][0] -= a;
+				this.#data.gameState.dataSaver.foodFish[d][1] += a;
+				await this.#functions.clear();
+				let time = Math.ceil(a / this.#data.gameState.dataSaver.ovenCount);
+				for (let i = 0; i < time; i++) {
+					for (let j = 0; j < 20; j++) {
+						await this.#functions.clear();
+						await this.#functions.write(this.#lang.current.fishing.roasting + "\n");
+						let ok = i * 20 + j,
+							all = time;
+						let done = Math.floor(ok / all * 3);
+						let d2 = done & 1;
 						done >>= 1;
-						for(int k = 1; k <= done; k++){
-							cout << "\033[32;1m=\033[m";
+						for (let k = 1; k <= done; k++) {
+							await this.#functions.write("\x1b[32;1m=\x1b[m")
 						}
-						if(done < 30){
-							cout << (d2 ? "\033[32;1m-\033[m" : "\033[31;1m=\033[m");
+						if (done < 30) {
+							await this.#functions.write(d2 ? "\x1b[32;1m-\x1b[m" : "\x1b[31;1m=\x1b[m")
 						}
-						for(int k = done + 1; k < 30; k++){
-							cout << "\033[31;1m=\033[m";
+						for (let k = done + 1; k < 30; k++) {
+							await this.#functions.write("\x1b[31;1m=\x1b[m")
 						}
-						cout << endl;
-						cout << i * variate::data_saver.roast << "/" << a << roastDoneSuffix << endl;
-						sleept(0.5);
+						await this.#functions.write("\n");
+						await this.#functions.write(i * this.#data.gameState.dataSaver.ovenCount + "/" + a + this.#lang.current.fishing.done + "\n");
+						await this.#functions.sleep(.5)
 					}
 				}
-				clear();
-				cout << roastFinishedText << endl;
-				for(int k = 0; k < 30; k++){
-					cout << "\033[32;1m=\033[m";
+				await this.#functions.clear();
+				await this.#functions.write(this.#lang.current.fishing.done + "\n");
+				for (let k = 0; k < 30; k++) {
+					await this.#functions.write("\x1b[32;1m=\x1b[m")
 				}
-				cout << endl;
-				cout << a << "/" << a << roastDoneSuffix << endl;
-				sleept(1);
-				return;
-			}else if(c == 127){
-				clear();
-				return;
+				await this.#functions.write("\n");
+				await this.#functions.write(a + "/" + a + this.#lang.current.fishing.done + "\n");
+				await this.#functions.sleep();
+				return
+			} else if (c === "") {
+				await this.#functions.clear();
+				return
 			}
-			clear();
-			cout << roastingInstructionsText << endl << roastingLineText << fish_color[d] << fish_name[d] + fishLabel << "\033[m" << endl;
-			cout << (a == l ? "\033[1;31m" : "\033[1m") << " < \033[m" << a << fishCountSuffix << (a == r ? "\033[1;31m" : "\033[1m") << " > \033[m" << endl;
 		}
 	}
-	void eat_food(){
-		while(true){
-			clear();
-			print(eatRawFishText);
-			printnl(currentHungerText);
-			cout << (variate::data_saver.hungry < 10 ? "\033[31;1m" : (variate::data_saver.hungry < 30 ? "" : variate::data_saver.hungry < 35 ? "\033[32m" : "\033[32;1m")) << variate::data_saver.hungry << "\033[m" << endl;
-			print(currentAmountText);
-			bool b[8] = {};
-			string s = "";
-			for(int i = 0; i <= 6; i++){
-				b[i] = variate::data_saver.caughtFishStacks[i][0];
-				if(b[i]){
-					s += to_string(i);
-					s += ". ";
-					s += fish_name[i];
-					s += rawFishItemText;
-					s += ", ";
+	async #eatFish() {
+		while (true) {
+			await this.#functions.clear();
+			await this.#functions.print(this.#lang.current.fishing.eatRawFish);
+			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
+			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
+			let b = Array(8).fill(false);
+			let s = "";
+			for (let i = 0; i <= 6; i++) {
+				b[i] = this.#data.gameState.dataSaver.foodFish[i][0];
+				if (b[i]) {
+					s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.rawFish + ", "
 				}
 			}
 			b[7] = true;
-			if(s.empty()){
-				print(noneText);
-				sleept(0.5);
-				return;
+			if (s.length === 0) {
+				await this.#functions.print(this.#lang.current.fishing.none);
+				await this.#functions.sleep(.5);
+				return
 			}
-			s += exitOptionText;
-			for(int i = 1; i <= 6; i++){
-				cout << fish_color[i] << fish_name[i] + fishLabel << "\033[m" << endl;
-				if(variate::data_saver.caughtFishStacks[i][0]){
-					cout << rawFishLinePrefix << variate::data_saver.caughtFishStacks[i][0] << fishPlusSuffix << i + 3 << endl;
+			s += this.#lang.current.functions.exit;
+			for (let i = 1; i <= 6; i++) {
+				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
+				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + " + " + (i + 3) + "\n")
 				}
-				if(!variate::data_saver.caughtFishStacks[i][0] && !variate::data_saver.caughtFishStacks[i][1]){
-					cout << noneIndentedText << endl;
-				}
-			}
-			cout << endl;
-			print(s);
-			int d;
-			while(true){
-				int c = getch();
-				c -= '0';
-				if(c >= 0 && c <= 7){
-					if(b[c]){
-						d = c;
-						break;
-					}
+				if (!this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
 				}
 			}
-			if(d == 7){
-				sleept(0.5);
-				return;
+			await this.#functions.write("\n");
+			await this.#functions.print(s);
+			let d;
+			while (true) {
+				let c = await this.#functions.getch();
+				c -= "0";
+				if (c >= 0 && c <= 7 && b[c]) {
+					d = c;
+					break
+				}
 			}
-			if(variate::data_saver.caughtFishStacks[d][0] < 1){
-				sleept(0.5);
-				return;
+			if (d === 7) {
+				await this.#functions.sleep(.5);
+				return
 			}
-			variate::data_saver.caughtFishStacks[d][0]--;
-			variate::data_saver.hungry += d + 3;
-			variate::data_saver.hungry = min(variate::data_saver.hungry, 40);
-			sleept(0.5);
+			if (this.#data.gameState.dataSaver.foodFish[d][0] < 1) {
+				await this.#functions.sleep(.5);
+				return
+			}
+			this.#data.gameState.dataSaver.foodFish[d][0]--;
+			this.#data.gameState.dataSaver.hunger += d + 3;
+			this.#data.gameState.dataSaver.hunger = Math.min(this.#data.gameState.dataSaver.hunger, 40);
+			await this.#functions.sleep(.5)
 		}
 	}
-	void eat_food_roast(){
-		while(true){
-			clear();
-			print(eatRoastedFishText);
-			printnl(currentHungerText);
-			cout << (variate::data_saver.hungry < 10 ? "\033[31;1m" : (variate::data_saver.hungry < 30 ? "" : variate::data_saver.hungry < 35 ? "\033[32m" : "\033[32;1m")) << variate::data_saver.hungry << "\033[m" << endl;
-			print(currentAmountText);
-			bool b[8] = {};
-			string s = "";
-			for(int i = 0; i <= 6; i++){
-				b[i] = variate::data_saver.caughtFishStacks[i][1];
-				if(b[i]){
-					s += to_string(i);
-					s += ". ";
-					s += fish_name[i];
-					s += roastedFishText;
-					s += ", ";
+	async #eat_food_roast() {
+		while (true) {
+			await this.#functions.clear();
+			await this.#functions.print(this.#lang.current.fishing.eatRoastedFish);
+			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
+			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
+			let b = Array(8).fill(false);
+			let s = "";
+			for (let i = 0; i <= 6; i++) {
+				b[i] = this.#data.gameState.dataSaver.foodFish[i][1];
+				if (b[i]) {
+					s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.eatRoastedFish + ", "
 				}
 			}
 			b[7] = true;
-			if(s.empty()){
-				print(noneText);
-				sleept(0.5);
-				return;
+			if (s.length === 0) {
+				await this.#functions.print(this.#lang.current.fishing.none);
+				await this.#functions.sleep(.5);
+				return
 			}
-			s += exitOptionText;
-			for(int i = 1; i <= 6; i++){
-				cout << fish_color[i] << fish_name[i] + fishLabel << "\033[m" << endl;
-				if(variate::data_saver.caughtFishStacks[i][1]){
-					cout << roastedFishLinePrefix << variate::data_saver.caughtFishStacks[i][1] << fishPlusSuffix << i + 7 << endl;
+			s += this.#lang.current.functions.exit;
+			for (let i = 1; i <= 6; i++) {
+				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
+				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + " + " + (i + 7) + "\n")
 				}
-				if(!variate::data_saver.caughtFishStacks[i][0] && !variate::data_saver.caughtFishStacks[i][1]){
-					cout << noneIndentedText << endl;
-				}
-			}
-			cout << endl;
-			print(s);
-			int d;
-			while(true){
-				int c = getch();
-				c -= '0';
-				if(c >= 0 && c <= 7){
-					if(b[c]){
-						d = c;
-						break;
-					}
+				if (!this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
 				}
 			}
-			if(d == 7){
-				sleept(0.5);
-				return;
+			await this.#functions.write("\n");
+			await this.#functions.print(s);
+			let d;
+			while (true) {
+				let c = await this.#functions.getch();
+				c -= "0";
+				if (c >= 0 && c <= 7 && b[c]) {
+					d = c;
+					break
+				}
 			}
-			if(variate::data_saver.caughtFishStacks[d][1] < 1){
-				return;
+			if (d === 7) {
+				await this.#functions.sleep(.5);
+				return
 			}
-			variate::data_saver.caughtFishStacks[d][1]--;
-			variate::data_saver.hungry += d + 7;
-			variate::data_saver.hungry = min(variate::data_saver.hungry, 40);
-			sleept(0.5);
+			if (this.#data.gameState.dataSaver.foodFish[d][1] < 1) {
+				return
+			}
+			this.#data.gameState.dataSaver.foodFish[d][1]--;
+			this.#data.gameState.dataSaver.hunger += d + 7;
+			this.#data.gameState.dataSaver.hunger = Math.min(this.#data.gameState.dataSaver.hunger, 40);
+			await this.#functions.sleep(.5)
 		}
 	}
-	void no_roast(){
-		while(true){
-			clear();
-			print(makeFoodMenuText);
-			printnl(currentHungerText);
-			cout << (variate::data_saver.hungry < 10 ? "\033[31;1m" : (variate::data_saver.hungry < 30 ? "" : variate::data_saver.hungry < 35 ? "\033[32m" : "\033[32;1m")) << variate::data_saver.hungry << "\033[m" << endl;
-			print(currentAmountText);
-			for(int i = 1; i <= 6; i++){
-				cout << fish_color[i] << fish_name[i] + fishLabel << "\033[m" << endl;
-				if(caughtFishStacks[i].size()){
-					cout << fishPondText << caughtFishStacks[i].size() << fishCountSuffix << endl;
+	async #no_roast() {
+		while (true) {
+			await this.#functions.clear();
+			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.fishing.noOvenMenu));
+			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
+			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
+			for (let i = 1; i <= 6; i++) {
+				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
+				if (this.#fish[i].length) {
+					await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(variate::data_saver.caughtFishStacks[i][0]){
-					cout << rawFishLinePrefix << variate::data_saver.caughtFishStacks[i][0] << fishCountSuffix << endl;
+				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(variate::data_saver.caughtFishStacks[i][1]){
-					cout << roastedFishLinePrefix << variate::data_saver.caughtFishStacks[i][1] << fishCountSuffix << endl;
+				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(caughtFishStacks[i].empty() && !variate::data_saver.caughtFishStacks[i][0] && !variate::data_saver.caughtFishStacks[i][1]){
-					cout << noneIndentedText << endl;
-				}
-			}
-			while(true){
-				char c = getch();
-				if(c == '1'){
-					make_food();
-					break;
-				}else if(c == '2'){
-					eat_food();
-					break;
-				}else if(c == '3'){
-					return;
+				if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
 				}
 			}
-			sleept(0.5);
+			while (true) {
+				let c = await this.#functions.getch();
+				if (c === "1") {
+					await this.#makeFood();
+					break
+				} else if (c === "2") {
+					await this.#eatFish();
+					break
+				} else if (c === "3") {
+					return
+				}
+			}
+			await this.#functions.sleep(.5)
 		}
 	}
-	void roast(){
-		if(!variate::data_saver.roast){
-			no_roast();
-			return;
+	async #roast() {
+		if (!this.#data.gameState.dataSaver.ovenCount) {
+			await this.#no_roast();
+			return
 		}
-		while(true){
-			clear();
-			print(roastFoodMenuText);
-			printnl(currentHungerText);
-			cout << (variate::data_saver.hungry < 10 ? "\033[31;1m" : (variate::data_saver.hungry < 30 ? "" : variate::data_saver.hungry < 35 ? "\033[32m" : "\033[32;1m")) << variate::data_saver.hungry << "\033[m" << endl;
-			print(currentAmountText);
-			for(int i = 1; i <= 6; i++){
-				cout << fish_color[i] << fish_name[i] + fishLabel << "\033[m" << endl;
-				if(caughtFishStacks[i].size()){
-					cout << fishPondText << caughtFishStacks[i].size() << fishCountSuffix << endl;
+		while (true) {
+			await this.#functions.clear();
+			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.fishing.ovenMenu));
+			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
+			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
+			for (let i = 1; i <= 6; i++) {
+				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
+				if (this.#fish[i].length) {
+					await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(variate::data_saver.caughtFishStacks[i][0]){
-					cout << rawFishLinePrefix << variate::data_saver.caughtFishStacks[i][0] << fishCountSuffix << endl;
+				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(variate::data_saver.caughtFishStacks[i][1]){
-					cout << roastedFishLinePrefix << variate::data_saver.caughtFishStacks[i][1] << fishCountSuffix << endl;
+				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.roastFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
 				}
-				if(caughtFishStacks[i].empty() && !variate::data_saver.caughtFishStacks[i][0] && !variate::data_saver.caughtFishStacks[i][1]){
-					cout << noneIndentedText << endl;
-				}
-			}
-			cout << endl;
-			while(true){
-				char c = getch();
-				if(c == '1'){
-					make_food();
-					break;
-				}else if(c == '2'){
-					roast_food();
-					break;
-				}else if(c == '3'){
-					eat_food();
-					break;
-				}else if(c == '4'){
-					eat_food_roast();
-					break;
-				}else if(c == '5'){
-					return;
+				if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
+					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
 				}
 			}
-			sleept(0.5);
+			await this.#functions.write("\n");
+			while (true) {
+				let c = await this.#functions.getch();
+				if (c === "1") {
+					await this.#makeFood();
+					break
+				} else if (c === "2") {
+					await this.#roastedFish();
+					break
+				} else if (c === "3") {
+					await this.#eatFish();
+					break
+				} else if (c === "4") {
+					await this.#eat_food_roast();
+					break
+				} else if (c === "5") {
+					return
+				}
+			}
+			await this.#functions.sleep(.5)
 		}
 	}
-	inline void fishing_setup(){
-		while(true){
-			clear();
-			if(pollutionLevel >= 10){
-				cout << "\033[31m";
-				print(pollutionFullText);
-				print(cleanPondOptionText);
-				for(int i = 0; i <= 6; i++){
-					while(!caughtFishStacks[i].empty()){
-						caughtFishStacks[i].pop_back();
+	async #run() {
+		while (true) {
+			await this.#functions.clear();
+			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.fishing.mainMenu));
+			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
+			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await this.#functions.print(this.#lang.current.fishing.currentFishingRod + ": " + this.#lang.current.fishing.fishName[this.#data.gameState.dataSaver.rodLevel] + this.#lang.current.fishing.fishingRod);
+			for (let i = 0; i <= 6; i++) {
+				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
+				for (let j = 0; j < this.#fish[i].length; j++) {
+					if (this.#fish[i][j] >= 8) {
+						await this.#functions.write("\x1b[1;32m")
+					} else if (this.#fish[i][j] <= 2) {
+						await this.#functions.write("\x1b[1;31m")
+					} else {
+						await this.#functions.write("\x1b[1m")
 					}
-					variate::data_saver.aqfish_cnt[i] = 0;
+					await this.#functions.write("    " + this.#lang.current.fishing.freshness + ": " + this.#fish[i][j] + "\x1b[m\n")
 				}
-				checkpoint::savechpnp(variate::name);
-				while(getch() == '1'){
-					variate::data_saver.money -= 1000;
-				}
-			}
-			print(mainMenuOptionsText);
-			printnl(currentHungerText);
-			cout << (variate::data_saver.hungry < 10 ? "\033[31;1m" : (variate::data_saver.hungry < 30 ? "" : variate::data_saver.hungry < 35 ? "\033[32m" : "\033[32;1m")) << variate::data_saver.hungry << "\033[m" << endl;
-			print(currentRodLabelText + fish_name[variate::data_saver.gan] + rodText);
-			print(currentPollutionLabelText + to_string(pollutionLevel));
-			for(int i = 0; i <= 6; i++){
-				cout << fish_color[i] << fish_name[i] + fishLabel << "\033[m" << endl;
-				for(int j = 0; j < caughtFishStacks[i].size(); j++){
-					if(caughtFishStacks[i][j] >= 8){
-						cout << "\033[1;32m";
-					}else if(caughtFishStacks[i][j] <= 2){
-						cout << "\033[1;31m";
-					}else{
-						cout << "\033[1m";
-					}
-					cout << freshnessLabelText << caughtFishStacks[i][j] << "\033[m" << endl;
-				}
-				if(caughtFishStacks[i].empty()){
-					cout << noneIndentedText << endl;
+				if (this.#fish[i].length === 0) {
+					await this.#functions.write("    " + this.#lang.current.fishing.none + "\x1b[m\n")
 				}
 			}
-			while(true){
-				char c = getch();
-				if(c == '1'){
-					for(int i = 0; i <= 6; i++){
-						for(int j = 0; j < caughtFishStacks[i].size(); j++){
-							caughtFishStacks[i][j] -= pollutionLevel + 1;
-							if(caughtFishStacks[i][j] <= 0){
-								if(i == 0){
-									pollutionLevel++;
-								}else{
-									caughtFishStacks[i - 1].push_back(10);
+			while (true) {
+				let c = await this.#functions.getch();
+				if (c === "1") {
+					for (let i = 0; i <= 6; i++) {
+						for (let j = 0; j < this.#fish[i].length; j++) {
+							this.#fish[i][j] -= 1;
+							if (this.#fish[i][j] <= 0) {
+								if (i !== 0) {
+									this.#fish[i - 1].push(10)
 								}
-								for(int k = j + 1; k < caughtFishStacks[i].size(); k++){
-									caughtFishStacks[i][k - 1] = caughtFishStacks[i][k];
+								for (let k = j + 1; k < this.#fish[i].length; k++) {
+									this.#fish[i][k - 1] = this.#fish[i][k]
 								}
-								caughtFishStacks[i].pop_back();
-								j--;
+								this.#fish[i].pop();
+								j--
 							}
 						}
 					}
-					chooseFishingOutcome();
-					variate::data_saver.hungry--;
-					break;
-				}else if(c == '2'){
-					clear();
-					if(!pollutionLevel){
-						cout << noCleaningNeededText << endl;
-						break;
-					}
-					while(true){
-						if(variate::data_saver.cleaning_ball){
-							print(cleanMenuText);
-							print(currentPollutionStatusText + to_string(variate::data_saver.cleaning_ball));
-							print(cleaningSuppliesLabelText + to_string(variate::data_saver.cleaning_ball));
-							char c = 0;
-							while(true){
-								c = getch();
-								if(c == '1' || c == '2'){
-									break;
-								}
-							}
-							if(c == '1'){
-								variate::data_saver.cleaning_ball--;
-								pollutionLevel -= variate::data_saver.cleaning_sub;
-								if(pollutionLevel < 0){
-									pollutionLevel = 0;
-								}
-							}else{
-								break;
-							}
-						}else{
-							print(buyAndCleanMenuText);
-							print(pollutionLevelText + to_string(variate::data_saver.cleaning_ball));
-							print(cleaningSuppliesText);
-							print(cleaningCostText + to_string(variate::data_saver.money));
-							char c = 0;
-							while(true){
-								c = getch();
-								if(c == '1' || c == '2'){
-									break;
-								}
-							}
-							if(c == '1'){
-								if(variate::data_saver.money < 20){
-									cout << notEnoughMoneyText << endl;
-									break;
-								}else{
-									variate::data_saver.money -= 20;
-									pollutionLevel -= variate::data_saver.cleaning_sub;
-									if(pollutionLevel < 0){
-										pollutionLevel = 0;
-									}
-								}
-							}else{
-								break;
-							}
+					await this.#fishing_choose();
+					this.#data.gameState.dataSaver.hunger--;
+					break
+				} else if (c === "2") {
+					await this.makeFishingRod();
+					await this.#functions.sleep(1);
+					break
+				} else if (c === "3") {
+					await this.#roast();
+					break
+				} else if (c === "4") {
+					for (let i = 0; i <= 6; i++) {
+						for (let j = 0; j < this.#fish[i].length; j++) {
+							this.#data.gameState.dataSaver.money += Math.round(this.#gr() * (1 - .02 * this.#dirty) * this.#fresh(this.#fish[i][j]))
 						}
-						if(!pollutionLevel){
-							cout << cleaningCompleteText << endl;
-							break;
+						while (this.#fish[i].length !== 0) {
+							this.#fish[i].pop()
 						}
 					}
-					break;
-				}else if(c == '3'){
-					get_gan();
-					sleept(1);
-					break;
-				}else if(c == '4'){
-					if(variate::data_saver.aqcnt){
-						aqua();
-						sleept(1);
-					}else{
-						print(aquariumRequiredText);
-						sleept(0.5);
-					}
-					break;
-				}else if(c == '5'){
-					roast();
-					break;
-				}else if(c == '6'){
-					for(int i = 0; i <= 6; i++){
-						for(int j = 0; j < caughtFishStacks[i].size(); j++){
-							variate::data_saver.money += (int)(getFishPrice() * (1 - 0.02 * pollutionLevel) * freshnessMultiplier(caughtFishStacks[i][j]));
+					await this.#functions.clear();
+					break
+				} else if (c === "5") {
+					for (let i = 0; i <= 6; i++) {
+						for (let j = 0; j < this.#fish[i].length; j++) {
+							this.#data.gameState.dataSaver.money += Math.round(this.#gr() * (1 - .02 * this.#dirty) * this.#fresh(this.#fish[i][j]))
 						}
-						while(!caughtFishStacks[i].empty()){
-							caughtFishStacks[i].pop_back();
+						while (this.#fish[i].length !== 0) {
+							this.#fish[i].pop()
 						}
 					}
-					clear();
-					break;
-				}else if(c == '7'){
-					for(int i = 0; i <= 6; i++){
-						for(int j = 0; j < caughtFishStacks[i].size(); j++){
-							variate::data_saver.money += (int)(getFishPrice() * (1 - 0.02 * pollutionLevel) * freshnessMultiplier(caughtFishStacks[i][j]));
-						}
-						while(!caughtFishStacks[i].empty()){
-							caughtFishStacks[i].pop_back();
-						}
-					}
-					return;
+					return
 				}
 			}
-			sleept(1);
+			await this.#functions.sleep(1)
 		}
+	}
+	constructor(lang, data, functions) {
+		this.#lang = lang;
+		this.#data = data;
+		this.#functions = functions;
+		this.#fish_gai = deepFreeze([
+			[0, 8100, 1400, 400, 90, 9, 1],
+			[100, 8e3, 1400, 400, 90, 9, 1],
+			[300, 7500, 1700, 400, 90, 9, 1],
+			[500, 7e3, 1700, 700, 90, 9, 1],
+			[700, 6500, 1700, 700, 390, 9, 1],
+			[900, 6e3, 1700, 700, 390, 309, 1],
+			[0, 6600, 1700, 700, 390, 309, 301]
+		]);
+		this.#old = Object.freeze(["                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                         o                  ", "                        /|\\--------         ", "                        /_\\___              ", "~~~~~~~~~~~~~~~~~~~~~~~|      |~~~~~~~~~~~~|", "                              |            |", "                              |            |", "                              |____________|"]);
+		this.#la = 0;
+		this.#la2 = 0;
+		this.#weatherpcr = deepFreeze([
+			["     \x1b[33;1m_____\x1b[m                                  ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|_____|\x1b[m                                 "],
+			["         _______      ___________           ", "     ___/       \\____/           \\___       ", "    (                                )      ", "     \\______________________________/       "],
+			["         \x1b[33;1m_____\x1b[m       ___________            ", "     ___\x1b[33;1m|_____|\x1b[m_____/           \\____       ", "    (                                )      ", "     \\______________________________/       "]
+		]);
+		this.#macnt = Object.freeze([0, 11, 20, 40]);
+		this.#fu = Object.freeze([".", "*", " ", " ", " ", " "]);
+		this.#fucolor = Object.freeze(["\x1b[1;34m", "\x1b[1;36m", "", "", "", ""]);
+		this.#weather = [2, 0];
+		this.#lw = 0;
+		this.#weapoint = [];
+		this.#paint = Array.from({
+			length: 15
+		}, () => Array(44).fill(" "));
+		this.#color = Array.from({
+			length: 15
+		}, () => Array(44).fill(""));
+		this.#last = "";
+		this.#fish = Array.from({
+			length: 7
+		}, () => []);
+		this.#dirty = 0;
+		this.#fish_color = Object.freeze(["\x1b[1;31m", "\x1b[1;37m", "\x1b[1;35m", "\x1b[1;34m", "\x1b[1;33m", "\x1b[1;32m", "\x1b[1;36m"]);
+		this.#now_status = 0;
+		this.#fish_add = Object.freeze([0, 1, 2, 5, 10, 50, 100]);
+		this.#ter_big = Array.from({
+			length: 7
+		}, () => []);
+		Object.defineProperty(this, "run", {
+			value: this.#run.bind(this),
+			writable: false,
+			configurable: false,
+			enumerable: true
+		});
+		Object.seal(this)
 	}
 }
-#endif

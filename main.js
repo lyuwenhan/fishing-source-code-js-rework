@@ -4,6 +4,7 @@ import Functions from "./functions.js";
 import NormalizeDataSaver from "./normalizeDataSaver.js";
 import Checkpoint from "./checkpoint.js";
 import Shop from "./shop.js";
+import Fishing from "./fishing.js";
 import Parkour from "./parkour.js";
 import Lottery from "./lottery.js";
 import Adventure from "./adventure.js";
@@ -15,6 +16,7 @@ export function createGameInstance(write, loadGame, saveGame, hasSave, languageC
 	const normalizeDataSaver = new NormalizeDataSaver(data, functions);
 	const checkpoint = new Checkpoint(lang, data, functions, normalizeDataSaver);
 	const shop = new Shop(lang, data, functions);
+	const fishing = new Fishing(lang, data, functions);
 	const parkour = new Parkour(lang, data, functions);
 	const lottery = new Lottery(lang, data, functions);
 	const adventure = new Adventure(lang, data, functions);
