@@ -270,6 +270,10 @@
 				while (true) {
 					const gameInstance = fishing.createGameInstance(text => term.write(text), loadGame, saveGame, hasSave);
 					langs = gameInstance.languages;
+					gameInstance.setConsoleSize({
+						cols: term.cols,
+						rows: term.rows
+					});
 					disposers.push(term.onData(data => {
 						gameInstance.onInput(data)
 					}));

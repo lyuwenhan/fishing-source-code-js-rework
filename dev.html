@@ -215,9 +215,6 @@
 			window.addEventListener("resize", () => {
 				fitAddon.fit()
 			});
-			terminal.addEventListener("contextmenu", e => {
-				e.preventDefault()
-			}, true);
 
 			function getData() {
 				let data = {};
@@ -276,6 +273,10 @@
 					settings.forceUsername = "USERNAME_FOR_TEST";
 					settings.forceBlancPassword = true;
 					settings.forceInstantOutput = true;
+					gameInstance.setConsoleSize({
+						cols: term.cols,
+						rows: term.rows
+					});
 					disposers.push(term.onData(data => {
 						gameInstance.onInput(data)
 					}));
