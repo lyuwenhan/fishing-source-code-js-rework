@@ -13,7 +13,7 @@ function createWindow() {
 	const win = new BrowserWindow({
 		width: 1200,
 		height: 800,
-		icon: path.join(__dirname, "icons", "icon.ico"),
+		icon: path.join(__dirname, "icons", process.platform === "darwin" ? "icon.icns" : "icon.ico"),
 		webPreferences: {
 			contextIsolation: true,
 			nodeIntegration: false

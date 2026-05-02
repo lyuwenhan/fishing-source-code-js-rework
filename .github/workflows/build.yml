@@ -1,0 +1,205 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bundle and minify source-code (entry main.js)
+        run: npm run bundle
+
+      - name: Commit and push bundle
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add main.js docs/main.js electron/main.js
+          if git diff --staged --quiet; then
+            echo "Bundle unchanged, nothing to commit."
+          else
+            git commit -m "chore: build main.js"
+            git push
+          fi
+
+  icon-ico:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to latest on branch
+        run: |
+          git fetch origin "${{ github.ref_name }}"
+          git reset --hard "origin/${{ github.ref_name }}"
+
+      - name: Setup ImageMagick
+        uses: mfinelli/setup-imagemagick@v7
+        with:
+          cache: true
+          install-libfuse2: true
+
+      - name: Build icon.ico from PNGs
+        run: |
+          set -euo pipefail
+          cd electron/icons
+          magick 16x16.png 24x24.png 32x32.png 48x48.png 64x64.png 128x128.png 256x256.png 512x512.png 1024x1024.png icon.ico
+
+      - name: Commit and push icon.ico
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add electron/icons/icon.ico
+          if git diff --staged --quiet; then
+            echo "icon.ico unchanged, nothing to commit."
+          else
+            git commit -m "chore: regenerate icon.ico"
+            git push
+          fi
+
+  icon-icns:
+    runs-on: macos-latest
+    needs: [icon-ico]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to latest on branch
+        run: |
+          git fetch origin "${{ github.ref_name }}"
+          git reset --hard "origin/${{ github.ref_name }}"
+
+      - name: Build icon.icns from PNGs
+        run: |
+          set -euo pipefail
+          cd electron/icons
+          rm -rf icon.iconset
+          mkdir icon.iconset
+          cp 16x16.png icon.iconset/icon_16x16.png
+          cp 32x32.png icon.iconset/icon_16x16@2x.png
+          cp 32x32.png icon.iconset/icon_32x32.png
+          cp 64x64.png icon.iconset/icon_32x32@2x.png
+          cp 128x128.png icon.iconset/icon_128x128.png
+          cp 256x256.png icon.iconset/icon_128x128@2x.png
+          cp 256x256.png icon.iconset/icon_256x256.png
+          cp 512x512.png icon.iconset/icon_256x256@2x.png
+          cp 512x512.png icon.iconset/icon_512x512.png
+          cp 1024x1024.png icon.iconset/icon_512x512@2x.png
+          iconutil -c icns icon.iconset -o icon.icns
+          rm -rf icon.iconset
+
+      - name: Commit and push icon.icns
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add electron/icons/icon.icns
+          if git diff --staged --quiet; then
+            echo "icon.icns unchanged, nothing to commit."
+          else
+            git commit -m "chore: regenerate icon.icns"
+            git push
+          fi
+
+  electron-pack:
+    needs: [icon-icns]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to latest on branch
+        run: |
+          git fetch origin "${{ github.ref_name }}"
+          git reset --hard "origin/${{ github.ref_name }}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y binutils fakeroot
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bundle app and pack with electron-builder
+        run: npm run dist
+
+      - name: Upload Windows NSIS installer
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-electron-${{ matrix.os }}-nsis
+          path: dist-electron/*Setup*.exe
+
+      - name: Upload Windows portable
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-electron-${{ matrix.os }}-portable
+          path: dist-electron/*Portable*.exe
+
+      - name: Upload macOS DMG
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-electron-${{ matrix.os }}-dmg
+          path: dist-electron/*.dmg
+
+      - name: Upload macOS ZIP
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-electron-${{ matrix.os }}-zip
+          path: dist-electron/*.zip
+
+      - name: Upload Linux AppImage
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-electron-${{ matrix.os }}-appimage
+          path: dist-electron/*.AppImage
+
+      - name: Upload Linux deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-electron-${{ matrix.os }}-deb
+          path: dist-electron/*.deb
