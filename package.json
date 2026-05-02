@@ -28,12 +28,19 @@
 			]
 		},
 		"linux": {
-			"icon": "electron/icons",
-			"target": [
-				"AppImage",
-				"deb"
-			],
-			"category": "Game"
+			"executableName": "fishing",
+			"icon": "electron/icons/512x512.png",
+			"target": ["AppImage", "deb"],
+			"category": "Game",
+			"synopsis": "Terminal-style fishing game",
+			"maintainer": "lyuwenhan <81000228+lyuwenhan@users.noreply.github.com>",
+			"desktop": {
+				"Name": "Fishing",
+				"Comment": "Terminal-style fishing game",
+				"Keywords": "game;terminal;",
+				"Categories": "Game;",
+				"StartupWMClass": "Fishing"
+			}
 		},
 		"mac": {
 			"icon": "electron/icons/icon.icns",
