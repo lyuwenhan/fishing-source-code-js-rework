@@ -1,47 +1,55 @@
 import deepFreeze from "./deepFreeze.js";
-export default class Parkour {
-	#level = 0;
-	#x = 0;
-	#y = 0;
-	#sx = 1;
-	#sy = 0;
-	#born = [];
-	#map = [];
-	#lang = undefined;
-	#data = undefined;
-	#functions = undefined;
-	run;
-	#cellAt(mapRow, col) {
-		if (mapRow < 0 || mapRow >= this.#map.length) {
-			return undefined
+export default function createParkour(lang, data, functions) {
+	let level = 0;
+	let x = 0;
+	let y = 0;
+	let sx = 1;
+	let sy = 0;
+	const born = deepFreeze([
+		[1, 30],
+		[33, 30],
+		[66, 30],
+		[98, 11],
+		[42, 14]
+	]);
+	const map = Object.freeze(["|     | |   |                                                                                       |", "+---+ +>+   |                                                                                +---   |", "|   | | | +-+          +---+                     --                          -      -      --+   \\  |", "|   | | | |            |   |                    /                                                 | |", "|   | | | |            |   +-------------------+*****Z****Z****Z****Z****Z******Z******Z**********| |", "+^^^+ +^+ +---------+  |   |  finish           +--------------------------------------------------+ |", "|   | | | |         |  |   |     \\             |                                                  | |", "|   | | | |   +---+ |  +---+      \\            |  -   -   -   -   -   -   -   -   -   -   -   -   | |", "|   |   |     |   |        |       \\           |</ \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\    |", "+^^^+--^+-----+---+--------+--------+-----------+-+-+---+---+---+---+---+---+---+---+---+---+---+---+", "|   |   |     |                                                                                 |...|", "|   |   |     |                                                                                 | |.|", "|   |   |     |                                                      |                          | |.|", "+^^^+ +-+  +--+ +-----     ------             |                   +--+      ---                 | |.|", "|   | | |  |  | |                \\        +---+                   |        |***\\                | |.|", "|   | | |  |  | |                 \\       |             ZZ        |        |****+--   -------     |.|", "|     |    |    |                  \\      |                       |        |*****************\\    |.|", "+^^^--+^---+^^--+^^^^^---+          \\     |******ZZ***********Z***|*****ZZ*|******************\\   |.|", "+-----+----+----+--------+-------+---+----+-----------------+-----+--------+-------------------+--+.|", "|                                |                          |     |                               |.|", "|                                |              ---+--+---- |     |                    +---       |.|", "|                                |                 |  |           |                   /           |.|", "|                                |       -------   |  |           |                  /            |.|", "|                         +----+ |                 |           /| |            -----+     |.......|.|", "|                    -----+    | |                 |  +-------+ | |                       |.......|.|", "|                              | +--------                      | |      +----+           |.......|.|", "|             |                | |                              | |     /      \\          |.......|.|", "|        -----+------          | |                              | |    /        \\         |.......|.|", "|             |                | |        -----+                | |   /          \\        |.......|.|", "|             |                |               |                |    /            \\       |.........|", "+-------------+----------------+---------------+----------------+---+--------------+------+---------|"]);
+
+	function cellAt(rowNumber, colNumber) {
+		if (rowNumber < 0 || rowNumber >= map.length) {
+			return ""
 		}
-		const row = this.#map[mapRow];
-		if (!row || col < 0 || col >= row.length) {
-			return undefined
+		const row = map[rowNumber];
+		if (!row || colNumber < 0 || colNumber >= row.length) {
+			return ""
 		}
-		return row[col]
+		return row[colNumber]
 	}
-	#isAirAbove() {
-		return this.#cellAt(this.#y - 1, this.#x) === " "
+
+	function isAirAbove() {
+		return cellAt(y - 1, x) === " "
 	}
-	#isLavaCell() {
-		return this.#cellAt(this.#y, this.#x) === "*"
+
+	function isLavaCell() {
+		return cellAt(y, x) === "*"
 	}
-	#isFinishCell(x2, y2) {
-		const c = this.#cellAt(y2 - 1, x2);
+
+	function isFinishCell(x2, y2) {
+		const c = cellAt(y2 - 1, x2);
 		return c === "f" || c === "i" || c === "n" || c === "s" || c === "h"
 	}
-	#canMoveTo(x2, y2) {
-		const c = this.#cellAt(y2 - 1, x2);
+
+	function canMoveTo(x2, y2) {
+		const c = cellAt(y2 - 1, x2);
 		return c === " " || c === "."
 	}
-	#getSlideDirection(x2, y2) {
-		const c = this.#cellAt(y2 - 1, x2);
+
+	function getSlideDirection(x2, y2) {
+		const c = cellAt(y2 - 1, x2);
 		return c === "/" ? 1 : c === "\\" ? -1 : 0
 	}
-	async #show() {
-		let a = Math.max(this.#x - 30, 0);
-		let b = Math.max(this.#y - 5, 0);
+	async function show() {
+		let a = Math.max(x - 30, 0);
+		let b = Math.max(y - 5, 0);
 		if (a + 59 > 100) {
 			a = 100 - 59
 		}
@@ -50,32 +58,34 @@ export default class Parkour {
 		}
 		for (let i = b; i < b + 10; i++) {
 			for (let j = a; j < a + 60; j++) {
-				if (i === this.#y - 1 && j === this.#x) {
-					await this.#functions.write("O")
+				if (i === y - 1 && j === x) {
+					await functions.write("O")
 				} else {
-					if (this.#map[i][j] === ".") {
-						await this.#functions.write("\x1b[34;1m#\x1b[m")
-					} else if (this.#map[i][j] === "*") {
-						await this.#functions.write("\x1b[31;1m*\x1b[m")
-					} else if (this.#map[i][j] === "Z") {
-						await this.#functions.write("\x1b[32;1mZ\x1b[m")
-					} else if (this.#map[i][j] === "^") {
-						await this.#functions.write("\x1b[33;1m^\x1b[m")
-					} else if (this.#map[i][j] === ">") {
-						await this.#functions.write("\x1b[33;1m>\x1b[m")
-					} else if (this.#map[i][j] === "<") {
-						await this.#functions.write("\x1b[33;1m<\x1b[m")
-					} else if (this.#isFinishCell(j, i + 1)) {
-						await this.#functions.write("\x1b[33;1m" + this.#map[i][j] + "\x1b[m")
+					const mapIJ = cellAt(i, j);
+					if (mapIJ === ".") {
+						await functions.write("\x1b[34;1m\x1b[m")
+					} else if (mapIJ === "*") {
+						await functions.write("\x1b[31;1m*\x1b[m")
+					} else if (mapIJ === "Z") {
+						await functions.write("\x1b[32;1mZ\x1b[m")
+					} else if (mapIJ === "^") {
+						await functions.write("\x1b[33;1m^\x1b[m")
+					} else if (mapIJ === ">") {
+						await functions.write("\x1b[33;1m>\x1b[m")
+					} else if (mapIJ === "<") {
+						await functions.write("\x1b[33;1m<\x1b[m")
+					} else if (isFinishCell(j, i + 1)) {
+						await functions.write("\x1b[33;1m" + mapIJ + "\x1b[m")
 					} else {
-						await this.#functions.write(this.#map[i][j])
+						await functions.write(mapIJ)
 					}
 				}
 			}
-			await this.#functions.write("\n")
+			await functions.write("\n")
 		}
 	}
-	#tryMove(x2, y2) {
+
+	function tryMove(x2, y2) {
 		if (x2 <= 0) {
 			return
 		}
@@ -88,38 +98,38 @@ export default class Parkour {
 		if (x2 >= 100) {
 			return
 		}
-		if (this.#canMoveTo(x2, y2)) {
-			this.#x = x2;
-			this.#y = y2
+		if (canMoveTo(x2, y2)) {
+			x = x2;
+			y = y2
 		}
 	}
-	async #run() {
-		if (this.#data.gameState.dataSaver.challengeLevel !== 0) {
+	async function run() {
+		if (data.gameState.dataSaver.challengeLevel !== 0) {
 			return
 		}
-		this.#x = this.#born[this.#level][0];
-		this.#y = this.#born[this.#level][1];
-		await this.#functions.clear();
+		x = born[level][0];
+		y = born[level][1];
+		await functions.clear();
 		let sinkTimer = 0;
 		let jumpCarry = false;
 		while (true) {
-			if (this.#x <= 0) {
-				this.#x = 1
+			if (x <= 0) {
+				x = 1
 			}
-			if (this.#y <= 0) {
-				this.#y = 1
+			if (y <= 0) {
+				y = 1
 			}
-			await this.#functions.clear();
-			if (this.#level + 1 < this.#born.length && this.#x === this.#born[this.#level + 1][0] && this.#y === this.#born[this.#level + 1][1]) {
-				this.#level++
+			await functions.clear();
+			if (level + 1 < born.length && x === born[level + 1][0] && y === born[level + 1][1]) {
+				level++
 			}
-			if (this.#isAirAbove()) {
+			if (isAirAbove()) {
 				sinkTimer = 0;
-				await this.#functions.write(this.#lang.current.parkour.jumpTip + "\n");
-				await this.#show();
+				await functions.write(lang.current.parkour.jumpTip + "\n");
+				await show();
 				let shouldJump = false;
 				let shouldRespawn = false;
-				for (const c of this.#functions.getch2s()) {
+				for (const c of functions.getch2s()) {
 					if (c === "") {
 						return
 					}
@@ -131,107 +141,108 @@ export default class Parkour {
 						shouldRespawn = true
 					}
 				}
-				if (this.#isFinishCell(this.#x, this.#y - 1)) {
-					await this.#functions.clear();
-					await this.#functions.printa(this.#lang.current.parkour.challengeCompleteReward);
-					this.#data.gameState.dataSaver.money += 500;
-					this.#data.gameState.dataSaver.challengeLevel = 1;
+				if (isFinishCell(x, y - 1)) {
+					await functions.clear();
+					await functions.printa(lang.current.parkour.challengeCompleteReward);
+					data.gameState.dataSaver.money += 500;
+					data.gameState.dataSaver.challengeLevel = 1;
 					return
 				}
-				if (this.#isLavaCell()) {
-					await this.#functions.print(this.#lang.current.parkour.deathMessage);
-					if (!await this.#functions.printYn(this.#lang.current.parkour.respawnConfirm)) {
+				if (isLavaCell()) {
+					await functions.print(lang.current.parkour.deathMessage);
+					if (!await functions.printYn(lang.current.parkour.respawnConfirm)) {
 						return
 					}
-					this.#x = this.#born[this.#level][0];
-					this.#y = this.#born[this.#level][1];
+					x = born[level][0];
+					y = born[level][1];
 					continue
 				}
 				if (shouldRespawn) {
-					this.#x = this.#born[this.#level][0];
-					this.#y = this.#born[this.#level][1];
+					x = born[level][0];
+					y = born[level][1];
 					continue
 				}
-				if (this.#map[this.#y][this.#x] === "^") {
-					this.#sy = 0;
-					this.#tryMove(this.#x, this.#y - 4);
-					await this.#functions.sleep(.1);
+				const mapXY = cellAt(y, x);
+				if (mapXY === "^") {
+					sy = 0;
+					tryMove(x, y - 4);
+					await functions.sleep(.1);
 					continue
 				}
-				if (this.#map[this.#y][this.#x] === ">") {
-					this.#sy = 0;
-					this.#tryMove(this.#x + 4, this.#y);
-					await this.#functions.sleep(.1);
+				if (mapXY === ">") {
+					sy = 0;
+					tryMove(x + 4, y);
+					await functions.sleep(.1);
 					continue
 				}
-				if (this.#map[this.#y][this.#x] === "<") {
-					this.#sy = 0;
-					this.#tryMove(this.#x - 4, this.#y);
-					await this.#functions.sleep(.1);
+				if (mapXY === "<") {
+					sy = 0;
+					tryMove(x - 4, y);
+					await functions.sleep(.1);
 					continue
 				}
-				if (this.#map[this.#y][this.#x] === "Z") {
-					this.#sy = 3
+				if (mapXY === "Z") {
+					sy = 3
 				}
-				for (let i = 1; i <= this.#sy; i++) {
-					this.#tryMove(this.#x, this.#y - 1);
-					if (!this.#isAirAbove()) {
-						this.#sy = 0;
+				for (let i = 1; i <= sy; i++) {
+					tryMove(x, y - 1);
+					if (!isAirAbove()) {
+						sy = 0;
 						continue
 					}
 				}
-				if (this.#canMoveTo(this.#x, this.#y + 1)) {
-					this.#sy--
+				if (canMoveTo(x, y + 1)) {
+					sy--
 				} else {
-					this.#sy = 0
+					sy = 0
 				}
-				if (this.#sy) {
-					for (let i = 1; i <= this.#sy; i++) {
-						this.#tryMove(this.#x, this.#y - 1);
-						if (!this.#isAirAbove()) {
-							this.#sy = 0;
+				if (sy) {
+					for (let i = 1; i <= sy; i++) {
+						tryMove(x, y - 1);
+						if (!isAirAbove()) {
+							sy = 0;
 							continue
 						}
 					}
-					for (let i = 1; i <= -this.#sy; i++) {
-						this.#tryMove(this.#x, this.#y + 1);
-						if (!this.#isAirAbove()) {
-							this.#sy = 0;
+					for (let i = 1; i <= -sy; i++) {
+						tryMove(x, y + 1);
+						if (!isAirAbove()) {
+							sy = 0;
 							continue
 						}
 					}
 				}
-				if (!this.#canMoveTo(this.#x + this.#sx, this.#y)) {
-					if (this.#sx === this.#getSlideDirection(this.#x + this.#sx, this.#y) && this.#canMoveTo(this.#x + this.#sx, this.#y - 1) || this.#getSlideDirection(this.#x, this.#y + 1) !== 0) {
-						this.#tryMove(this.#x, this.#y - 1);
-						if (!this.#isAirAbove()) {
-							this.#sy = 0;
+				if (!canMoveTo(x + sx, y)) {
+					if (sx === getSlideDirection(x + sx, y) && canMoveTo(x + sx, y - 1) || getSlideDirection(x, y + 1) !== 0) {
+						tryMove(x, y - 1);
+						if (!isAirAbove()) {
+							sy = 0;
 							continue
 						}
 					} else {
-						this.#sx *= -1
+						sx *= -1
 					}
 				}
-				this.#tryMove(this.#x + this.#sx, this.#y);
-				if ((shouldJump || jumpCarry) && !this.#sy && !this.#canMoveTo(this.#x, this.#y + 1)) {
+				tryMove(x + sx, y);
+				if ((shouldJump || jumpCarry) && !sy && !canMoveTo(x, y + 1)) {
 					jumpCarry = false;
-					this.#sy = 2;
-					for (let i = 1; i <= this.#sy; i++) {
-						this.#tryMove(this.#x, this.#y - 1);
-						if (!this.#isAirAbove()) {
-							this.#sy = 0;
+					sy = 2;
+					for (let i = 1; i <= sy; i++) {
+						tryMove(x, y - 1);
+						if (!isAirAbove()) {
+							sy = 0;
 							continue
 						}
 					}
 				}
-				if (!this.#canMoveTo(this.#x, this.#y + 1)) {
-					this.#sy = 0
+				if (!canMoveTo(x, y + 1)) {
+					sy = 0
 				}
-				await this.#functions.sleep(.1)
+				await functions.sleep(.1)
 			} else {
 				jumpCarry = false;
-				await this.#functions.write(this.#lang.current.parkour.swimTip + "\n");
-				await this.#show();
+				await functions.write(lang.current.parkour.swimTip + "\n");
+				await show();
 				sinkTimer++;
 				sinkTimer %= 5;
 				let moveUp = false;
@@ -239,7 +250,7 @@ export default class Parkour {
 				let moveLeft = false;
 				let moveRight = false;
 				let shouldRespawn = false;
-				for (const c of this.#functions.getch2s()) {
+				for (const c of functions.getch2s()) {
 					if (c === "") {
 						return
 					}
@@ -259,57 +270,38 @@ export default class Parkour {
 						moveRight = true
 					}
 				}
-				if (this.#isLavaCell()) {
-					await this.#functions.print(this.#lang.current.parkour.deathMessage);
-					if (!await this.#functions.printYn(this.#lang.current.parkour.respawnConfirm)) {
+				if (isLavaCell()) {
+					await functions.print(lang.current.parkour.deathMessage);
+					if (!await functions.printYn(lang.current.parkour.respawnConfirm)) {
 						return
 					}
-					this.#x = this.#born[this.#level][0];
-					this.#y = this.#born[this.#level][1];
+					x = born[level][0];
+					y = born[level][1];
 					continue
 				}
 				if (shouldRespawn) {
-					this.#x = this.#born[this.#level][0];
-					this.#y = this.#born[this.#level][1];
+					x = born[level][0];
+					y = born[level][1];
 					continue
 				}
 				if (moveUp && !moveDown) {
-					this.#tryMove(this.#x, this.#y - 1)
+					tryMove(x, y - 1)
 				}
 				if (moveDown && !moveUp) {
-					this.#tryMove(this.#x, this.#y + 1)
+					tryMove(x, y + 1)
 				}
 				if (!moveUp && !moveDown && !sinkTimer) {
-					this.#tryMove(this.#x, this.#y + 1)
+					tryMove(x, y + 1)
 				}
 				if (moveLeft && !moveRight) {
-					this.#tryMove(this.#x - 1, this.#y)
+					tryMove(x - 1, y)
 				}
 				if (!moveLeft && moveRight) {
-					this.#tryMove(this.#x + 1, this.#y)
+					tryMove(x + 1, y)
 				}
-				await this.#functions.sleep(.1)
+				await functions.sleep(.1)
 			}
 		}
 	}
-	constructor(lang, data, functions) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		this.#born = deepFreeze([
-			[1, 30],
-			[33, 30],
-			[66, 30],
-			[98, 11],
-			[42, 14]
-		]);
-		this.#map = Object.freeze(["|     | |   |                                                                                       |", "+---+ +>+   |                                                                                +---   |", "|   | | | +-+          +---+                     --                          -      -      --+   \\  |", "|   | | | |            |   |                    /                                                 | |", "|   | | | |            |   +-------------------+*****Z****Z****Z****Z****Z******Z******Z**********| |", "+^^^+ +^+ +---------+  |   |  finish           +--------------------------------------------------+ |", "|   | | | |         |  |   |     \\             |                                                  | |", "|   | | | |   +---+ |  +---+      \\            |  -   -   -   -   -   -   -   -   -   -   -   -   | |", "|   |   |     |   |        |       \\           |</ \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\    |", "+^^^+--^+-----+---+--------+--------+-----------+-+-+---+---+---+---+---+---+---+---+---+---+---+---+", "|   |   |     |                                                                                 |...|", "|   |   |     |                                                                                 | |.|", "|   |   |     |                                                      |                          | |.|", "+^^^+ +-+  +--+ +-----     ------             |                   +--+      ---                 | |.|", "|   | | |  |  | |                \\        +---+                   |        |***\\                | |.|", "|   | | |  |  | |                 \\       |             ZZ        |        |****+--   -------     |.|", "|     |    |    |                  \\      |                       |        |*****************\\    |.|", "+^^^--+^---+^^--+^^^^^---+          \\     |******ZZ***********Z***|*****ZZ*|******************\\   |.|", "+-----+----+----+--------+-------+---+----+-----------------+-----+--------+-------------------+--+.|", "|                                |                          |     |                               |.|", "|                                |              ---+--+---- |     |                    +---       |.|", "|                                |                 |  |           |                   /           |.|", "|                                |       -------   |  |           |                  /            |.|", "|                         +----+ |                 |           /| |            -----+     |.......|.|", "|                    -----+    | |                 |  +-------+ | |                       |.......|.|", "|                              | +--------                      | |      +----+           |.......|.|", "|             |                | |                              | |     /      \\          |.......|.|", "|        -----+------          | |                              | |    /        \\         |.......|.|", "|             |                | |        -----+                | |   /          \\        |.......|.|", "|             |                |               |                |    /            \\       |.........|", "+-------------+----------------+---------------+----------------+---+--------------+------+---------|"]);
-		Object.defineProperty(this, "run", {
-			value: this.#run.bind(this),
-			writable: false,
-			configurable: false,
-			enumerable: true
-		});
-		Object.seal(this)
-	}
+	return run
 }

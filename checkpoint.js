@@ -1,112 +1,101 @@
-export default class Checkpoint {
-	#lang = undefined;
-	#data = undefined;
-	#functions = undefined;
-	#normalizeDataSaver = undefined;
-	login;
-	load;
-	save;
-	async #loadGame() {
-		const loadState = await this.#data.gameState.requiredFunctions.loadGame(this.#data.gameState.username, this.#data.gameState.password);
+export default function createCheckpoint(lang, data, functions, normalizeDataSaver) {
+	async function loadGame() {
+		const loadState = await data.gameState.requiredFunctions.loadGame(data.gameState.username, data.gameState.password);
 		if (loadState?.code === 1) {
-			this.#data.gameState.dataSaver = {
-				...this.#data.getData(),
+			data.gameState.dataSaver = {
+				...data.createDataSaver(),
 				...loadState.data
 			};
-			this.#normalizeDataSaver.run()
+			normalizeDataSaver()
 		}
 		return loadState
 	}
-	async #saveGame() {
-		this.#normalizeDataSaver.run();
-		return this.#data.gameState.requiredFunctions.saveGame(this.#data.gameState.username, this.#data.gameState.password, this.#data.gameState.dataSaver)
+	async function saveGame() {
+		normalizeDataSaver();
+		return data.gameState.requiredFunctions.saveGame(data.gameState.username, data.gameState.password, data.gameState.dataSaver)
 	}
-	async #login() {
+	async function login() {
 		while (true) {
-			let username, password = "";
-			await this.#functions.clear();
-			await this.#functions.print(this.#functions.capitalize(this.#lang.current.checkpoint.login));
-			await this.#functions.printnl(this.#functions.capitalize(this.#lang.current.checkpoint.username) + ": ");
-			if (this.#data.gameState.settings.forceUsername) {
-				username = this.#data.gameState.settings.forceUsername;
-				await this.#functions.write(username + "\n")
+			let username = "";
+			let password = "";
+			await functions.clear();
+			await functions.print(functions.capitalize(lang.current.checkpoint.login));
+			await functions.printnl(functions.capitalize(lang.current.checkpoint.username) + ": ");
+			if (data.gameState.settings.forceUsername) {
+				username = data.gameState.settings.forceUsername;
+				await functions.write(username + "\n")
 			} else {
-				username = await this.#functions.getline(1);
+				username = await functions.getline(1);
 				if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-					await this.#functions.print(this.#lang.current.checkpoint.invalidUsername);
-					await this.#functions.sleep(1);
+					await functions.print(lang.current.checkpoint.invalidUsername);
+					await functions.sleep(1);
 					continue
 				}
 			}
-			const userState = await this.#data.gameState.requiredFunctions.hasSave(username);
+			const userState = await data.gameState.requiredFunctions.hasSave(username);
 			if (!userState?.code) {
-				await this.#functions.print(this.#functions.capitalize(this.#lang.current.checkpoint.apiError));
-				await this.#functions.sleep(1);
+				await functions.print(functions.capitalize(lang.current.checkpoint.apiError));
+				await functions.sleep(1);
 				continue
 			}
 			const isNew = userState.code === 2;
-			await this.#functions.printnl(this.#functions.capitalize(this.#lang.current.checkpoint.password) + ": ");
-			if (this.#data.gameState.settings.forceBlancPassword) {
-				await this.#functions.write("\n")
+			await functions.printnl(functions.capitalize(lang.current.checkpoint.password) + ": ");
+			if (data.gameState.settings.forceBlancPassword) {
+				await functions.write("\n")
 			} else {
-				password = await this.#functions.getline(2);
+				password = await functions.getline(2);
 				if (isNew) {
-					await this.#functions.printnl(this.#functions.capitalize(this.#lang.current.checkpoint.confirmPassword) + ": ");
-					let newPassword = await this.#functions.getline(2);
+					await functions.printnl(functions.capitalize(lang.current.checkpoint.confirmPassword) + ": ");
+					let newPassword = await functions.getline(2);
 					if (newPassword !== password) {
-						await this.#functions.print(this.#lang.current.checkpoint.passwordNotMatch);
-						await this.#functions.sleep(1);
+						await functions.print(lang.current.checkpoint.passwordNotMatch);
+						await functions.sleep(1);
 						continue
 					}
 				}
 			}
-			this.#data.gameState.username = username;
-			this.#data.gameState.password = password;
+			data.gameState.username = username;
+			data.gameState.password = password;
 			if (!isNew) {
-				const loadState = await this.#loadGame();
+				const loadState = await loadGame();
 				if (loadState?.code !== 1) {
-					await this.#functions.print(this.#lang.current.checkpoint.apiError);
-					await this.#functions.sleep(1);
+					await functions.print(lang.current.checkpoint.apiError);
+					await functions.sleep(1);
 					continue
 				}
 			}
-			const saveState = await this.#saveGame();
+			const saveState = await saveGame();
 			if (!saveState?.code) {
-				await this.#functions.print(this.#lang.current.checkpoint.apiError);
-				await this.#functions.sleep(1);
+				await functions.print(lang.current.checkpoint.apiError);
+				await functions.sleep(1);
 				continue
 			}
 			if (saveState.code === 2) {
-				await this.#functions.print(this.#lang.current.checkpoint.passwordError);
-				await this.#functions.sleep(1);
+				await functions.print(lang.current.checkpoint.passwordError);
+				await functions.sleep(1);
 				continue
 			}
-			await this.#functions.clear();
+			await functions.clear();
 			return isNew
 		}
 	}
-	async #load() {
-		const loadState = await this.#loadGame();
+	async function load() {
+		const loadState = await loadGame();
 		if (loadState?.code !== 1) {
-			await this.#functions.printa(this.#lang.current.checkpoint.apiError)
+			await functions.printa(lang.current.checkpoint.apiError)
 		}
 	}
-	async #save() {
-		const saveState = await this.#saveGame();
+	async function save() {
+		const saveState = await saveGame();
 		if (!saveState?.code) {
-			await this.#functions.printa(this.#lang.current.checkpoint.apiError)
+			await functions.printa(lang.current.checkpoint.apiError)
 		} else if (saveState.code === 2) {
-			await this.#functions.printa(this.#lang.current.checkpoint.passwordError)
+			await functions.printa(lang.current.checkpoint.passwordError)
 		}
 	}
-	constructor(lang, data, functions, normalizeDataSaver) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		this.#normalizeDataSaver = normalizeDataSaver;
-		this.login = this.#login.bind(this);
-		this.load = this.#load.bind(this);
-		this.save = this.#save.bind(this);
-		Object.freeze(this)
-	}
+	return Object.freeze({
+		login,
+		load,
+		save
+	})
 }

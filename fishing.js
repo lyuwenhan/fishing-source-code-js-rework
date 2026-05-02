@@ -1,1114 +1,1036 @@
 import deepFreeze from "./deepFreeze.js";
-export default class Fishing {
-	#lang = undefined;
-	#data = undefined;
-	#functions = undefined;
-	#fish_gai;
-	#old;
-	#la;
-	#la2;
-	#weatherpcr;
-	#macnt;
-	#fu;
-	#fucolor;
-	#weather;
-	#lw;
-	#weapoint;
-	#paint;
-	#color;
-	#last;
-	#fish;
-	#dirty;
-	#fish_color;
-	#now_status;
-	#fish_add;
-	#ter_big;
-	run;
-	#change(wea) {
-		if (wea[0] < 0 || wea[0] > 5 || wea[1] < 0 || wea[1] > 3) {
+export default function createFishing(lang, data, functions) {
+	const paintTemplate = Object.freeze(["                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                         o                  ", "                        /|\\--------         ", "                        /_\\___              ", "~~~~~~~~~~~~~~~~~~~~~~~|      |~~~~~~~~~~~~|", "                              |            |", "                              |            |", "                              |____________|"]);
+	const precipitationSymbol = Object.freeze([".", "*", " ", " ", " ", " "]);
+	const precipitationColor = Object.freeze(["\x1b[1;34m", "\x1b[1;36m", "", "", "", ""]);
+	const weatherPaintTemplate = deepFreeze([
+		["     \x1b[33;1m_____\x1b[m                                  ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|_____|\x1b[m                                 "],
+		["         _______      ___________           ", "     ___/       \\____/           \\___       ", "    (                                )      ", "     \\______________________________/       "],
+		["         \x1b[33;1m_____\x1b[m       ___________            ", "     ___\x1b[33;1m|_____|\x1b[m_____/           \\____       ", "    (                                )      ", "     \\______________________________/       "]
+	]);
+	let lastDrawTime = 0;
+	let timeUsedInGame = 0;
+	let currentWeather = [2, 0];
+	let lastPrecipitation = 0;
+	let precipitationPoints = [];
+	let paint = Array.from({
+		length: 15
+	}, () => Array(44).fill(" "));
+	let color = Array.from({
+		length: 15
+	}, () => Array(44).fill(""));
+	let paintLastTick = "";
+	let fishInPond = Array.from({
+		length: 7
+	}, () => []);
+	let fishColor = Object.freeze(["\x1b[1;31m", "\x1b[1;37m", "\x1b[1;35m", "\x1b[1;34m", "\x1b[1;33m", "\x1b[1;32m", "\x1b[1;36m"]);
+	let currentWaitingStatus = 0;
+	let consoleSizeLastTick = "";
+
+	function changeWeather(weather) {
+		if (weather[0] < 0 || weather[0] > 5) {
 			return [3, 0]
 		}
-		if (wea[0] === 0 || wea[0] === 1) {
-			if (wea[1] < 2) {
-				let ra = this.#functions.random(1, 20);
-				if (ra <= 9) {
-					return wea
-				} else if (ra <= 15) {
-					return [wea[0], this.#functions.random(1, 3)]
-				} else if (ra <= 18) {
-					return [this.#functions.random(0, 1), wea[1]]
+		if (weather[1] < 0 || weather[1] > (weather[0] < 2 ? 3 : 0)) {
+			return [weather[0], 0]
+		}
+		if (weather[0] === 0 || weather[0] === 1) {
+			if (weather[1] < 2) {
+				const weatherRoll = functions.random(1, 20);
+				if (weatherRoll <= 9) {
+					return [weather[0], weather[1]]
+				} else if (weatherRoll <= 15) {
+					return [weather[0], functions.random(1, 3)]
+				} else if (weatherRoll <= 18) {
+					return [functions.random(0, 1), weather[1]]
 				} else {
-					return [this.#functions.random(2, 4), 0]
+					return [functions.random(2, 4), 0]
 				}
 			} else {
-				let ra = this.#functions.random(1, 2);
-				if (ra <= 1) {
-					return [wea[0], this.#functions.random(1, 3)]
-				} else if (ra <= 15) {
-					return wea
+				const weatherRoll = functions.random(1, 2);
+				if (weatherRoll <= 1) {
+					return [weather[0], functions.random(1, 3)]
+				} else {
+					return [weather[0], weather[1]]
 				}
 			}
-		} else if (wea[0] === 2 || wea[0] === 3 || wea[0] === 4) {
-			let ra = this.#functions.random(1, 10);
-			if (ra <= 1) {
-				return [5, wea[1]]
-			} else if (ra <= 3) {
-				return [this.#functions.random(0, 1), this.#functions.random(1, 2)]
-			} else if (ra <= 6) {
-				return [this.#functions.random(2, 4), wea[1]]
+		} else if (weather[0] >= 2 && weather[0] <= 4) {
+			const weatherRoll = functions.random(1, 10);
+			if (weatherRoll <= 1) {
+				return [5, weather[1]]
+			} else if (weatherRoll <= 3) {
+				return [functions.random(0, 1), functions.random(1, 2)]
+			} else if (weatherRoll <= 6) {
+				return [functions.random(2, 4), weather[1]]
 			} else {
-				return wea
+				return [weather[0], weather[1]]
 			}
 		} else {
-			let ra = this.#functions.random(1, 10);
-			if (ra <= 3) {
-				return [this.#functions.random(2, 4), wea[1]]
+			const weatherRoll = functions.random(1, 10);
+			if (weatherRoll <= 3) {
+				return [functions.random(2, 4), weather[1]]
 			} else {
-				return wea
+				return [weather[0], weather[1]]
 			}
 		}
-		return wea
 	}
-	#rand_time(l = this.#data.gameState.dataSaver.catchSpeedLevel) {
-		return this.#functions.random(this.#data.constant.minCatchSpeed[l], this.#data.constant.maxCatchSpeed[l])
+
+	function getRandomCatchTime() {
+		return functions.random(data.constant.minCatchSpeed[data.gameState.dataSaver.catchSpeedLevel], data.constant.maxCatchSpeed[data.gameState.dataSaver.catchSpeedLevel])
 	}
-	#gr(l = this.#data.gameState.dataSaver.incomeLevel, bei = 1) {
-		return this.#functions.random(bei * this.#data.constant.minIncome[l], bei * this.#data.constant.maxIncome[l])
+
+	function getRandomIncome(multiplier = 1) {
+		return functions.random(multiplier * data.constant.minIncome[data.gameState.dataSaver.incomeLevel], multiplier * data.constant.maxIncome[data.gameState.dataSaver.incomeLevel])
 	}
-	#gettype() {
-		let ty = this.#functions.random(1, 1e4);
+
+	function getFishType() {
+		let fishTypeRoll = functions.random(1, 1e4);
 		for (let i = 0; i <= 6; i++) {
-			ty -= this.#fish_gai[this.#data.gameState.dataSaver.rodLevel][i];
-			if (ty <= 0) {
+			fishTypeRoll -= data.constant.fishOddsByRodLevel[data.gameState.dataSaver.rodLevel][i];
+			if (fishTypeRoll <= 0) {
 				return i
 			}
 		}
 		return 0
 	}
-	async #get(is_big, type) {
-		await this.#functions.clear();
-		if (this.#data.gameState.dataSaver.hunger <= 2) {
-			await this.#functions.printa(this.#lang.current.fishing.youCaughtA + this.#fish_color[type] + this.#lang.current.fishing.fishName[type] + (is_big ? this.#lang.current.fishing.big : "") + this.#lang.current.fishing.fish + "\x1b[m, " + this.#lang.current.fishing.eaten);
-			this.#data.gameState.dataSaver.hunger += type + 3;
+	async function getFish(isBigFish, fishType) {
+		await functions.clear();
+		if (data.gameState.dataSaver.hunger <= 2) {
+			await functions.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.fishName[fishType] + (isBigFish ? lang.current.fishing.big : "") + lang.current.fishing.fish + "\x1b[m, " + lang.current.fishing.eaten);
+			data.gameState.dataSaver.hunger += fishType + 3;
 			return
 		}
-		let pri = this.#gr(this.#data.gameState.dataSaver.incomeLevel, (is_big + 1) * this.#fish_add[type]);
-		if (type === 4 && is_big) {
-			await this.#functions.printa(this.#lang.current.fishing.youCaughtA + this.#fish_color[type] + this.#lang.current.fishing.egg + ", " + this.#lang.current.fishing.worth + "$" + pri)
+		const price = getRandomIncome((isBigFish ? 2 : 1) * data.constant.fishValueMultipliers[fishType]);
+		if (fishType === 4 && isBigFish) {
+			await functions.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.egg + ", " + lang.current.fishing.worth + "$" + price)
 		} else {
-			await this.#functions.printa(this.#lang.current.fishing.youCaughtA + this.#fish_color[type] + this.#lang.current.fishing.fish + (is_big ? this.#lang.current.fishing.bf : "", this.#lang.current.fishing.fishName[type]) + ", " + this.#lang.current.fishing.worth + "$" + pri)
+			await functions.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.fish + (isBigFish ? lang.current.fishing.bf : "") + lang.current.fishing.fishName[fishType] + ", " + lang.current.fishing.worth + "$" + price)
 		}
-		this.#fish[type].push(10);
-		this.#data.gameState.dataSaver.totalFishCaught++
+		fishInPond[fishType].push(10);
+		data.gameState.dataSaver.totalFishCaught++
 	}
-	#lmi = 0;
-	#lma = 0;
-	#lst = 0;
-	#swp = false;
-	async #draw(mi = 0, ma = 0) {
-		this.#data.gameState.dataSaver.compactMode = this.#data.gameState.dataSaver.compactMode != this.#swp;
-		let wcg = false,
-			wcgd = false;
+	let lastWaitingMinTime = 0;
+	let lastWaitingMaxTime = 0;
+	let lastWaitingStatus = 0;
+	async function draw(minWaitingTime = 0, maxWaitingTime = 0) {
+		const changeCompactMode = (await functions.getch2s()).includes("e");
+		if (changeCompactMode) {
+			data.gameState.dataSaver.compactMode = !data.gameState.dataSaver.compactMode
+		}
+		let weatherChanged = false,
+			precipitationPointsChanged = false;
 		const now = Math.floor(Date.now() / 1e3);
-		while (now - this.#la > 10) {
-			let nweather = this.#change(this.#weather);
-			if (nweather != this.#weather) {
-				wcg = true
+		while (now - lastDrawTime > 10) {
+			const newWeather = changeWeather(currentWeather);
+			if (newWeather[0] !== currentWeather[0] || newWeather[1] !== currentWeather[1]) {
+				weatherChanged = true
 			}
-			this.#weather = nweather;
-			if (this.#weather[0] <= 1) {
-				this.#lw = this.#weather[0]
+			currentWeather = newWeather;
+			if (currentWeather[0] <= 1) {
+				lastPrecipitation = currentWeather[0]
 			}
-			if (now - this.#la > 100) {
-				this.#la = now - 100
+			if (now - lastDrawTime > 100) {
+				lastDrawTime = now - 100
 			}
-			this.#la += 10
+			lastDrawTime += 10
 		}
-		let need_cl = this.#swp;
-		if (this.#lmi != mi || this.#lma != ma) {
-			this.#lmi = mi;
-			this.#lma = ma;
-			wcg = true;
-			need_cl = true
+		let needClear = changeCompactMode;
+		if (lastWaitingMinTime !== minWaitingTime || lastWaitingMaxTime !== maxWaitingTime) {
+			lastWaitingMinTime = minWaitingTime;
+			lastWaitingMaxTime = maxWaitingTime;
+			weatherChanged = true;
+			needClear = true
 		}
-		if (this.#lst != this.#now_status) {
-			this.#lst = this.#now_status;
-			wcg = true;
-			need_cl = true
+		if (lastWaitingStatus !== currentWaitingStatus) {
+			lastWaitingStatus = currentWaitingStatus;
+			weatherChanged = true;
+			needClear = true
 		}
-		while (this.#la2 > .2) {
-			this.#la2 -= .2;
-			for (let i = this.#weapoint.length - 1; i >= 0; i--) {
-				this.#weapoint[i][0] += 1;
-				wcgd = true;
-				if (this.#weapoint[i][0] > 10) {
-					[this.#weapoint[i], this.#weapoint[this.#weapoint.length - 1]] = [this.#weapoint[this.#weapoint.length - 1], this.#weapoint[i]];
-					this.#weapoint.pop()
+		const stringConsoleSize = data.gameState.consoleSize.rows + " " + data.gameState.consoleSize.cols;
+		if (consoleSizeLastTick !== stringConsoleSize) {
+			consoleSizeLastTick = stringConsoleSize;
+			needClear = true
+		}
+		while (timeUsedInGame >= .2) {
+			timeUsedInGame -= .2;
+			for (let i = precipitationPoints.length - 1; i >= 0; i--) {
+				precipitationPoints[i][0] += 1;
+				precipitationPointsChanged = true;
+				if (precipitationPoints[i][0] > 10) {
+					[precipitationPoints[i], precipitationPoints[precipitationPoints.length - 1]] = [precipitationPoints[precipitationPoints.length - 1], precipitationPoints[i]];
+					precipitationPoints.pop()
 				}
 			}
-			if (this.#macnt[this.#weather[1]]) {
-				wcgd = true;
-				this.#weapoint.push([0, this.#functions.random(0, 44)])
+			if (data.constant.precipitationDensityByIntensity[currentWeather[1]]) {
+				precipitationPointsChanged = true;
+				precipitationPoints.push([0, functions.random(0, 43)])
 			}
-			for (let i = 1; i <= this.#macnt[this.#weather[1]] / 6 - 1 && this.#weapoint.length < this.#macnt[this.#weather[1]]; i++) {
-				if (this.#weapoint.length < this.#macnt[this.#weather[1]] && this.#functions.random(1, 2) <= 1) {
-					wcgd = true;
-					this.#weapoint.push([0, this.#functions.random(0, 44)])
+			for (let i = 1; i <= data.constant.precipitationDensityByIntensity[currentWeather[1]] / 6 - 1 && precipitationPoints.length < data.constant.precipitationDensityByIntensity[currentWeather[1]]; i++) {
+				if (precipitationPoints.length < data.constant.precipitationDensityByIntensity[currentWeather[1]] && functions.random(1, 2) <= 1) {
+					precipitationPointsChanged = true;
+					precipitationPoints.push([0, functions.random(0, 43)])
 				}
 			}
 		}
 		let start = 0;
-		let nowsize = this.#data.gameState.consoleSize;
-		const notEnoughRows = nowsize.rows < 20,
-			notEnoughCols = nowsize.cols < 51;
-		const paintStr = JSON.stringify(this.#paint);
-		if (this.#last !== paintStr) {
-			wcgd = true;
-			this.#last = paintStr
+		const requiredRows = 21,
+			requiredCols = 44;
+		const notEnoughRows = data.gameState.consoleSize.rows < requiredRows,
+			notEnoughCols = data.gameState.consoleSize.cols < requiredCols;
+		const stringPaint = paint.map(row => row.join("")).join("\n");
+		if (paintLastTick !== stringPaint) {
+			precipitationPointsChanged = true;
+			paintLastTick = stringPaint
 		}
-		if (this.#ter_big != nowsize) {
-			this.#ter_big = nowsize;
-			need_cl = true
-		}
-		if (this.#data.gameState.dataSaver.compactMode || notEnoughRows || notEnoughCols) {
-			if (need_cl) {
-				await this.#functions.write("\x1bc\x1b[?25l")
-			} else if (this.#data.gameState.dataSaver.compactMode || wcg) {
-				await this.#functions.write("\x1b[H")
+		if (data.gameState.dataSaver.compactMode || notEnoughRows || notEnoughCols) {
+			if (needClear) {
+				await functions.write("\x1bc\x1b[?25l")
+			} else if (data.gameState.dataSaver.compactMode || weatherChanged) {
+				await functions.write("\x1b[H")
 			} else {
 				return
 			}
-			if (!this.#data.gameState.dataSaver.compactMode) {
+			if (!data.gameState.dataSaver.compactMode) {
 				if (notEnoughRows) {
-					await this.#functions.write(this.#lang.current.fishing.notEnoughRows + "\n");
-					await this.#functions.write(this.#lang.current.fishing.currentSize + ": " + nowsize.rows + this.#lang.current.fishing.rows + "\n")
+					await functions.write(lang.current.fishing.notEnoughRows + " " + requiredRows + " " + lang.current.fishing.rows + "\n");
+					await functions.write(lang.current.fishing.currentSize + ": " + data.gameState.consoleSize.rows + " " + lang.current.fishing.rows + "\n")
 				}
 				if (notEnoughCols) {
-					await this.#functions.write(this.#lang.current.fishing.notEnoughCols + "\n");
-					await this.#functions.write(this.#lang.current.fishing.currentSize + ": " + nowsize.cols + this.#lang.current.fishing.cols + "\n")
+					await functions.write(lang.current.fishing.notEnoughCols + " " + requiredCols + " " + lang.current.fishing.cols + "\n");
+					await functions.write(lang.current.fishing.currentSize + ": " + data.gameState.consoleSize.cols + " " + lang.current.fishing.cols + "\n")
 				}
 			}
 		} else {
-			if (need_cl) {
-				await this.#functions.write("\x1bc\x1b[?25l")
-			} else if (wcg || wcgd) {
-				await this.#functions.write("\x1b[H")
+			if (needClear) {
+				await functions.write("\x1bc\x1b[?25l")
+			} else if (weatherChanged || precipitationPointsChanged) {
+				await functions.write("\x1b[H")
 			} else {
 				return
 			}
-			if (this.#weather[0] >= 2 && this.#weather[0] <= 4) {
+			if (currentWeather[0] >= 2 && currentWeather[0] <= 4) {
 				start = 4;
 				for (let i = 0; i < 4; i++) {
-					await this.#functions.write(this.#weatherpcr[this.#weather[0] - 2][i] + "\n")
+					await functions.write(weatherPaintTemplate[currentWeather[0] - 2][i] + "\n")
 				}
 			}
 			for (let i = start; i < 15; i++) {
 				for (let j = 0; j < 44; j++) {
 					let b = false;
-					for (const p of this.#weapoint) {
+					for (const p of precipitationPoints) {
 						if (p[0] === i && p[1] === j) {
 							b = true;
 							break
 						}
 					}
-					if (this.#paint[i][j] === " " && b) {
-						await this.#functions.write("\x1b[m" + this.#fucolor[this.#lw] + this.#fu[this.#lw])
+					if (paint[i][j] === " " && b) {
+						await functions.write("\x1b[m" + precipitationColor[lastPrecipitation] + precipitationSymbol[lastPrecipitation])
 					} else {
-						await this.#functions.write("\x1b[m" + this.#color[i][j] + this.#paint[i][j])
+						await functions.write("\x1b[m" + color[i][j] + paint[i][j])
 					}
 				}
-				await this.#functions.write("\n")
+				await functions.write("\n")
 			}
 		}
-		await this.#functions.write(this.#lang.current.fishing.currentStatus + ": " + this.#lang.current.fishing.waitingStatus[this.#now_status] + "\n");
-		await this.#functions.write(this.#lang.current.fishing.totalFishCaught + ": " + this.#data.gameState.dataSaver.totalFishCaught + " " + this.#lang.current.fishing.currentWeather + ": " + this.#lang.current.fishing.rainSize[this.#weather[1]] + this.#lang.current.fishing.weatherNames[this.#weather[0]] + "\n");
-		if (ma) {
-			if (mi) {
-				await this.#functions.write(this.#lang.current.fishing.remainingTime + ": " + mi / 2 + " min ~ " + ma / 2 + " min\n")
+		await functions.write(lang.current.fishing.currentStatus + ": " + lang.current.fishing.waitingStatus[currentWaitingStatus] + "\n");
+		await functions.write(lang.current.fishing.totalFishCaught + ": " + data.gameState.dataSaver.totalFishCaught + "\n");
+		await functions.write(lang.current.fishing.currentWeather + ": " + lang.current.fishing.rainSize[currentWeather[1]] + lang.current.fishing.weatherNames[currentWeather[0]] + "\n");
+		if (maxWaitingTime) {
+			if (minWaitingTime) {
+				await functions.write(lang.current.fishing.remainingTime + ": " + minWaitingTime / 2 + " min ~ " + maxWaitingTime / 2 + " min\n")
 			} else {
-				await this.#functions.write(this.#lang.current.fishing.remainingTime + ": < " + ma / 2 + " min\n")
+				await functions.write(lang.current.fishing.remainingTime + ": < " + maxWaitingTime / 2 + " min\n")
 			}
 		}
-		await this.#functions.write((this.#data.gameState.dataSaver.compactMode ? this.#lang.current.fishing.exitCompactMode : this.#lang.current.fishing.enterCompactMode) + "\n");
-		this.#swp = false
+		await functions.write((data.gameState.dataSaver.compactMode ? lang.current.fishing.exitCompactMode : lang.current.fishing.enterCompactMode) + "\n")
 	}
-	async #sleepck(s) {
-		for (const c of await this.#functions.getch2s()) {
-			if (c === "e") {
-				this.#swp = !this.#swp
+	async function slep(time) {
+		time = Math.round(time * 100) / 100;
+		if (time < .01) {
+			time = .01
+		}
+		while (time > .1) {
+			await functions.sleep(.1);
+			await draw();
+			time -= .1;
+			timeUsedInGame += .1
+		}
+		await functions.sleep(time);
+		await draw();
+		timeUsedInGame += time
+	}
+	async function wait(time) {
+		time = Math.round(time * 100) / 100;
+		let minWaitingTime = data.constant.minCatchSpeed[data.gameState.dataSaver.catchSpeedLevel] * 10,
+			maxWaitingTime = data.constant.maxCatchSpeed[data.gameState.dataSaver.catchSpeedLevel] * 10;
+		if (time && time < .01) {
+			time = .01
+		}
+		while (time > .1) {
+			await functions.sleep(.1);
+			if (minWaitingTime > 0) {
+				minWaitingTime -= 1
 			}
-		}
-		await this.#functions.sleep(s)
-	}
-	async #slep(s) {
-		s = Math.round(s * 100) / 100;
-		if (s < .01) {
-			s = .01
-		}
-		while (s > .1) {
-			await this.#sleepck(.1);
-			await this.#draw();
-			s -= .1;
-			this.#la2 += .1
-		}
-		await this.#sleepck(s);
-		await this.#draw();
-		this.#la2 += s
-	}
-	async #wait(s) {
-		s = Math.round(s * 100) / 100;
-		let mi = this.#data.constant.minCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel] * 10,
-			ma = this.#data.constant.maxCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel] * 10;
-		if (s && s < .01) {
-			s = .01
-		}
-		while (s > .1) {
-			await this.#sleepck(.1);
-			if (mi > 0) {
-				mi -= 1
+			if (maxWaitingTime > 10) {
+				maxWaitingTime -= 1
 			}
-			if (ma > 10) {
-				ma -= 1
-			}
-			s -= .1;
-			this.#la2 += .1;
-			await this.#draw(Math.floor((mi - 10) / 300), Math.ceil(Math.max((ma + 290) / 300, 1)))
+			time -= .1;
+			timeUsedInGame += .1;
+			await draw(Math.floor((minWaitingTime - 10) / 300), Math.ceil(Math.max((maxWaitingTime + 290) / 300, 1)))
 		}
-		if (s) {
-			await this.#sleepck(s);
-			await this.#draw(Math.floor((mi - 10) / 300), Math.ceil(Math.max((ma + 290) / 300, 1)))
+		if (time) {
+			await functions.sleep(time);
+			await draw(Math.floor((minWaitingTime - 10) / 300), Math.ceil(Math.max((maxWaitingTime + 290) / 300, 1)))
 		}
-		this.#la2 += s
+		timeUsedInGame += time
 	}
-	async #fishing(is_big, type) {
-		const hung_speed = this.#data.gameState.dataSaver.hunger < 5 ? 3 : this.#data.gameState.dataSaver.hunger < 10 ? 2 : this.#data.gameState.dataSaver.hunger < 30 ? 1 : this.#data.gameState.dataSaver.hunger < 35 ? .8 : .5;
-		await this.#functions.write("\x1b[?25l");
-		this.#color[11][18] = "\x1b[1;34m";
-		this.#paint[11][18] = "~";
-		this.#color[10][19] = this.#fish_color[type];
-		this.#paint[11][19] = "^";
-		this.#paint[10][19] = "O";
-		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#color[11][19] = "\x1b[1;34m";
-		this.#paint[11][19] = "~";
-		this.#color[9][19] = this.#fish_color[type];
-		this.#paint[10][19] = "^";
-		this.#paint[9][19] = "O";
-		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+	async function fishingStep2(isBigFish, fishType) {
+		const speedMultiplierByHunger = data.gameState.dataSaver.hunger < 5 ? 3 : data.gameState.dataSaver.hunger < 10 ? 2 : data.gameState.dataSaver.hunger < 30 ? 1 : data.gameState.dataSaver.hunger < 35 ? .8 : .5;
+		const bigFishMultiplier = isBigFish ? 2 : 1;
+		await functions.write("\x1b[?25l");
+		color[11][18] = "\x1b[1;34m";
+		paint[11][18] = "~";
+		color[10][19] = fishColor[fishType];
+		paint[11][19] = "^";
+		paint[10][19] = "O";
+		await slep(.5 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		color[11][19] = "\x1b[1;34m";
+		paint[11][19] = "~";
+		color[9][19] = fishColor[fishType];
+		paint[10][19] = "^";
+		paint[9][19] = "O";
+		await slep(.5 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
 		for (let i = 8; i >= 5; i--) {
-			this.#color[i + 2][19] = "";
-			this.#paint[i + 2][19] = " ";
-			this.#color[i][19] = this.#fish_color[type];
-			this.#paint[i + 1][19] = "^";
-			this.#paint[i][19] = "O";
-			await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
+			color[i + 2][19] = "";
+			paint[i + 2][19] = " ";
+			color[i][19] = fishColor[fishType];
+			paint[i + 1][19] = "^";
+			paint[i][19] = "O";
+			await slep(.5 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		this.#paint[9][24] = this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = "|";
-		this.#paint[8][23] = this.#paint[7][22] = this.#paint[6][21] = this.#paint[5][20] = this.#paint[5][19] = this.#paint[6][19] = " ";
-		this.#color[5][19] = this.#color[6][19] = "";
-		this.#paint[5][23] = ">";
-		this.#paint[5][24] = "O";
-		this.#color[5][23] = this.#color[5][24] = this.#fish_color[type];
-		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[9][26] = "V";
-		this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = this.#paint[5][23] = this.#paint[5][24] = " ";
-		this.#color[5][23] = this.#color[5][24] = "";
-		this.#paint[9][26] = this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = "|";
-		this.#paint[9][24] = "/";
-		this.#paint[5][25] = ">";
-		this.#paint[5][26] = "O";
-		this.#color[5][25] = this.#color[5][26] = this.#fish_color[type];
-		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[9][26] = this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = "/";
-		this.#color[5][25] = this.#color[5][26] = "";
-		this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = this.#paint[5][25] = this.#paint[5][26] = " ";
-		this.#paint[5][29] = ">";
-		this.#paint[5][30] = "O";
-		this.#color[5][29] = this.#color[5][30] = this.#fish_color[type];
-		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = this.#paint[5][29] = this.#paint[5][30] = " ";
-		this.#paint[9][26] = "\\";
-		this.#paint[9][27] = this.#paint[9][28] = this.#paint[9][29] = this.#paint[9][30] = this.#paint[9][31] = this.#paint[9][32] = this.#paint[9][33] = this.#paint[9][34] = "-";
-		this.#paint[8][35] = "V";
-		this.#paint[9][35] = "O";
-		this.#color[9][35] = this.#color[8][35] = this.#fish_color[type];
-		this.#color[5][29] = this.#color[5][30] = "";
-		await this.#slep(.5 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[10][35] = "O";
-		this.#paint[8][35] = " ";
-		this.#paint[9][35] = "V";
-		this.#color[10][35] = this.#fish_color[type];
-		this.#color[8][35] = "";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[11][34] = "\\";
-		this.#paint[11][36] = "/";
+		paint[9][24] = paint[8][24] = paint[7][24] = paint[6][24] = "|";
+		paint[8][23] = paint[7][22] = paint[6][21] = paint[5][20] = paint[5][19] = paint[6][19] = " ";
+		color[5][19] = color[6][19] = "";
+		paint[5][23] = ">";
+		paint[5][24] = "O";
+		color[5][23] = color[5][24] = fishColor[fishType];
+		await slep(.5 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[9][26] = "V";
+		paint[8][24] = paint[7][24] = paint[6][24] = paint[5][23] = paint[5][24] = " ";
+		color[5][23] = color[5][24] = "";
+		paint[9][26] = paint[8][26] = paint[7][26] = paint[6][26] = "|";
+		paint[9][24] = "/";
+		paint[5][25] = ">";
+		paint[5][26] = "O";
+		color[5][25] = color[5][26] = fishColor[fishType];
+		await slep(.5 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[9][26] = paint[8][27] = paint[7][28] = paint[6][29] = "/";
+		color[5][25] = color[5][26] = "";
+		paint[8][26] = paint[7][26] = paint[6][26] = paint[5][25] = paint[5][26] = " ";
+		paint[5][29] = ">";
+		paint[5][30] = "O";
+		color[5][29] = color[5][30] = fishColor[fishType];
+		await slep(.5 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[8][27] = paint[7][28] = paint[6][29] = paint[5][29] = paint[5][30] = " ";
+		paint[9][26] = "\\";
+		paint[9][27] = paint[9][28] = paint[9][29] = paint[9][30] = paint[9][31] = paint[9][32] = paint[9][33] = paint[9][34] = "-";
+		paint[8][35] = "V";
+		paint[9][35] = "O";
+		color[9][35] = color[8][35] = fishColor[fishType];
+		color[5][29] = color[5][30] = "";
+		await slep(.5 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[10][35] = "O";
+		paint[8][35] = " ";
+		paint[9][35] = "V";
+		color[10][35] = fishColor[fishType];
+		color[8][35] = "";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[11][34] = "\\";
+		paint[11][36] = "/";
 		for (let i = 11; i <= 12; i++) {
-			this.#paint[i][35] = "O";
-			this.#paint[i - 2][35] = " ";
-			this.#paint[i - 1][35] = "V";
-			this.#color[i][35] = this.#fish_color[type];
-			this.#color[i - 2][35] = "";
-			await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
+			paint[i][35] = "O";
+			paint[i - 2][35] = " ";
+			paint[i - 1][35] = "V";
+			color[i][35] = fishColor[fishType];
+			color[i - 2][35] = "";
+			await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		this.#paint[11][34] = this.#paint[11][35] = this.#paint[11][36] = "~";
-		this.#paint[13][35] = "O";
-		this.#paint[12][35] = "V";
-		this.#color[13][35] = this.#fish_color[type];
-		this.#color[11][35] = "\x1b[1;34m";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[13][36] = "O";
-		this.#paint[12][35] = " ";
-		this.#paint[13][35] = ">";
-		this.#color[13][36] = this.#fish_color[type];
-		this.#color[12][35] = "";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[11][34] = paint[11][35] = paint[11][36] = "~";
+		paint[13][35] = "O";
+		paint[12][35] = "V";
+		color[13][35] = fishColor[fishType];
+		color[11][35] = "\x1b[1;34m";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[13][36] = "O";
+		paint[12][35] = " ";
+		paint[13][35] = ">";
+		color[13][36] = fishColor[fishType];
+		color[12][35] = "";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
 		for (let i = 37; i <= 38; i++) {
-			this.#paint[13][i] = "O";
-			this.#paint[13][i - 2] = " ";
-			this.#paint[13][i - 1] = ">";
-			this.#color[13][i] = this.#fish_color[type];
-			this.#color[13][i - 2] = "";
-			await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
+			paint[13][i] = "O";
+			paint[13][i - 2] = " ";
+			paint[13][i - 1] = ">";
+			color[13][i] = fishColor[fishType];
+			color[13][i - 2] = "";
+			await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		this.#paint[13][38] = this.#paint[13][37] = " ";
-		this.#color[13][38] = this.#color[13][37] = "";
-		await this.#functions.write("\x1b[?25h");
-		await this.#get(is_big, type)
+		paint[13][38] = paint[13][37] = " ";
+		color[13][38] = color[13][37] = "";
+		await functions.write("\x1b[?25h");
+		await getFish(isBigFish, fishType)
 	}
-	async #fishingslip(is_big, type) {
-		const hung_speed = this.#data.gameState.dataSaver.hunger < 5 ? 3 : this.#data.gameState.dataSaver.hunger < 10 ? 2 : this.#data.gameState.dataSaver.hunger < 30 ? 1 : this.#data.gameState.dataSaver.hunger < 35 ? .8 : .5;
-		await this.#functions.write("\x1b[?25l");
-		this.#color[11][18] = "\x1b[1;34m";
-		this.#paint[11][18] = "~";
-		this.#color[10][19] = this.#fish_color[type];
-		this.#paint[11][19] = "^";
-		this.#paint[10][19] = "O";
-		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#now_status = 4;
-		this.#color[11][19] = "\x1b[1;34m";
-		this.#paint[11][19] = "~";
-		this.#color[10][19] = "";
-		this.#paint[10][19] = " ";
-		this.#paint[10][20] = "^";
-		this.#paint[9][19] = "O";
-		this.#color[10][20] = this.#color[9][19] = this.#fish_color[type];
-		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[10][20] = this.#paint[9][19] = " ";
-		this.#color[10][20] = this.#color[9][19] = "";
-		this.#paint[9][18] = "^";
-		this.#paint[8][19] = "O";
-		this.#color[9][18] = this.#color[8][19] = this.#fish_color[type];
-		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[9][18] = this.#paint[8][19] = " ";
-		this.#color[9][18] = this.#color[8][19] = "";
-		this.#paint[8][20] = "^";
-		this.#paint[7][19] = "O";
-		this.#color[8][20] = this.#color[7][19] = this.#fish_color[type];
-		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[6][19] = "j";
-		this.#color[8][20] = "";
-		this.#paint[8][20] = " ";
-		this.#color[7][20] = this.#fish_color[type];
-		this.#paint[7][20] = "<";
-		await this.#slep(.3 * hung_speed * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#color[7][20] = "";
-		this.#paint[5][19] = "j";
-		this.#paint[7][20] = this.#paint[6][19] = " ";
-		this.#color[8][19] = this.#fish_color[type];
-		this.#paint[7][19] = "V";
-		this.#paint[8][19] = "O";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#color[7][19] = "";
-		this.#color[9][19] = this.#fish_color[type];
-		this.#paint[7][19] = " ";
-		this.#paint[8][19] = "V";
-		this.#paint[9][19] = "O";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#color[8][19] = "";
-		this.#color[10][19] = this.#fish_color[type];
-		this.#paint[8][19] = " ";
-		this.#paint[9][19] = "V";
-		this.#paint[10][19] = "O";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[11][18] = "\\";
-		this.#paint[11][20] = "/";
+	async function fishingStep2Slip(isBigFish, fishType) {
+		const speedMultiplierByHunger = data.gameState.dataSaver.hunger < 5 ? 3 : data.gameState.dataSaver.hunger < 10 ? 2 : data.gameState.dataSaver.hunger < 30 ? 1 : data.gameState.dataSaver.hunger < 35 ? .8 : .5;
+		const bigFishMultiplier = isBigFish ? 2 : 1;
+		await functions.write("\x1b[?25l");
+		color[11][18] = "\x1b[1;34m";
+		paint[11][18] = "~";
+		color[10][19] = fishColor[fishType];
+		paint[11][19] = "^";
+		paint[10][19] = "O";
+		await slep(.3 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		currentWaitingStatus = 4;
+		color[11][19] = "\x1b[1;34m";
+		paint[11][19] = "~";
+		color[10][19] = "";
+		paint[10][19] = " ";
+		paint[10][20] = "^";
+		paint[9][19] = "O";
+		color[10][20] = color[9][19] = fishColor[fishType];
+		await slep(.3 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[10][20] = paint[9][19] = " ";
+		color[10][20] = color[9][19] = "";
+		paint[9][18] = "^";
+		paint[8][19] = "O";
+		color[9][18] = color[8][19] = fishColor[fishType];
+		await slep(.3 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[9][18] = paint[8][19] = " ";
+		color[9][18] = color[8][19] = "";
+		paint[8][20] = "^";
+		paint[7][19] = "O";
+		color[8][20] = color[7][19] = fishColor[fishType];
+		await slep(.3 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[6][19] = "j";
+		color[8][20] = "";
+		paint[8][20] = " ";
+		color[7][20] = fishColor[fishType];
+		paint[7][20] = "<";
+		await slep(.3 * speedMultiplierByHunger * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		color[7][20] = "";
+		paint[5][19] = "j";
+		paint[7][20] = paint[6][19] = " ";
+		color[8][19] = fishColor[fishType];
+		paint[7][19] = "V";
+		paint[8][19] = "O";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		color[7][19] = "";
+		color[9][19] = fishColor[fishType];
+		paint[7][19] = " ";
+		paint[8][19] = "V";
+		paint[9][19] = "O";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		color[8][19] = "";
+		color[10][19] = fishColor[fishType];
+		paint[8][19] = " ";
+		paint[9][19] = "V";
+		paint[10][19] = "O";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[11][18] = "\\";
+		paint[11][20] = "/";
 		for (let i = 11; i <= 12; i++) {
-			this.#color[i - 2][19] = "";
-			this.#color[i][19] = this.#fish_color[type];
-			this.#paint[i - 2][19] = " ";
-			this.#paint[i - 1][19] = "V";
-			this.#paint[i][19] = "O";
-			await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
+			color[i - 2][19] = "";
+			color[i][19] = fishColor[fishType];
+			paint[i - 2][19] = " ";
+			paint[i - 1][19] = "V";
+			paint[i][19] = "O";
+			await slep(.5 / bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		this.#paint[11][18] = this.#paint[11][20] = this.#paint[11][19] = "~";
-		this.#color[11][19] = "\x1b[1;34m";
-		this.#color[13][19] = this.#fish_color[type];
-		this.#paint[12][19] = "V";
-		this.#paint[13][19] = "O";
-		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[12][19] = " ";
-		this.#color[12][19] = "";
-		this.#color[14][19] = this.#fish_color[type];
-		this.#paint[13][19] = "V";
-		this.#paint[14][19] = "O";
-		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[13][19] = " ";
-		this.#color[13][19] = "";
-		this.#paint[14][19] = "V";
-		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[14][19] = " ";
-		this.#color[14][19] = "";
-		await this.#slep(.5 / (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[8][23] = this.#paint[7][22] = this.#paint[6][21] = this.#paint[5][20] = this.#paint[5][19] = " ";
-		this.#paint[9][24] = "/";
-		await this.#functions.write("\x1b[?25h")
+		paint[11][18] = paint[11][20] = paint[11][19] = "~";
+		color[11][19] = "\x1b[1;34m";
+		color[13][19] = fishColor[fishType];
+		paint[12][19] = "V";
+		paint[13][19] = "O";
+		await slep(.5 / bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[12][19] = " ";
+		color[12][19] = "";
+		color[14][19] = fishColor[fishType];
+		paint[13][19] = "V";
+		paint[14][19] = "O";
+		await slep(.5 / bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[13][19] = " ";
+		color[13][19] = "";
+		paint[14][19] = "V";
+		await slep(.5 / bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[14][19] = " ";
+		color[14][19] = "";
+		await slep(.5 / bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[8][23] = paint[7][22] = paint[6][21] = paint[5][20] = paint[5][19] = " ";
+		paint[9][24] = "/";
+		await functions.write("\x1b[?25h")
 	}
-	async #front_fishing(is_big, type) {
-		this.#last = "";
-		this.#ter_big = [0, 0];
-		this.#la = Math.floor(Date.now() / 1e3);
-		const hung_speed = this.#data.gameState.dataSaver.hunger < 5 ? 3 : this.#data.gameState.dataSaver.hunger < 10 ? 2 : this.#data.gameState.dataSaver.hunger < 30 ? 1 : this.#data.gameState.dataSaver.hunger < 35 ? .8 : .5;
-		this.#now_status = 0;
-		await this.#functions.write("\x1b[?25l");
+	async function fishingStep1(isBigFish, fishType) {
+		const speedMultiplierByHunger = data.gameState.dataSaver.hunger < 5 ? 3 : data.gameState.dataSaver.hunger < 10 ? 2 : data.gameState.dataSaver.hunger < 30 ? 1 : data.gameState.dataSaver.hunger < 35 ? .8 : .5;
+		const bigFishMultiplier = isBigFish ? 2 : 1;
+		paintLastTick = "";
+		consoleSizeLastTick = "";
+		lastDrawTime = Math.floor(Date.now() / 1e3);
+		currentWaitingStatus = 0;
+		await functions.write("\x1b[?25l");
 		for (let i = 0; i < 15; i++) {
 			for (let j = 0; j < 44; j++) {
-				this.#color[i][j] = "";
-				this.#paint[i][j] = this.#old[i][j]
+				color[i][j] = "";
+				paint[i][j] = paintTemplate[i][j]
 			}
 		}
 		for (let i = 0; i <= 22; i++) {
-			this.#color[11][i] = "\x1b[1;34m"
+			color[11][i] = "\x1b[1;34m"
 		}
 		for (let i = 31; i <= 42; i++) {
-			this.#color[11][i] = "\x1b[1;34m"
+			color[11][i] = "\x1b[1;34m"
 		}
-		if (this.#data.gameState.fishMan) {
-			this.#paint[8][25] = " ";
-			this.#paint[9][25] = "O";
-			this.#color[9][25] = this.#color[10][24] = this.#color[10][26] = this.#fish_color[6];
-			this.#data.gameState.fishMan = false
+		if (data.gameState.fishMan) {
+			paint[8][25] = " ";
+			paint[9][25] = "O";
+			color[9][25] = color[10][24] = color[10][26] = fishColor[6];
+			data.gameState.fishMan = false
 		}
-		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		await slep(.5 * speedMultiplierByHunger / data.gameState.dataSaver.actionSpeedMultiplier);
 		for (let i = 27; i <= 34; i++) {
-			this.#paint[9][i] = " "
+			paint[9][i] = " "
 		}
-		this.#paint[9][26] = "V";
-		this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = this.#paint[5][30] = "/";
-		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[8][27] = this.#paint[7][28] = this.#paint[6][29] = this.#paint[5][30] = " ";
-		this.#paint[9][26] = this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = this.#paint[5][26] = "|";
-		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[9][26] = "\\";
-		this.#paint[8][26] = this.#paint[7][26] = this.#paint[6][26] = this.#paint[5][26] = " ";
-		this.#paint[9][24] = this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = this.#paint[5][24] = "|";
-		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[8][24] = this.#paint[7][24] = this.#paint[6][24] = this.#paint[5][24] = " ";
-		this.#paint[9][24] = "V";
-		this.#paint[8][23] = this.#paint[7][22] = this.#paint[6][21] = this.#paint[5][20] = "\\";
-		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#paint[5][19] = "j";
-		await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[9][26] = "V";
+		paint[8][27] = paint[7][28] = paint[6][29] = paint[5][30] = "/";
+		await slep(.5 * speedMultiplierByHunger / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[8][27] = paint[7][28] = paint[6][29] = paint[5][30] = " ";
+		paint[9][26] = paint[8][26] = paint[7][26] = paint[6][26] = paint[5][26] = "|";
+		await slep(.5 * speedMultiplierByHunger / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[9][26] = "\\";
+		paint[8][26] = paint[7][26] = paint[6][26] = paint[5][26] = " ";
+		paint[9][24] = paint[8][24] = paint[7][24] = paint[6][24] = paint[5][24] = "|";
+		await slep(.5 * speedMultiplierByHunger / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[8][24] = paint[7][24] = paint[6][24] = paint[5][24] = " ";
+		paint[9][24] = "V";
+		paint[8][23] = paint[7][22] = paint[6][21] = paint[5][20] = "\\";
+		await slep(.5 * speedMultiplierByHunger / data.gameState.dataSaver.actionSpeedMultiplier);
+		paint[5][19] = "j";
+		await slep(.5 * speedMultiplierByHunger / data.gameState.dataSaver.actionSpeedMultiplier);
 		for (let i = 6; i <= 10; i++) {
-			this.#paint[i - 1][19] = "|";
-			this.#paint[i][19] = "j";
-			await this.#slep(.5 * hung_speed / this.#data.gameState.dataSaver.actionSpeedMultiplier)
+			paint[i - 1][19] = "|";
+			paint[i][19] = "j";
+			await slep(.5 * speedMultiplierByHunger / data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		this.#paint[10][19] = "|";
-		this.#paint[11][19] = "j";
-		this.#color[11][19] = "";
-		let stime = this.#rand_time();
-		if (this.#weather[0] === 0) {
-			stime = Math.max(0, stime - 5 * this.#weather[1])
+		paint[10][19] = "|";
+		paint[11][19] = "j";
+		color[11][19] = "";
+		let catchTime = getRandomCatchTime();
+		if (currentWeather[0] === 0) {
+			catchTime = Math.max(0, catchTime - 5 * currentWeather[1])
+		} else if (currentWeather[0] === 1) {
+			catchTime = catchTime + 5 * currentWeather[1]
 		}
-		if (this.#weather[0] === 1) {
-			stime = Math.max(0, stime + 5 * this.#weather[1])
-		}
-		this.#now_status = 1;
-		await this.#wait(stime);
-		this.#now_status = 2;
-		this.#color[11][0] = this.#fish_color[type];
-		this.#paint[11][0] = "O";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
-		this.#color[11][1] = this.#fish_color[type];
-		this.#paint[11][0] = ">";
-		this.#paint[11][1] = "O";
-		await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier);
+		currentWaitingStatus = 1;
+		await wait(catchTime);
+		currentWaitingStatus = 2;
+		color[11][0] = fishColor[fishType];
+		paint[11][0] = "O";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
+		color[11][1] = fishColor[fishType];
+		paint[11][0] = ">";
+		paint[11][1] = "O";
+		await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
 		for (let i = 2; i <= 19; i++) {
 			if (i === 19) {
-				this.#now_status = 3
+				currentWaitingStatus = 3
 			}
-			this.#color[11][i - 2] = "\x1b[1;34m";
-			this.#paint[11][i - 2] = "~";
-			this.#color[11][i] = this.#fish_color[type];
-			this.#paint[11][i - 1] = ">";
-			this.#paint[11][i] = "O";
-			await this.#slep(.5 * (is_big + 1) / this.#data.gameState.dataSaver.actionSpeedMultiplier)
+			color[11][i - 2] = "\x1b[1;34m";
+			paint[11][i - 2] = "~";
+			color[11][i] = fishColor[fishType];
+			paint[11][i - 1] = ">";
+			paint[11][i] = "O";
+			await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		await this.#functions.write("\x1b[?25h");
-		let slip = this.#functions.random(1, 100) <= this.#data.gameState.dataSaver.slipOffChance + (this.#weather[0] === 5) * 10;
-		if (slip) {
-			await this.#fishingslip(is_big, type)
+		await functions.write("\x1b[?25h");
+		const slipOff = functions.random(1, 100) <= data.gameState.dataSaver.slipOffChance + (currentWeather[0] === 5) * 10;
+		if (slipOff) {
+			await fishingStep2Slip(isBigFish, fishType)
 		} else {
-			await this.#fishing(is_big, type)
+			await fishingStep2(isBigFish, fishType)
 		}
-		while (this.#weapoint.length !== 0) {
-			this.#weapoint.pop()
-		}
+		precipitationPoints.length = 0
 	}
-	async #fishing_choose() {
-		let b = this.#functions.random(1, 100) <= this.#data.gameState.dataSaver.bigFishChance;
-		if (this.#data.gameState.bigFish) {
-			b = true;
-			this.#data.gameState.bigFish--
+	async function runFishing() {
+		let bigFishRoll = functions.random(1, 100) <= data.gameState.dataSaver.bigFishChance;
+		if (data.gameState.bigFish) {
+			bigFishRoll = true;
+			data.gameState.bigFish--
 		}
-		let type = this.#gettype();
-		if (this.#data.gameState.diamondFish) {
-			type = 6;
-			this.#data.gameState.diamondFish--
+		let fishType = getFishType();
+		if (data.gameState.diamondFish) {
+			fishType = 6;
+			data.gameState.diamondFish--
 		}
-		await this.#front_fishing(b, type)
+		await fishingStep1(bigFishRoll, fishType)
 	}
-	#fresh(a) {
-		if (a >= 8) {
+
+	function getFreshnessMultiplier(freshness) {
+		if (freshness >= 8) {
 			return 1.25
-		} else if (a <= 2) {
+		} else if (freshness <= 2) {
 			return .8
 		} else {
 			return 1
 		}
 	}
-	async makeFishingRod() {
-		await this.#functions.clear();
-		await this.#functions.print(this.#lang.current.fishing.makeFishingRod);
-		await this.#functions.print(this.#lang.current.fishing.currentFishingRod + this.#lang.current.fishing.fishName[this.#data.gameState.dataSaver.rodLevel] + this.#lang.current.fishing.fishingRod);
-		let b = Array(8).fill(false);
-		let s = "";
+	async function makeFishingRod() {
+		await functions.clear();
+		await functions.print(lang.current.fishing.makeFishingRod);
+		await functions.print(lang.current.fishing.currentFishingRod + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
+		let hasFishInPond = Array(8).fill(false);
+		let fishInPondChoices = "";
 		for (let i = 0; i <= 6; i++) {
-			b[i] = this.#fish[i].length !== 0;
-			if (b[i]) {
-				s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fishingRod + ", "
+			hasFishInPond[i] = fishInPond[i].length !== 0;
+			if (hasFishInPond[i]) {
+				fishInPondChoices += i + ". " + lang.current.fishing.fishName[i] + lang.current.fishing.fishingRod + ", "
 			}
 		}
-		b[7] = true;
-		if (s.length === 0) {
-			await this.#functions.print(this.#lang.current.fishing.none);
+		hasFishInPond[7] = true;
+		if (fishInPondChoices.length === 0) {
+			await functions.print(lang.current.fishing.none);
 			return
 		}
-		s += this.#lang.current.functions.exit;
-		await this.#functions.print(s);
-		let d;
-		while (true) {
-			let c = await this.#functions.getch();
-			c -= "0";
-			if (c >= 0 && c <= 7 && b[c]) {
-				d = c;
-				break
-			}
-		}
-		if (d === 7) {
+		fishInPondChoices += lang.current.functions.exit;
+		await functions.print(fishInPondChoices);
+		let selectedFishInPondIndex;
+		do {
+			selectedFishInPondIndex = Number(await functions.getch())
+		} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
+		if (selectedFishInPondIndex === 7) {
 			return
 		}
-		if (this.#fish[d].length !== 0) {
-			this.#fish[d].pop()
-		}
-		this.#data.gameState.dataSaver.rodLevel = d
+		fishInPond[selectedFishInPondIndex].length = 0;
+		data.gameState.dataSaver.rodLevel = selectedFishInPondIndex
 	}
-	async #makeFood() {
+	async function makeFood() {
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#lang.current.fishing.rawFish);
-			await this.#functions.print(this.#lang.current.fishing.currentAmount);
-			let b = Array(8).fill(false);
-			let s = "";
+			await functions.clear();
+			await functions.print(lang.current.fishing.rawFish);
+			await functions.print(lang.current.fishing.currentAmount);
+			let hasFishInPond = Array(8).fill(false);
+			let fishInPondChoices = "";
 			for (let i = 0; i <= 6; i++) {
-				b[i] = this.#fish[i].length !== 0;
-				if (b[i]) {
-					s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + ", "
+				hasFishInPond[i] = fishInPond[i].length !== 0;
+				if (hasFishInPond[i]) {
+					fishInPondChoices += i + ". " + lang.current.fishing.fishName[i] + lang.current.fishing.fish + ", "
 				}
 			}
-			b[7] = true;
-			if (s.length === 0) {
-				await this.#functions.print(this.#lang.current.fishing.none);
-				await this.#functions.sleep(.5);
+			hasFishInPond[7] = true;
+			if (fishInPondChoices.length === 0) {
+				await functions.print(lang.current.fishing.none);
+				await functions.sleep(.5);
 				return
 			}
-			s += this.#lang.current.functions.exit;
+			fishInPondChoices += lang.current.functions.exit;
 			for (let i = 1; i <= 6; i++) {
-				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
-				if (this.#fish[i].length) {
-					await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
+				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				if (fishInPond[i].length) {
+					await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
+				if (data.gameState.dataSaver.foodFish[i][0]) {
+					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
+				if (data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
-				}
-			}
-			await this.#functions.write("\n");
-			await this.#functions.print(s);
-			let d;
-			while (true) {
-				let c = await this.#functions.getch();
-				c -= "0";
-				if (c >= 0 && c <= 7 && b[c]) {
-					d = c;
-					break
+				if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			if (d === 7) {
-				break
+			await functions.write("\n");
+			await functions.print(fishInPondChoices);
+			let selectedFishInPondIndex;
+			do {
+				selectedFishInPondIndex = Number(await functions.getch())
+			} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
+			if (selectedFishInPondIndex === 7) {
+				return
 			}
-			if (this.#fish[d].length === 0) {
+			if (fishInPond[selectedFishInPondIndex].length === 0) {
 				continue
 			}
-			this.#fish[d].pop();
-			this.#data.gameState.dataSaver.foodFish[d][0]++
+			fishInPond[selectedFishInPondIndex].pop();
+			data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0]++
 		}
 	}
-	async #roastedFish() {
-		await this.#functions.clear();
-		await this.#functions.print(this.#lang.current.fishing.roastedFish);
-		await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
-		let b = Array(8).fill(false);
-		let s = "";
+	async function roastFish() {
+		await functions.clear();
+		await functions.print(lang.current.fishing.roastedFish);
+		await functions.print(lang.current.fishing.currentAmount + ": ");
+		let hasFishInPond = Array(8).fill(false);
+		let fishInPondChoices = "";
 		for (let i = 0; i <= 6; i++) {
-			b[i] = this.#data.gameState.dataSaver.foodFish[i][0];
-			if (b[i]) {
-				s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + ", "
+			hasFishInPond[i] = Boolean(data.gameState.dataSaver.foodFish[i][0]);
+			if (hasFishInPond[i]) {
+				fishInPondChoices += i + ". " + lang.current.fishing.fishName[i] + lang.current.fishing.fish + ", "
 			}
 		}
-		b[7] = true;
-		if (s.length === 0) {
-			await this.#functions.print(this.#lang.current.fishing.none);
-			await this.#functions.sleep(.5);
+		hasFishInPond[7] = true;
+		if (fishInPondChoices.length === 0) {
+			await functions.print(lang.current.fishing.none);
+			await functions.sleep(.5);
 			return
 		}
-		s += this.#lang.current.functions.exit;
+		fishInPondChoices += lang.current.functions.exit;
 		for (let i = 1; i <= 6; i++) {
-			await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
-			if (this.#fish[i].length) {
-				await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
+			await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+			if (fishInPond[i].length) {
+				await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 			}
-			if (this.#data.gameState.dataSaver.foodFish[i][0]) {
-				await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
+			if (data.gameState.dataSaver.foodFish[i][0]) {
+				await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 			}
-			if (this.#data.gameState.dataSaver.foodFish[i][1]) {
-				await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
+			if (data.gameState.dataSaver.foodFish[i][1]) {
+				await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 			}
-			if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
-				await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
-			}
-		}
-		await this.#functions.write("\n");
-		await this.#functions.print(s);
-		let d;
-		while (true) {
-			let c = await this.#functions.getch();
-			c -= "0";
-			if (c >= 0 && c <= 7 && b[c]) {
-				d = c;
-				break
+			if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
+				await functions.write("    " + lang.current.fishing.none + "\n")
 			}
 		}
-		if (d === 7) {
-			await this.#functions.sleep(.5);
+		await functions.write("\n");
+		await functions.print(fishInPondChoices);
+		let selectedFishInPondIndex;
+		do {
+			selectedFishInPondIndex = Number(await functions.getch())
+		} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
+		if (selectedFishInPondIndex === 7 || !data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0]) {
 			return
 		}
-		if (!this.#data.gameState.dataSaver.foodFish[d][0]) {
-			return
-		}
-		const l = 0,
-			r = this.#data.gameState.dataSaver.foodFish[d][0];
-		let a = 0;
+		const minCount = 0,
+			maxCount = data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0];
+		let count = 0;
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.write(this.#lang.current.fishing.makeFoodAction + "\n" + this.#lang.current.fishing.makeRoastedFish + ": " + this.#fish_color[d] + this.#lang.current.fishing.fishName[d] + this.#lang.current.fishing.fish + "\x1b[m\n");
-			await this.#functions.write((a === l ? "\x1b[1;31m" : "\x1b[1m") + " < \x1b[m" + a + this.#lang.current.fishing.fishNumber + (a === r ? "\x1b[1;31m" : "\x1b[1m") + " > \x1b[m\n");
-			let c = await this.#functions.getch();
-			if (c === "a" || c === "A") {
-				a--;
-				if (a < l) {
-					a = l
+			await functions.clear();
+			await functions.write(lang.current.fishing.makeFoodAction + "\n" + lang.current.fishing.makeRoastedFish + ": " + fishColor[selectedFishInPondIndex] + lang.current.fishing.fishName[selectedFishInPondIndex] + lang.current.fishing.fish + "\x1b[m\n");
+			await functions.write((count === minCount ? "\x1b[1;31m" : "\x1b[1m") + " < \x1b[m" + count + lang.current.fishing.fishNumber + (count === maxCount ? "\x1b[1;31m" : "\x1b[1m") + " > \x1b[m\n");
+			const input = await functions.getch();
+			if (input === "a" || input === "A") {
+				count--;
+				if (count < minCount) {
+					count = minCount
 				}
-			} else if (c === "d" || c === "D") {
-				a++;
-				if (a > r) {
-					a = r
+			} else if (input === "d" || input === "D") {
+				count++;
+				if (count > maxCount) {
+					count = maxCount
 				}
-			} else if (c === "\r") {
-				if (a > this.#data.gameState.dataSaver.foodFish[d][0] || a < 0 || !this.#data.gameState.dataSaver.ovenCount) {
-					await this.#functions.clear();
+			} else if (input === "\r") {
+				if (count > data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0] || count < 0 || !data.gameState.dataSaver.ovenCount) {
+					await functions.clear();
 					return
 				}
-				this.#data.gameState.dataSaver.foodFish[d][0] -= a;
-				this.#data.gameState.dataSaver.foodFish[d][1] += a;
-				await this.#functions.clear();
-				let time = Math.ceil(a / this.#data.gameState.dataSaver.ovenCount);
-				for (let i = 0; i < time; i++) {
+				data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0] -= count;
+				data.gameState.dataSaver.foodFish[selectedFishInPondIndex][1] += count;
+				await functions.clear();
+				const roastingTime = Math.ceil(count / data.gameState.dataSaver.ovenCount);
+				for (let i = 0; i < roastingTime; i++) {
 					for (let j = 0; j < 20; j++) {
-						await this.#functions.clear();
-						await this.#functions.write(this.#lang.current.fishing.roasting + "\n");
-						let ok = i * 20 + j,
-							all = time;
-						let done = Math.floor(ok / all * 3);
-						let d2 = done & 1;
-						done >>= 1;
+						await functions.clear();
+						await functions.write(lang.current.fishing.roasting + "\n");
+						const currentRoastingTime = i * 20 + j;
+						let done = Math.floor(currentRoastingTime / roastingTime * 3);
+						let d2 = done % 2;
+						done = Math.floor(done / 2);
 						for (let k = 1; k <= done; k++) {
-							await this.#functions.write("\x1b[32;1m=\x1b[m")
+							await functions.write("\x1b[32;1m=\x1b[m")
 						}
 						if (done < 30) {
-							await this.#functions.write(d2 ? "\x1b[32;1m-\x1b[m" : "\x1b[31;1m=\x1b[m")
+							await functions.write(d2 ? "\x1b[32;1m-\x1b[m" : "\x1b[31;1m=\x1b[m")
 						}
 						for (let k = done + 1; k < 30; k++) {
-							await this.#functions.write("\x1b[31;1m=\x1b[m")
+							await functions.write("\x1b[31;1m=\x1b[m")
 						}
-						await this.#functions.write("\n");
-						await this.#functions.write(i * this.#data.gameState.dataSaver.ovenCount + "/" + a + this.#lang.current.fishing.done + "\n");
-						await this.#functions.sleep(.5)
+						await functions.write("\n");
+						await functions.write(i * data.gameState.dataSaver.ovenCount + "/" + count + lang.current.fishing.done + "\n");
+						await functions.sleep(.5)
 					}
 				}
-				await this.#functions.clear();
-				await this.#functions.write(this.#lang.current.fishing.done + "\n");
+				await functions.clear();
+				await functions.write(lang.current.fishing.done + "\n");
 				for (let k = 0; k < 30; k++) {
-					await this.#functions.write("\x1b[32;1m=\x1b[m")
+					await functions.write("\x1b[32;1m=\x1b[m")
 				}
-				await this.#functions.write("\n");
-				await this.#functions.write(a + "/" + a + this.#lang.current.fishing.done + "\n");
-				await this.#functions.sleep();
+				await functions.write("\n");
+				await functions.write(count + "/" + count + lang.current.fishing.done + "\n");
+				await functions.sleep();
 				return
-			} else if (c === "") {
-				await this.#functions.clear();
+			} else if (input === "") {
+				await functions.clear();
 				return
 			}
 		}
 	}
-	async #eatFish() {
+	async function eatFish() {
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#lang.current.fishing.eatRawFish);
-			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
-			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
-			let b = Array(8).fill(false);
-			let s = "";
+			await functions.clear();
+			await functions.print(lang.current.fishing.eatRawFish);
+			await functions.printnl(lang.current.fishing.currentHunger + ": ");
+			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await functions.print(lang.current.fishing.currentAmount + ": ");
+			let hasFishInPond = Array(8).fill(false);
+			let fishInPondChoices = "";
 			for (let i = 0; i <= 6; i++) {
-				b[i] = this.#data.gameState.dataSaver.foodFish[i][0];
-				if (b[i]) {
-					s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.rawFish + ", "
+				hasFishInPond[i] = Boolean(data.gameState.dataSaver.foodFish[i][0]);
+				if (hasFishInPond[i]) {
+					fishInPondChoices += i + ". " + lang.current.fishing.fishName[i] + lang.current.fishing.rawFish + ", "
 				}
 			}
-			b[7] = true;
-			if (s.length === 0) {
-				await this.#functions.print(this.#lang.current.fishing.none);
-				await this.#functions.sleep(.5);
+			hasFishInPond[7] = true;
+			if (fishInPondChoices.length === 0) {
+				await functions.print(lang.current.fishing.none);
+				await functions.sleep(.5);
 				return
 			}
-			s += this.#lang.current.functions.exit;
+			fishInPondChoices += lang.current.functions.exit;
 			for (let i = 1; i <= 6; i++) {
-				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
-				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + " + " + (i + 3) + "\n")
+				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				if (data.gameState.dataSaver.foodFish[i][0]) {
+					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + " + " + (i + 3) + "\n")
 				}
-				if (!this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
-				}
-			}
-			await this.#functions.write("\n");
-			await this.#functions.print(s);
-			let d;
-			while (true) {
-				let c = await this.#functions.getch();
-				c -= "0";
-				if (c >= 0 && c <= 7 && b[c]) {
-					d = c;
-					break
+				if (!data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			if (d === 7) {
-				await this.#functions.sleep(.5);
+			await functions.write("\n");
+			await functions.print(fishInPondChoices);
+			let selectedFishInPondIndex;
+			do {
+				selectedFishInPondIndex = Number(await functions.getch())
+			} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
+			if (selectedFishInPondIndex === 7) {
+				await functions.sleep(.5);
 				return
 			}
-			if (this.#data.gameState.dataSaver.foodFish[d][0] < 1) {
-				await this.#functions.sleep(.5);
+			if (data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0] < 1) {
+				await functions.sleep(.5);
 				return
 			}
-			this.#data.gameState.dataSaver.foodFish[d][0]--;
-			this.#data.gameState.dataSaver.hunger += d + 3;
-			this.#data.gameState.dataSaver.hunger = Math.min(this.#data.gameState.dataSaver.hunger, 40);
-			await this.#functions.sleep(.5)
+			data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0]--;
+			data.gameState.dataSaver.hunger += selectedFishInPondIndex + 3;
+			data.gameState.dataSaver.hunger = Math.min(data.gameState.dataSaver.hunger, 40);
+			await functions.sleep(.5)
 		}
 	}
-	async #eat_food_roast() {
+	async function eatRoastedFish() {
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#lang.current.fishing.eatRoastedFish);
-			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
-			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
-			let b = Array(8).fill(false);
-			let s = "";
+			await functions.clear();
+			await functions.print(lang.current.fishing.eatRoastedFish);
+			await functions.printnl(lang.current.fishing.currentHunger + ": ");
+			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await functions.print(lang.current.fishing.currentAmount + ": ");
+			let hasFishInPond = Array(8).fill(false);
+			let fishInPondChoices = "";
 			for (let i = 0; i <= 6; i++) {
-				b[i] = this.#data.gameState.dataSaver.foodFish[i][1];
-				if (b[i]) {
-					s += i + ". " + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.eatRoastedFish + ", "
+				hasFishInPond[i] = Boolean(data.gameState.dataSaver.foodFish[i][1]);
+				if (hasFishInPond[i]) {
+					fishInPondChoices += i + ". " + lang.current.fishing.fishName[i] + lang.current.fishing.eatRoastedFish + ", "
 				}
 			}
-			b[7] = true;
-			if (s.length === 0) {
-				await this.#functions.print(this.#lang.current.fishing.none);
-				await this.#functions.sleep(.5);
+			hasFishInPond[7] = true;
+			if (fishInPondChoices.length === 0) {
+				await functions.print(lang.current.fishing.none);
+				await functions.sleep(.5);
 				return
 			}
-			s += this.#lang.current.functions.exit;
+			fishInPondChoices += lang.current.functions.exit;
 			for (let i = 1; i <= 6; i++) {
-				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
-				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + " + " + (i + 7) + "\n")
+				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				if (data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + " + " + (i + 7) + "\n")
 				}
-				if (!this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
-				}
-			}
-			await this.#functions.write("\n");
-			await this.#functions.print(s);
-			let d;
-			while (true) {
-				let c = await this.#functions.getch();
-				c -= "0";
-				if (c >= 0 && c <= 7 && b[c]) {
-					d = c;
-					break
+				if (!data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			if (d === 7) {
-				await this.#functions.sleep(.5);
+			await functions.write("\n");
+			await functions.print(fishInPondChoices);
+			let selectedFishInPondIndex;
+			do {
+				selectedFishInPondIndex = Number(await functions.getch())
+			} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
+			if (selectedFishInPondIndex === 7) {
+				await functions.sleep(.5);
 				return
 			}
-			if (this.#data.gameState.dataSaver.foodFish[d][1] < 1) {
+			if (data.gameState.dataSaver.foodFish[selectedFishInPondIndex][1] < 1) {
 				return
 			}
-			this.#data.gameState.dataSaver.foodFish[d][1]--;
-			this.#data.gameState.dataSaver.hunger += d + 7;
-			this.#data.gameState.dataSaver.hunger = Math.min(this.#data.gameState.dataSaver.hunger, 40);
-			await this.#functions.sleep(.5)
+			data.gameState.dataSaver.foodFish[selectedFishInPondIndex][1]--;
+			data.gameState.dataSaver.hunger += selectedFishInPondIndex + 7;
+			data.gameState.dataSaver.hunger = Math.min(data.gameState.dataSaver.hunger, 40);
+			await functions.sleep(.5)
 		}
 	}
-	async #no_roast() {
+	async function eatMenuNoOven() {
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.fishing.noOvenMenu));
-			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
-			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
+			await functions.clear();
+			await functions.print(functions.listToChoice(lang.current.fishing.noOvenMenu));
+			await functions.printnl(lang.current.fishing.currentHunger + ": ");
+			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await functions.print(lang.current.fishing.currentAmount + ": ");
 			for (let i = 1; i <= 6; i++) {
-				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
-				if (this.#fish[i].length) {
-					await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
+				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				if (fishInPond[i].length) {
+					await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
+				if (data.gameState.dataSaver.foodFish[i][0]) {
+					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.roastedFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
+				if (data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
+				if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
 			while (true) {
-				let c = await this.#functions.getch();
-				if (c === "1") {
-					await this.#makeFood();
+				const input = await functions.getch();
+				if (input === "1") {
+					await makeFood();
 					break
-				} else if (c === "2") {
-					await this.#eatFish();
+				} else if (input === "2") {
+					await eatFish();
 					break
-				} else if (c === "3") {
+				} else if (input === "3") {
 					return
 				}
 			}
-			await this.#functions.sleep(.5)
+			await functions.sleep(.5)
 		}
 	}
-	async #roast() {
-		if (!this.#data.gameState.dataSaver.ovenCount) {
-			await this.#no_roast();
+	async function eatMenu() {
+		if (!data.gameState.dataSaver.ovenCount) {
+			await eatMenuNoOven();
 			return
 		}
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.fishing.ovenMenu));
-			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
-			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await this.#functions.print(this.#lang.current.fishing.currentAmount + ": ");
+			await functions.clear();
+			await functions.print(functions.listToChoice(lang.current.fishing.ovenMenu));
+			await functions.printnl(lang.current.fishing.currentHunger + ": ");
+			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await functions.print(lang.current.fishing.currentAmount + ": ");
 			for (let i = 1; i <= 6; i++) {
-				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
-				if (this.#fish[i].length) {
-					await this.#functions.write("    " + this.#lang.current.fishing.fishpond + ": " + this.#fish[i].length + this.#lang.current.fishing.fishNumber + "\n")
+				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				if (fishInPond[i].length) {
+					await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#data.gameState.dataSaver.foodFish[i][0]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.rawFish + ": " + this.#data.gameState.dataSaver.foodFish[i][0] + this.#lang.current.fishing.fishNumber + "\n")
+				if (data.gameState.dataSaver.foodFish[i][0]) {
+					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.roastFish + ": " + this.#data.gameState.dataSaver.foodFish[i][1] + this.#lang.current.fishing.fishNumber + "\n")
+				if (data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.roastFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 				}
-				if (this.#fish[i].length === 0 && !this.#data.gameState.dataSaver.foodFish[i][0] && !this.#data.gameState.dataSaver.foodFish[i][1]) {
-					await this.#functions.write("    " + this.#lang.current.fishing.none + "\n")
+				if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
+					await functions.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			await this.#functions.write("\n");
+			await functions.write("\n");
 			while (true) {
-				let c = await this.#functions.getch();
-				if (c === "1") {
-					await this.#makeFood();
+				const input = await functions.getch();
+				if (input === "1") {
+					await makeFood();
 					break
-				} else if (c === "2") {
-					await this.#roastedFish();
+				} else if (input === "2") {
+					await roastFish();
 					break
-				} else if (c === "3") {
-					await this.#eatFish();
+				} else if (input === "3") {
+					await eatFish();
 					break
-				} else if (c === "4") {
-					await this.#eat_food_roast();
+				} else if (input === "4") {
+					await eatRoastedFish();
 					break
-				} else if (c === "5") {
+				} else if (input === "5") {
 					return
 				}
 			}
-			await this.#functions.sleep(.5)
+			await functions.sleep(.5)
 		}
 	}
-	async #run() {
+	async function run() {
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.fishing.mainMenu));
-			await this.#functions.printnl(this.#lang.current.fishing.currentHunger + ": ");
-			await this.#functions.write((this.#data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : this.#data.gameState.dataSaver.hunger < 30 ? "" : this.#data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + this.#data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await this.#functions.print(this.#lang.current.fishing.currentFishingRod + ": " + this.#lang.current.fishing.fishName[this.#data.gameState.dataSaver.rodLevel] + this.#lang.current.fishing.fishingRod);
+			await functions.clear();
+			await functions.print(functions.listToChoice(lang.current.fishing.mainMenu));
+			await functions.printnl(lang.current.fishing.currentHunger + ": ");
+			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await functions.print(lang.current.fishing.currentFishingRod + ": " + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
 			for (let i = 0; i <= 6; i++) {
-				await this.#functions.write(this.#fish_color[i] + this.#lang.current.fishing.fishName[i] + this.#lang.current.fishing.fish + "\x1b[m\n");
-				for (let j = 0; j < this.#fish[i].length; j++) {
-					if (this.#fish[i][j] >= 8) {
-						await this.#functions.write("\x1b[1;32m")
-					} else if (this.#fish[i][j] <= 2) {
-						await this.#functions.write("\x1b[1;31m")
+				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				for (let j = 0; j < fishInPond[i].length; j++) {
+					if (fishInPond[i][j] >= 8) {
+						await functions.write("\x1b[1;32m")
+					} else if (fishInPond[i][j] <= 2) {
+						await functions.write("\x1b[1;31m")
 					} else {
-						await this.#functions.write("\x1b[1m")
+						await functions.write("\x1b[1m")
 					}
-					await this.#functions.write("    " + this.#lang.current.fishing.freshness + ": " + this.#fish[i][j] + "\x1b[m\n")
+					await functions.write("    " + lang.current.fishing.freshness + ": " + fishInPond[i][j] + "\x1b[m\n")
 				}
-				if (this.#fish[i].length === 0) {
-					await this.#functions.write("    " + this.#lang.current.fishing.none + "\x1b[m\n")
+				if (fishInPond[i].length === 0) {
+					await functions.write("    " + lang.current.fishing.none + "\x1b[m\n")
 				}
 			}
 			while (true) {
-				let c = await this.#functions.getch();
-				if (c === "1") {
+				const input = await functions.getch();
+				if (input === "1") {
 					for (let i = 0; i <= 6; i++) {
-						for (let j = 0; j < this.#fish[i].length; j++) {
-							this.#fish[i][j] -= 1;
-							if (this.#fish[i][j] <= 0) {
+						for (let j = 0; j < fishInPond[i].length; j++) {
+							fishInPond[i][j] -= 1;
+							if (fishInPond[i][j] <= 0) {
 								if (i !== 0) {
-									this.#fish[i - 1].push(10)
+									fishInPond[i - 1].push(10)
 								}
-								for (let k = j + 1; k < this.#fish[i].length; k++) {
-									this.#fish[i][k - 1] = this.#fish[i][k]
+								for (let k = j + 1; k < fishInPond[i].length; k++) {
+									fishInPond[i][k - 1] = fishInPond[i][k]
 								}
-								this.#fish[i].pop();
+								fishInPond[i].pop();
 								j--
 							}
 						}
 					}
-					await this.#fishing_choose();
-					this.#data.gameState.dataSaver.hunger--;
+					await runFishing();
+					data.gameState.dataSaver.hunger--;
 					break
-				} else if (c === "2") {
-					await this.makeFishingRod();
-					await this.#functions.sleep(1);
+				} else if (input === "2") {
+					await makeFishingRod();
+					await functions.sleep(1);
 					break
-				} else if (c === "3") {
-					await this.#roast();
+				} else if (input === "3") {
+					await eatMenu();
 					break
-				} else if (c === "4") {
+				} else if (input === "4") {
 					for (let i = 0; i <= 6; i++) {
-						for (let j = 0; j < this.#fish[i].length; j++) {
-							this.#data.gameState.dataSaver.money += Math.round(this.#gr() * (1 - .02 * this.#dirty) * this.#fresh(this.#fish[i][j]))
+						for (let j = 0; j < fishInPond[i].length; j++) {
+							data.gameState.dataSaver.money += Math.round(getRandomIncome() * getFreshnessMultiplier(fishInPond[i][j]))
 						}
-						while (this.#fish[i].length !== 0) {
-							this.#fish[i].pop()
+						while (fishInPond[i].length !== 0) {
+							fishInPond[i].pop()
 						}
 					}
-					await this.#functions.clear();
+					await functions.clear();
 					break
-				} else if (c === "5") {
+				} else if (input === "5") {
 					for (let i = 0; i <= 6; i++) {
-						for (let j = 0; j < this.#fish[i].length; j++) {
-							this.#data.gameState.dataSaver.money += Math.round(this.#gr() * (1 - .02 * this.#dirty) * this.#fresh(this.#fish[i][j]))
+						for (let j = 0; j < fishInPond[i].length; j++) {
+							data.gameState.dataSaver.money += Math.round(getRandomIncome() * getFreshnessMultiplier(fishInPond[i][j]))
 						}
-						while (this.#fish[i].length !== 0) {
-							this.#fish[i].pop()
+						while (fishInPond[i].length !== 0) {
+							fishInPond[i].pop()
 						}
 					}
 					return
 				}
 			}
-			await this.#functions.sleep(1)
+			await functions.sleep(1)
 		}
 	}
-	constructor(lang, data, functions) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		this.#fish_gai = deepFreeze([
-			[0, 8100, 1400, 400, 90, 9, 1],
-			[100, 8e3, 1400, 400, 90, 9, 1],
-			[300, 7500, 1700, 400, 90, 9, 1],
-			[500, 7e3, 1700, 700, 90, 9, 1],
-			[700, 6500, 1700, 700, 390, 9, 1],
-			[900, 6e3, 1700, 700, 390, 309, 1],
-			[0, 6600, 1700, 700, 390, 309, 301]
-		]);
-		this.#old = Object.freeze(["                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                         o                  ", "                        /|\\--------         ", "                        /_\\___              ", "~~~~~~~~~~~~~~~~~~~~~~~|      |~~~~~~~~~~~~|", "                              |            |", "                              |            |", "                              |____________|"]);
-		this.#la = 0;
-		this.#la2 = 0;
-		this.#weatherpcr = deepFreeze([
-			["     \x1b[33;1m_____\x1b[m                                  ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|_____|\x1b[m                                 "],
-			["         _______      ___________           ", "     ___/       \\____/           \\___       ", "    (                                )      ", "     \\______________________________/       "],
-			["         \x1b[33;1m_____\x1b[m       ___________            ", "     ___\x1b[33;1m|_____|\x1b[m_____/           \\____       ", "    (                                )      ", "     \\______________________________/       "]
-		]);
-		this.#macnt = Object.freeze([0, 11, 20, 40]);
-		this.#fu = Object.freeze([".", "*", " ", " ", " ", " "]);
-		this.#fucolor = Object.freeze(["\x1b[1;34m", "\x1b[1;36m", "", "", "", ""]);
-		this.#weather = [2, 0];
-		this.#lw = 0;
-		this.#weapoint = [];
-		this.#paint = Array.from({
-			length: 15
-		}, () => Array(44).fill(" "));
-		this.#color = Array.from({
-			length: 15
-		}, () => Array(44).fill(""));
-		this.#last = "";
-		this.#fish = Array.from({
-			length: 7
-		}, () => []);
-		this.#dirty = 0;
-		this.#fish_color = Object.freeze(["\x1b[1;31m", "\x1b[1;37m", "\x1b[1;35m", "\x1b[1;34m", "\x1b[1;33m", "\x1b[1;32m", "\x1b[1;36m"]);
-		this.#now_status = 0;
-		this.#fish_add = Object.freeze([0, 1, 2, 5, 10, 50, 100]);
-		this.#ter_big = Array.from({
-			length: 7
-		}, () => []);
-		Object.defineProperty(this, "run", {
-			value: this.#run.bind(this),
-			writable: false,
-			configurable: false,
-			enumerable: true
-		});
-		Object.seal(this)
-	}
+	return run
 }

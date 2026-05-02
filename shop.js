@@ -1,154 +1,150 @@
-export default class Shop {
-	#lang = undefined;
-	#data = undefined;
-	#functions = undefined;
-	run;
-	#avgText(minValue, maxValue) {
+export default function createShop(lang, data, functions) {
+	function avgText(minValue, maxValue) {
 		const sum = minValue + maxValue;
 		return sum % 2 === 0 ? String(sum / 2) : `${Math.floor(sum/2)}.5`
 	}
-	async #showResult(text) {
-		await this.#functions.print(text);
-		await this.#functions.sleep(.5)
+	async function showResult(text) {
+		await functions.print(text);
+		await functions.sleep(.5)
 	}
-	async #shop0() {
+	async function shop0() {
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.shop.shopMainMenu));
-			await this.#functions.print(this.#lang.current.shop.hookSpeedTitle + ": ");
-			if (this.#data.gameState.dataSaver.catchSpeedLevel === this.#data.constant.maxCatchSpeedLevel) {
-				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
+			await functions.clear();
+			await functions.print(functions.listToChoice(lang.current.shop.shopMainMenu));
+			await functions.print(lang.current.shop.hookSpeedTitle + ": ");
+			if (data.gameState.dataSaver.catchSpeedLevel === data.constant.maxCatchSpeedLevel) {
+				await functions.print("    " + lang.current.shop.maxLevelReached)
 			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.hookSpeedCurrentPrefix + ": " + this.#avgText(this.#data.constant.minCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel], this.#data.constant.maxCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel]) + ", " + this.#lang.current.shop.hookSpeedNextPrefix + ": " + this.#avgText(this.#data.constant.minCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel + 1], this.#data.constant.maxCatchSpeed[this.#data.gameState.dataSaver.catchSpeedLevel + 1]));
-				await this.#functions.print("    " + this.#lang.current.shop.upgradeCostPrefix + ": $" + this.#data.constant.catchSpeedUpgradeCost[this.#data.gameState.dataSaver.catchSpeedLevel + 1] + ", " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+				await functions.print("    " + lang.current.shop.hookSpeedCurrentPrefix + ": " + avgText(data.constant.minCatchSpeed[data.gameState.dataSaver.catchSpeedLevel], data.constant.maxCatchSpeed[data.gameState.dataSaver.catchSpeedLevel]) + ", " + lang.current.shop.hookSpeedNextPrefix + ": " + avgText(data.constant.minCatchSpeed[data.gameState.dataSaver.catchSpeedLevel + 1], data.constant.maxCatchSpeed[data.gameState.dataSaver.catchSpeedLevel + 1]));
+				await functions.print("    " + lang.current.shop.upgradeCostPrefix + ": $" + data.constant.catchSpeedUpgradeCost[data.gameState.dataSaver.catchSpeedLevel + 1] + ", " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 			}
-			await this.#functions.print(this.#lang.current.shop.fishingIncomeTitle + ": ");
-			if (this.#data.gameState.dataSaver.incomeLevel === this.#data.constant.maxIncomeLevel) {
-				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
+			await functions.print(lang.current.shop.fishingIncomeTitle + ": ");
+			if (data.gameState.dataSaver.incomeLevel === data.constant.maxIncomeLevel) {
+				await functions.print("    " + lang.current.shop.maxLevelReached)
 			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.fishingIncomeCurrentPrefix + ": " + this.#avgText(this.#data.constant.minIncome[this.#data.gameState.dataSaver.incomeLevel], this.#data.constant.maxIncome[this.#data.gameState.dataSaver.incomeLevel]) + ", " + this.#lang.current.shop.fishingIncomeNextPrefix + ": " + this.#avgText(this.#data.constant.minIncome[this.#data.gameState.dataSaver.incomeLevel + 1], this.#data.constant.maxIncome[this.#data.gameState.dataSaver.incomeLevel + 1]));
-				await this.#functions.print("    " + this.#lang.current.shop.upgradeCostPrefix + ": $" + this.#data.constant.incomeLevelUpgradeCost[this.#data.gameState.dataSaver.incomeLevel + 1] + ", " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+				await functions.print("    " + lang.current.shop.fishingIncomeCurrentPrefix + ": " + avgText(data.constant.minIncome[data.gameState.dataSaver.incomeLevel], data.constant.maxIncome[data.gameState.dataSaver.incomeLevel]) + ", " + lang.current.shop.fishingIncomeNextPrefix + ": " + avgText(data.constant.minIncome[data.gameState.dataSaver.incomeLevel + 1], data.constant.maxIncome[data.gameState.dataSaver.incomeLevel + 1]));
+				await functions.print("    " + lang.current.shop.upgradeCostPrefix + ": $" + data.constant.incomeLevelUpgradeCost[data.gameState.dataSaver.incomeLevel + 1] + ", " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 			}
-			await this.#functions.print(this.#lang.current.shop.hookOffTitle + ": ");
-			if (this.#data.gameState.dataSaver.slipOffChance === 0) {
-				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
-			} else if (this.#data.gameState.dataSaver.slipOffChance > 10) {
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffCurrentPrefix + ": " + this.#data.gameState.dataSaver.slipOffChance + "%, " + this.#lang.current.shop.hookOffNextPrefix + ": " + (this.#data.gameState.dataSaver.slipOffChance - 10) + "%");
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffCostPrefix + " $100, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
-			} else if (this.#data.gameState.dataSaver.slipOffChance > 5) {
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffPresetCurrent + " 10% " + this.#lang.current.shop.hookOffPresetNext + " 5%");
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffCostPrefix + " $100, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
-			} else if (this.#data.gameState.dataSaver.slipOffChance > 1) {
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffCurrentPrefix + ": " + this.#data.gameState.dataSaver.slipOffChance + "%, " + this.#lang.current.shop.hookOffNextPrefix + ": " + (this.#data.gameState.dataSaver.slipOffChance - 1) + "%");
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffCostPrefix + " $100, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+			await functions.print(lang.current.shop.hookOffTitle + ": ");
+			if (data.gameState.dataSaver.slipOffChance === 0) {
+				await functions.print("    " + lang.current.shop.maxLevelReached)
+			} else if (data.gameState.dataSaver.slipOffChance > 10) {
+				await functions.print("    " + lang.current.shop.hookOffCurrentPrefix + ": " + data.gameState.dataSaver.slipOffChance + "%, " + lang.current.shop.hookOffNextPrefix + ": " + (data.gameState.dataSaver.slipOffChance - 10) + "%");
+				await functions.print("    " + lang.current.shop.hookOffCostPrefix + " $100, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
+			} else if (data.gameState.dataSaver.slipOffChance > 5) {
+				await functions.print("    " + lang.current.shop.hookOffPresetCurrent + " 10% " + lang.current.shop.hookOffPresetNext + " 5%");
+				await functions.print("    " + lang.current.shop.hookOffCostPrefix + " $100, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
+			} else if (data.gameState.dataSaver.slipOffChance > 1) {
+				await functions.print("    " + lang.current.shop.hookOffCurrentPrefix + ": " + data.gameState.dataSaver.slipOffChance + "%, " + lang.current.shop.hookOffNextPrefix + ": " + (data.gameState.dataSaver.slipOffChance - 1) + "%");
+				await functions.print("    " + lang.current.shop.hookOffCostPrefix + " $100, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffPresetCurrent + " 1% " + this.#lang.current.shop.hookOffPresetNext + " 0%");
-				await this.#functions.print("    " + this.#lang.current.shop.hookOffCostPrefix + " $500, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+				await functions.print("    " + lang.current.shop.hookOffPresetCurrent + " 1% " + lang.current.shop.hookOffPresetNext + " 0%");
+				await functions.print("    " + lang.current.shop.hookOffCostPrefix + " $500, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 			}
-			await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $10, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money);
-			await this.#functions.print(this.#lang.current.shop.ovenCountTitle + ": ");
-			if (this.#data.gameState.dataSaver.ovenCount >= 3) {
-				await this.#functions.print("    " + this.#lang.current.shop.ovenMaxCount)
+			await functions.print("    " + lang.current.shop.purchaseCostPrefix + " $10, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money);
+			await functions.print(lang.current.shop.ovenCountTitle + ": ");
+			if (data.gameState.dataSaver.ovenCount >= 3) {
+				await functions.print("    " + lang.current.shop.ovenMaxCount)
 			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.ovenCurrentPrefix + ": " + this.#data.gameState.dataSaver.ovenCount);
-				if (this.#data.gameState.dataSaver.ovenCount < 1) {
-					await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $50, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
-				} else if (this.#data.gameState.dataSaver.ovenCount === 1) {
-					await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $1000, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+				await functions.print("    " + lang.current.shop.ovenCurrentPrefix + ": " + data.gameState.dataSaver.ovenCount);
+				if (data.gameState.dataSaver.ovenCount < 1) {
+					await functions.print("    " + lang.current.shop.purchaseCostPrefix + " $50, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
+				} else if (data.gameState.dataSaver.ovenCount === 1) {
+					await functions.print("    " + lang.current.shop.purchaseCostPrefix + " $1000, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 				} else {
-					await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $2000, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+					await functions.print("    " + lang.current.shop.purchaseCostPrefix + " $2000, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 				}
 			}
 			while (true) {
-				const type = await this.#functions.getch();
+				const type = await functions.getch();
 				if (type === "1") {
-					if (this.#data.gameState.dataSaver.catchSpeedLevel === this.#data.constant.maxCatchSpeedLevel) {
-						await this.#showResult("    " + this.#lang.current.shop.maxLevelReached);
+					if (data.gameState.dataSaver.catchSpeedLevel === data.constant.maxCatchSpeedLevel) {
+						await showResult("    " + lang.current.shop.maxLevelReached);
 						break
-					} else if (this.#data.gameState.dataSaver.money < this.#data.constant.catchSpeedUpgradeCost[this.#data.gameState.dataSaver.catchSpeedLevel + 1]) {
-						await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+					} else if (data.gameState.dataSaver.money < data.constant.catchSpeedUpgradeCost[data.gameState.dataSaver.catchSpeedLevel + 1]) {
+						await showResult("    " + lang.current.shop.notEnoughMoney);
 						break
 					} else {
-						this.#data.gameState.dataSaver.money -= this.#data.constant.catchSpeedUpgradeCost[++this.#data.gameState.dataSaver.catchSpeedLevel];
-						await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+						data.gameState.dataSaver.money -= data.constant.catchSpeedUpgradeCost[++data.gameState.dataSaver.catchSpeedLevel];
+						await showResult("    " + lang.current.shop.purchaseSuccess);
 						break
 					}
 				} else if (type === "2") {
-					if (this.#data.gameState.dataSaver.incomeLevel === this.#data.constant.maxIncomeLevel) {
-						await this.#showResult("    " + this.#lang.current.shop.maxLevelReached);
+					if (data.gameState.dataSaver.incomeLevel === data.constant.maxIncomeLevel) {
+						await showResult("    " + lang.current.shop.maxLevelReached);
 						break
-					} else if (this.#data.gameState.dataSaver.money < this.#data.constant.incomeLevelUpgradeCost[this.#data.gameState.dataSaver.incomeLevel + 1]) {
-						await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+					} else if (data.gameState.dataSaver.money < data.constant.incomeLevelUpgradeCost[data.gameState.dataSaver.incomeLevel + 1]) {
+						await showResult("    " + lang.current.shop.notEnoughMoney);
 						break
 					} else {
-						this.#data.gameState.dataSaver.money -= this.#data.constant.incomeLevelUpgradeCost[++this.#data.gameState.dataSaver.incomeLevel];
-						await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+						data.gameState.dataSaver.money -= data.constant.incomeLevelUpgradeCost[++data.gameState.dataSaver.incomeLevel];
+						await showResult("    " + lang.current.shop.purchaseSuccess);
 						break
 					}
 				} else if (type === "3") {
-					if (this.#data.gameState.dataSaver.slipOffChance === 0) {
-						await this.#showResult("    " + this.#lang.current.shop.maxLevelReached);
+					if (data.gameState.dataSaver.slipOffChance === 0) {
+						await showResult("    " + lang.current.shop.maxLevelReached);
 						break
-					} else if (this.#data.gameState.dataSaver.slipOffChance === 1) {
-						if (this.#data.gameState.dataSaver.money < 500) {
-							await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+					} else if (data.gameState.dataSaver.slipOffChance === 1) {
+						if (data.gameState.dataSaver.money < 500) {
+							await showResult("    " + lang.current.shop.notEnoughMoney);
 							break
 						} else {
-							this.#data.gameState.dataSaver.money -= 500;
-							this.#data.gameState.dataSaver.slipOffChance = 0;
-							await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+							data.gameState.dataSaver.money -= 500;
+							data.gameState.dataSaver.slipOffChance = 0;
+							await showResult("    " + lang.current.shop.purchaseSuccess);
 							break
 						}
 					} else {
-						if (this.#data.gameState.dataSaver.money < 100) {
-							await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+						if (data.gameState.dataSaver.money < 100) {
+							await showResult("    " + lang.current.shop.notEnoughMoney);
 							break
 						} else {
-							this.#data.gameState.dataSaver.money -= 100;
-							if (this.#data.gameState.dataSaver.slipOffChance > 10) {
-								this.#data.gameState.dataSaver.slipOffChance -= 10
-							} else if (this.#data.gameState.dataSaver.slipOffChance > 5) {
-								this.#data.gameState.dataSaver.slipOffChance = 5
-							} else if (this.#data.gameState.dataSaver.slipOffChance > 0) {
-								this.#data.gameState.dataSaver.slipOffChance -= 1
+							data.gameState.dataSaver.money -= 100;
+							if (data.gameState.dataSaver.slipOffChance > 10) {
+								data.gameState.dataSaver.slipOffChance -= 10
+							} else if (data.gameState.dataSaver.slipOffChance > 5) {
+								data.gameState.dataSaver.slipOffChance = 5
+							} else if (data.gameState.dataSaver.slipOffChance > 0) {
+								data.gameState.dataSaver.slipOffChance -= 1
 							}
-							await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+							await showResult("    " + lang.current.shop.purchaseSuccess);
 							break
 						}
 					}
 				} else if (type === "4") {
-					if (this.#data.gameState.dataSaver.ovenCount >= 3) {
-						await this.#showResult("    " + this.#lang.current.shop.ovenMaxCount);
+					if (data.gameState.dataSaver.ovenCount >= 3) {
+						await showResult("    " + lang.current.shop.ovenMaxCount);
 						break
 					} else {
-						if (this.#data.gameState.dataSaver.ovenCount < 1) {
-							if (this.#data.gameState.dataSaver.money < 50) {
-								await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+						if (data.gameState.dataSaver.ovenCount < 1) {
+							if (data.gameState.dataSaver.money < 50) {
+								await showResult("    " + lang.current.shop.notEnoughMoney);
 								break
 							} else {
-								this.#data.gameState.dataSaver.money -= 50;
-								this.#data.gameState.dataSaver.ovenCount = 1;
-								await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+								data.gameState.dataSaver.money -= 50;
+								data.gameState.dataSaver.ovenCount = 1;
+								await showResult("    " + lang.current.shop.purchaseSuccess);
 								break
 							}
-						} else if (this.#data.gameState.dataSaver.ovenCount === 1) {
-							if (this.#data.gameState.dataSaver.money < 1e3) {
-								await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+						} else if (data.gameState.dataSaver.ovenCount === 1) {
+							if (data.gameState.dataSaver.money < 1e3) {
+								await showResult("    " + lang.current.shop.notEnoughMoney);
 								break
 							} else {
-								this.#data.gameState.dataSaver.money -= 1e3;
-								this.#data.gameState.dataSaver.ovenCount = 2;
-								await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+								data.gameState.dataSaver.money -= 1e3;
+								data.gameState.dataSaver.ovenCount = 2;
+								await showResult("    " + lang.current.shop.purchaseSuccess);
 								break
 							}
 						} else {
-							if (this.#data.gameState.dataSaver.money < 2e3) {
-								await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+							if (data.gameState.dataSaver.money < 2e3) {
+								await showResult("    " + lang.current.shop.notEnoughMoney);
 								break
 							} else {
-								this.#data.gameState.dataSaver.money -= 2e3;
-								this.#data.gameState.dataSaver.ovenCount = 3;
-								await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+								data.gameState.dataSaver.money -= 2e3;
+								data.gameState.dataSaver.ovenCount = 3;
+								await showResult("    " + lang.current.shop.purchaseSuccess);
 								break
 							}
 						}
@@ -159,50 +155,50 @@ export default class Shop {
 			}
 		}
 	}
-	async #shop1() {
+	async function shop1() {
 		while (true) {
-			await this.#functions.clear();
-			await this.#functions.print(this.#functions.listToChoice(this.#lang.current.shop.superShopMainMenu));
-			await this.#functions.print(this.#lang.current.shop.superCastSpeedTitle + ": ");
-			if (this.#data.gameState.dataSaver.actionSpeedMultiplier >= 10) {
-				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
+			await functions.clear();
+			await functions.print(functions.listToChoice(lang.current.shop.superShopMainMenu));
+			await functions.print(lang.current.shop.superCastSpeedTitle + ": ");
+			if (data.gameState.dataSaver.actionSpeedMultiplier >= 10) {
+				await functions.print("    " + lang.current.shop.maxLevelReached)
 			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.superCurrentPrefix + ": " + this.#data.gameState.dataSaver.actionSpeedMultiplier + " " + this.#lang.current.shop.superNextPrefix + ": " + (this.#data.gameState.dataSaver.actionSpeedMultiplier + 1) + " " + this.#lang.current.shop.superSpeedSuffix);
-				await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $1000, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+				await functions.print("    " + lang.current.shop.superCurrentPrefix + ": " + data.gameState.dataSaver.actionSpeedMultiplier + " " + lang.current.shop.superNextPrefix + ": " + (data.gameState.dataSaver.actionSpeedMultiplier + 1) + " " + lang.current.shop.superSpeedSuffix);
+				await functions.print("    " + lang.current.shop.purchaseCostPrefix + " $1000, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 			}
-			await this.#functions.print(this.#lang.current.shop.superBigFishTitle + ": ");
-			if (this.#data.gameState.dataSaver.bigFishChance >= 60) {
-				await this.#functions.print("    " + this.#lang.current.shop.maxLevelReached)
+			await functions.print(lang.current.shop.superBigFishTitle + ": ");
+			if (data.gameState.dataSaver.bigFishChance >= 60) {
+				await functions.print("    " + lang.current.shop.maxLevelReached)
 			} else {
-				await this.#functions.print("    " + this.#lang.current.shop.superBigFishCurrentPrefix + ": " + this.#data.gameState.dataSaver.bigFishChance + " " + "%, " + this.#lang.current.shop.superBigFishNextPrefix + ": " + (this.#data.gameState.dataSaver.bigFishChance + 5) + "%");
-				await this.#functions.print("    " + this.#lang.current.shop.purchaseCostPrefix + " $1000, " + this.#lang.current.shop.currentGoldPrefix + ": $" + this.#data.gameState.dataSaver.money)
+				await functions.print("    " + lang.current.shop.superBigFishCurrentPrefix + ": " + data.gameState.dataSaver.bigFishChance + " " + "%, " + lang.current.shop.superBigFishNextPrefix + ": " + (data.gameState.dataSaver.bigFishChance + 5) + "%");
+				await functions.print("    " + lang.current.shop.purchaseCostPrefix + " $1000, " + lang.current.shop.currentGoldPrefix + ": $" + data.gameState.dataSaver.money)
 			}
 			while (true) {
-				const type = await this.#functions.getch();
+				const type = await functions.getch();
 				if (type === "1") {
-					if (this.#data.gameState.dataSaver.actionSpeedMultiplier >= 10) {
-						await this.#showResult("    " + this.#lang.current.shop.maxLevelReached);
+					if (data.gameState.dataSaver.actionSpeedMultiplier >= 10) {
+						await showResult("    " + lang.current.shop.maxLevelReached);
 						break
-					} else if (this.#data.gameState.dataSaver.money < 1e3) {
-						await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+					} else if (data.gameState.dataSaver.money < 1e3) {
+						await showResult("    " + lang.current.shop.notEnoughMoney);
 						break
 					} else {
-						this.#data.gameState.dataSaver.money -= 1e3;
-						this.#data.gameState.dataSaver.actionSpeedMultiplier++;
-						await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+						data.gameState.dataSaver.money -= 1e3;
+						data.gameState.dataSaver.actionSpeedMultiplier++;
+						await showResult("    " + lang.current.shop.purchaseSuccess);
 						break
 					}
 				} else if (type === "2") {
-					if (this.#data.gameState.dataSaver.bigFishChance >= 60) {
-						await this.#showResult("    " + this.#lang.current.shop.maxLevelReached);
+					if (data.gameState.dataSaver.bigFishChance >= 60) {
+						await showResult("    " + lang.current.shop.maxLevelReached);
 						break
-					} else if (this.#data.gameState.dataSaver.money < 1e3) {
-						await this.#showResult("    " + this.#lang.current.shop.notEnoughMoney);
+					} else if (data.gameState.dataSaver.money < 1e3) {
+						await showResult("    " + lang.current.shop.notEnoughMoney);
 						break
 					} else {
-						this.#data.gameState.dataSaver.money -= 1e3;
-						this.#data.gameState.dataSaver.bigFishChance += 5;
-						await this.#showResult("    " + this.#lang.current.shop.purchaseSuccess);
+						data.gameState.dataSaver.money -= 1e3;
+						data.gameState.dataSaver.bigFishChance += 5;
+						await showResult("    " + lang.current.shop.purchaseSuccess);
 						break
 					}
 				} else if (type === "3") {
@@ -211,28 +207,22 @@ export default class Shop {
 			}
 		}
 	}
-	async #run() {
-		await this.#functions.clear();
-		await this.#functions.print(this.#functions.listToChoice(this.#lang.current.shop.shopSelectMenu));
+	async function run() {
+		await functions.clear();
+		await functions.print(functions.listToChoice(lang.current.shop.shopSelectMenu));
 		let type;
 		while (true) {
-			type = await this.#functions.getch();
+			type = await functions.getch();
 			if (type === "1") {
-				await this.#shop0();
+				await shop0();
 				break
 			} else if (type === "2") {
-				await this.#shop1();
+				await shop1();
 				break
 			} else if (type === "3") {
 				return
 			}
 		}
 	}
-	constructor(lang, data, functions) {
-		this.#lang = lang;
-		this.#data = data;
-		this.#functions = functions;
-		this.run = this.#run.bind(this);
-		Object.freeze(this)
-	}
+	return run
 }

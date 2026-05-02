@@ -1,71 +1,61 @@
-export default class Functions {
-	#inputBuffer = [];
-	#waitingResolvers = [];
-	#data = undefined;
-	#lang = undefined;
-	listToChoice;
-	write;
-	clear;
-	onInput;
-	getch;
-	getch2;
-	getch2s;
-	getline;
-	getlineYe;
-	printnl;
-	print;
-	printa;
-	printYn;
-	deepCopy;
-	#listToChoice(...lists) {
-		return [lists].flat(2).map((name, index) => `${index+1}. ${this.capitalize(name)}`).join(", ")
+export default function createFunctions(data, lang) {
+	const inputBuffer = [];
+	const waitingResolvers = [];
+
+	function listToChoice(...lists) {
+		return [lists].flat(2).map((name, index) => `${index+1}. ${capitalize(name)}`).join(", ")
 	}
-	#write(text) {
-		return this.#data.gameState.requiredFunctions.write(String(text || "").replace(/\n/g, "\r\n"))
+
+	function write(text) {
+		return data.gameState.requiredFunctions.write(String(text || "").replace(/\n/g, "\r\n"))
 	}
-	async #clear() {
-		await this.#write("\x1bc")
+	async function clear() {
+		await write("\x1bc")
 	}
-	#onInput(str) {
+
+	function onInput(str) {
 		if (typeof str !== "string") {
 			str = String(str)
 		}
-		for (const ch of [...str.replace(/\r\n/g, "\r").replace(/\n/g, "\r").replace(/\x08/g, "")]) {
-			if (this.#waitingResolvers.length > 0) {
-				const resolve = this.#waitingResolvers.shift();
+		for (const ch of str.replace(/\r\n/g, "\r").replace(/\n/g, "\r").replace(/\x08/g, "")) {
+			if (waitingResolvers.length > 0) {
+				const resolve = waitingResolvers.shift();
 				resolve(ch)
 			} else {
-				this.#inputBuffer.push(ch)
+				inputBuffer.push(ch)
 			}
 		}
 	}
-	async #getch() {
-		if (this.#inputBuffer.length > 0) {
-			return this.#inputBuffer.shift()
+	async function getch() {
+		if (inputBuffer.length > 0) {
+			return inputBuffer.shift()
 		}
 		return new Promise(resolve => {
-			this.#waitingResolvers.push(resolve)
+			waitingResolvers.push(resolve)
 		})
 	}
-	#getch2() {
-		if (this.#inputBuffer.length > 0) {
-			return this.#inputBuffer.shift()
+
+	function getch2() {
+		if (inputBuffer.length > 0) {
+			return inputBuffer.shift()
 		}
 		return ""
 	}
-	#getch2s() {
-		if (this.#inputBuffer.length === 0) {
+
+	function getch2s() {
+		if (inputBuffer.length === 0) {
 			return ""
 		}
-		return this.#inputBuffer.splice(0).join("")
+		return inputBuffer.splice(0).join("")
 	}
-	isNumberBetween(num, l, r) {
+
+	function isNumberBetween(num, l, r) {
 		return num >= l && num <= r
 	}
-	async #getline(type = 0) {
+	async function getline(type = 0) {
 		let ans = "";
 		while (true) {
-			const a = await this.#getch();
+			const a = await getch();
 			if (a === "\r") {
 				if (ans) {
 					break
@@ -77,7 +67,7 @@ export default class Functions {
 				if (ans.length > 0) {
 					ans = ans.slice(0, -1);
 					if (type === 1 || type === 2) {
-						await this.#write("\b \b")
+						await write("\b \b")
 					}
 				}
 				continue
@@ -87,18 +77,18 @@ export default class Functions {
 			}
 			ans += a;
 			if (type === 1) {
-				await this.#write(a)
+				await write(a)
 			} else if (type === 2) {
-				await this.#write("*")
+				await write("*")
 			}
 		}
-		await this.#write("\n");
+		await write("\n");
 		return ans
 	}
-	async #getlineYe(type = 0) {
+	async function getlineYe(type = 0) {
 		let ans = "";
 		while (true) {
-			const a = await this.#getch();
+			const a = await getch();
 			if (a === "\r") {
 				break
 			}
@@ -106,7 +96,7 @@ export default class Functions {
 				if (ans.length > 0) {
 					ans = ans.slice(0, -1);
 					if (type === 1 || type === 2) {
-						await this.#write("\b \b")
+						await write("\b \b")
 					}
 				}
 				continue
@@ -116,47 +106,48 @@ export default class Functions {
 			}
 			ans += a;
 			if (type === 1) {
-				await this.#write(a)
+				await write(a)
 			} else if (type === 2) {
-				await this.#write("*")
+				await write("*")
 			}
 		}
-		await this.#write("\n");
+		await write("\n");
 		return ans
 	}
-	async sleep(time) {
-		return new Promise(resolve => setTimeout(resolve, time * 1e3))
+	async function sleep(time) {
+		return new Promise(resolve => setTimeout(resolve, (Number.isFinite(time) && time > 0 ? time : 0) * 1e3))
 	}
-	capitalize(text) {
+
+	function capitalize(text) {
 		if (!text) {
 			return ""
 		}
 		return text[0].toUpperCase() + text.slice(1)
 	}
-	async #printnl(text, time = .02) {
-		await this.#write("\x1b[?25l");
+	async function printnl(text, time = .02) {
+		await write("\x1b[?25l");
 		try {
-			if (!this.isNumberBetween(this.#data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0 || this.#data.gameState.settings.forceInstantOutput) {
-				await this.#write(text)
+			if (!isNumberBetween(data.gameState.dataSaver.textSpeed, 0, 1) || time <= 0 || data.gameState.settings.forceInstantOutput) {
+				await write(text)
 			} else {
 				for (const char of String(text || "")) {
-					await this.#write(char);
-					await this.sleep(time / (this.#data.gameState.dataSaver.textSpeed + 1) / this.#lang.current.functions.outputSpeed)
+					await write(char);
+					await sleep(time / (data.gameState.dataSaver.textSpeed + 1) / lang.current.functions.outputSpeed)
 				}
 			}
 		} finally {
-			await this.#write("\x1b[m\x1b[?25h")
+			await write("\x1b[m\x1b[?25h")
 		}
 	}
-	async #print(text, time = .02) {
-		await this.#printnl(text, time);
-		await this.#write("\n")
+	async function print(text, time = .02) {
+		await printnl(text, time);
+		await write("\n")
 	}
-	async #printa(text = "", time = .02) {
-		await this.#print(text + (text ? "    " : "") + "(" + this.capitalize(this.#lang.current.functions.pressEnterToContinue) + ")", time);
-		while (await this.#getch() !== "\r");
+	async function printa(text = "", time = .02) {
+		await print(text + (text ? "    " : "") + "(" + capitalize(lang.current.functions.pressEnterToContinue) + ")", time);
+		while (await getch() !== "\r");
 	}
-	async #printYn(text = "", time = .02) {
+	async function printYn(text = "", time = .02) {
 		const toYN = {
 			Y: "y",
 			N: "n",
@@ -164,67 +155,76 @@ export default class Functions {
 			n: "n",
 			"\r": "y"
 		};
-		await this.#print(text + (text ? " " : "") + "(Y/n)", time);
-		let c;
+		await print(text + (text ? " " : "") + "(Y/n)", time);
+		let input;
 		do {
-			c = await this.#getch()
-		} while (!toYN[c]);
-		return toYN[c] === "y"
+			input = await getch()
+		} while (!toYN[input]);
+		return toYN[input] === "y"
 	}
-	random(l, r) {
+
+	function random(l, r) {
 		return Math.floor(Math.random() * (r - l + 1)) + l
 	}
-	isPlainObject(value) {
+
+	function isPlainObject(value) {
 		if (value === null || typeof value !== "object") {
 			return false
 		}
 		const proto = Object.getPrototypeOf(value);
 		return proto === Object.prototype || proto === null
 	}
-	clamp(value, min, max, fallback = min) {
+
+	function clamp(value, min, max, fallback = min) {
 		const numberValue = Number(value);
 		if (Number.isNaN(numberValue)) {
 			return fallback
 		}
 		return Math.min(max, Math.max(min, numberValue))
 	}
-	clampInt(value, min, max, fallback = min) {
+
+	function clampInt(value, min, max, fallback = min) {
 		const numberValue = Number(value);
 		if (Number.isNaN(numberValue)) {
 			return fallback
 		}
 		return Math.min(max, Math.max(min, Math.trunc(numberValue)))
 	}
-	#deepCopy(obj) {
+
+	function deepCopy(obj) {
 		if (obj === null || typeof obj !== "object") {
 			return obj
 		}
 		if (Array.isArray(obj)) {
-			return obj.map(item => this.#deepCopy(item))
+			return obj.map(item => deepCopy(item))
 		}
 		const result = {};
 		for (const key of Object.keys(obj)) {
-			result[key] = this.#deepCopy(obj[key])
+			result[key] = deepCopy(obj[key])
 		}
 		return result
 	}
-	constructor(data, lang) {
-		this.#data = data;
-		this.#lang = lang;
-		this.listToChoice = this.#listToChoice.bind(this);
-		this.write = this.#write.bind(this);
-		this.clear = this.#clear.bind(this);
-		this.onInput = this.#onInput.bind(this);
-		this.getch = this.#getch.bind(this);
-		this.getch2 = this.#getch2.bind(this);
-		this.getch2s = this.#getch2s.bind(this);
-		this.getline = this.#getline.bind(this);
-		this.getlineYe = this.#getlineYe.bind(this);
-		this.printnl = this.#printnl.bind(this);
-		this.print = this.#print.bind(this);
-		this.printa = this.#printa.bind(this);
-		this.printYn = this.#printYn.bind(this);
-		this.deepCopy = this.#deepCopy.bind(this);
-		Object.freeze(this)
-	}
+	return Object.freeze({
+		listToChoice,
+		write,
+		clear,
+		onInput,
+		getch,
+		getch2,
+		getch2s,
+		isNumberBetween,
+		getline,
+		getlineYe,
+		sleep,
+		capitalize,
+		printnl,
+		print,
+		printa,
+		printYn,
+		random,
+		isPlainObject,
+		clamp,
+		clampInt,
+		deepCopy
+	})
 }
