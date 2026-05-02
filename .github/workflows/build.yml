@@ -9,7 +9,6 @@ on:
       - docs/main.js
       - electron/icons/icon.ico
       - electron/icons/icon.icns
-      - data/**
   workflow_dispatch:
 
 permissions:
@@ -17,70 +16,38 @@ permissions:
 
 jobs:
   bundle:
-    name: Bundle main.js
+    name: Bundle and commit
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Bundle to root main.js
-        run: npm run bundle
+      - run: npm run bundle
 
-      - name: Commit root main.js
+      - name: Copy bundle
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f main.js
-          if git diff --cached --quiet; then
-            echo "No root main.js changes"
-          else
-            git commit -m "build: update root main.js [skip ci]"
-            git pull --rebase origin main
-            git push
-          fi
-
-  copy-bundle:
-    name: Copy main.js to electron and docs
-    runs-on: ubuntu-latest
-    needs: bundle
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull latest
-        run: git pull origin main
-
-      - name: Copy main.js
-        run: |
-          mkdir -p electron
-          mkdir -p docs
+          mkdir -p electron docs
           cp main.js electron/main.js
           cp main.js docs/main.js
 
-      - name: Commit copied main.js
+      - name: Commit bundle files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f electron/main.js docs/main.js
+          git add -f main.js electron/main.js docs/main.js
           if git diff --cached --quiet; then
-            echo "No copied main.js changes"
+            echo "No bundle changes"
           else
-            git commit -m "build: copy main.js to electron and docs [skip ci]"
+            git commit -m "build: update bundle files [skip ci]"
             git pull --rebase origin main
             git push
           fi
@@ -88,22 +55,18 @@ jobs:
   icon-ico:
     name: Generate icon.ico
     runs-on: ubuntu-latest
-    needs: copy-bundle
+    needs: bundle
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull latest
-        run: git pull origin main
+      - run: git pull origin main
 
-      - name: Install ImageMagick
-        run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
 
-      - name: Generate icon.ico
-        run: convert electron/icons/16x16.png electron/icons/24x24.png electron/icons/32x32.png electron/icons/48x48.png electron/icons/64x64.png electron/icons/128x128.png electron/icons/256x256.png electron/icons/icon.ico
+      - run: convert electron/icons/16x16.png electron/icons/24x24.png electron/icons/32x32.png electron/icons/48x48.png electron/icons/64x64.png electron/icons/128x128.png electron/icons/256x256.png electron/icons/icon.ico
 
       - name: Commit icon.ico
         run: |
@@ -124,13 +87,11 @@ jobs:
     needs: icon-ico
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull latest
-        run: git pull origin main
+      - run: git pull origin main
 
       - name: Generate icon.icns
         run: |
@@ -173,54 +134,37 @@ jobs:
           - os: windows-latest
             platform: windows
             command: npx electron-builder --win --publish never
-            copy: cp -f dist/*.exe data/windows/ || true
           - os: ubuntu-latest
             platform: linux
             command: npx electron-builder --linux --publish never
-            copy: cp -f dist/*.AppImage dist/*.deb data/linux/ || true
           - os: macos-latest
             platform: macos
             command: npx electron-builder --mac --publish never
-            copy: cp -f dist/*.dmg dist/*.zip data/macos/ || true
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
 
-      - name: Pull latest
+      - run: git pull origin main
         shell: bash
-        run: git pull origin main
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
       - name: Build
         run: ${{ matrix.command }}
 
-      - name: Copy build outputs to data
-        shell: bash
-        run: |
-          mkdir -p data/${{ matrix.platform }}
-          ${{ matrix.copy }}
-
-      - name: Commit build outputs
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f data/${{ matrix.platform }}
-          if git diff --cached --quiet; then
-            echo "No ${{ matrix.platform }} build output changes"
-          else
-            git commit -m "build: update ${{ matrix.platform }} app [skip ci]"
-            git pull --rebase origin main
-            git push
-          fi
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fishing-${{ matrix.platform }}
+          path: |
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: warn
