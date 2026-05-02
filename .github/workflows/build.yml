@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths-ignore:
-      - docs/**
+      - electron/main.js
+      - docs/main.js
       - electron/icons/icon.ico
       - electron/icons/icon.icns
       - data/**
@@ -16,77 +17,87 @@ permissions:
 
 jobs:
   bundle:
-    name: Install and bundle
+    name: Bundle main.js
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - run: npm run bundle
+      - name: Bundle to root main.js
+        run: npm run bundle
 
-      - name: Commit bundled main.js
+      - name: Commit root main.js
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add electron/main.js
+          git add -f main.js
           if git diff --cached --quiet; then
-            echo "No bundle changes"
+            echo "No root main.js changes"
           else
-            git commit -m "build: update bundled main.js [skip ci]"
+            git commit -m "build: update root main.js [skip ci]"
             git pull --rebase origin main
             git push
           fi
 
-  docs:
-    name: Copy bundle to docs
+  copy-bundle:
+    name: Copy main.js to electron and docs
     runs-on: ubuntu-latest
     needs: bundle
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: git pull origin main
+      - name: Pull latest
+        run: git pull origin main
 
-      - name: Copy main.js to docs
+      - name: Copy main.js
         run: |
+          mkdir -p electron
           mkdir -p docs
-          cp electron/main.js docs/main.js
+          cp main.js electron/main.js
+          cp main.js docs/main.js
 
-      - name: Commit docs main.js
+      - name: Commit copied main.js
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/main.js
+          git add -f electron/main.js docs/main.js
           if git diff --cached --quiet; then
-            echo "No docs changes"
+            echo "No copied main.js changes"
           else
-            git commit -m "build: update docs main.js [skip ci]"
+            git commit -m "build: copy main.js to electron and docs [skip ci]"
             git pull --rebase origin main
             git push
           fi
 
   icon-ico:
-    name: Generate icon.ico on Ubuntu
+    name: Generate icon.ico
     runs-on: ubuntu-latest
-    needs: docs
+    needs: copy-bundle
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: git pull origin main
+      - name: Pull latest
+        run: git pull origin main
 
       - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
@@ -98,9 +109,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add electron/icons/icon.ico
+          git add -f electron/icons/icon.ico
           if git diff --cached --quiet; then
-            echo "No ico changes"
+            echo "No icon.ico changes"
           else
             git commit -m "build: update icon.ico [skip ci]"
             git pull --rebase origin main
@@ -108,16 +119,18 @@ jobs:
           fi
 
   icon-icns:
-    name: Generate icon.icns on macOS
+    name: Generate icon.icns
     runs-on: macos-latest
     needs: icon-ico
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: git pull origin main
+      - name: Pull latest
+        run: git pull origin main
 
       - name: Generate icon.icns
         run: |
@@ -139,9 +152,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add electron/icons/icon.icns
+          git add -f electron/icons/icon.icns
           if git diff --cached --quiet; then
-            echo "No icns changes"
+            echo "No icon.icns changes"
           else
             git commit -m "build: update icon.icns [skip ci]"
             git pull --rebase origin main
@@ -171,19 +184,23 @@ jobs:
             copy: cp -f dist/*.dmg dist/*.zip data/macos/ || true
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: git pull origin main
+      - name: Pull latest
         shell: bash
+        run: git pull origin main
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build
         run: ${{ matrix.command }}
@@ -199,9 +216,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/${{ matrix.platform }}
+          git add -f data/${{ matrix.platform }}
           if git diff --cached --quiet; then
-            echo "No build output changes"
+            echo "No ${{ matrix.platform }} build output changes"
           else
             git commit -m "build: update ${{ matrix.platform }} app [skip ci]"
             git pull --rebase origin main

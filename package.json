@@ -7,13 +7,14 @@
 		"url": "git+https://github.com/lyuwenhan/fishing-source-code-js.git"
 	},
 	"scripts": {
-		"bundle": "esbuild source-code/main.js --bundle --format=esm --platform=browser --outfile=electron/main.js",
-		"start": "npm run bundle && electron electron",
-		"pack": "npm run bundle && electron-builder --dir",
-		"dist": "npm run bundle && electron-builder --publish never",
-		"dist:win": "npm run bundle && electron-builder --win --publish never",
-		"dist:linux": "npm run bundle && electron-builder --linux --publish never",
-		"dist:mac": "npm run bundle && electron-builder --mac --publish never"
+		"bundle": "esbuild source-code/main.js --bundle --format=esm --platform=browser --outfile=main.js",
+		"copy:bundle": "cp main.js electron/main.js && mkdir -p docs && cp main.js docs/main.js",
+		"start": "npm run bundle && cp main.js electron/main.js && electron electron",
+		"pack": "npm run bundle && cp main.js electron/main.js && electron-builder --dir",
+		"dist": "npm run bundle && cp main.js electron/main.js && electron-builder --publish never",
+		"dist:win": "npm run bundle && cp main.js electron/main.js && electron-builder --win --publish never",
+		"dist:linux": "npm run bundle && cp main.js electron/main.js && electron-builder --linux --publish never",
+		"dist:mac": "npm run bundle && cp main.js electron/main.js && electron-builder --mac --publish never"
 	},
 	"main": "electron/electron-main.js",
 	"build": {
@@ -64,7 +65,7 @@
 	},
 	"keywords": [],
 	"author": "",
-	"license": "MIT",
+	"license": "GPL-3.0",
 	"type": "module",
 	"bugs": {
 		"url": "https://github.com/lyuwenhan/fishing-source-code-js/issues"
