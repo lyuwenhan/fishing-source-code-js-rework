@@ -20,20 +20,7 @@ jobs:
 
       - name: Read status.json
         id: check
-        run: |
-          if [ ! -f status.json ]; then
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            echo "status.json missing; skipping build and release."
-            exit 0
-          fi
-          VAL=$(jq -r '.needsUpdate // false' status.json)
-          if [ "$VAL" = "true" ]; then
-            echo "should_release=true" >> "$GITHUB_OUTPUT"
-            echo "needsUpdate is true — running build, pack, and release."
-          else
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            echo "needsUpdate is false — skipping build, pack, and release."
-          fi
+        run: node scripts/ci-read-gate.mjs
 
   build:
     runs-on: ubuntu-latest
@@ -282,11 +269,42 @@ jobs:
           ls -la release-out
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.ver.outputs.version }}
           name: Fishing v${{ steps.ver.outputs.version }}
           generate_release_notes: true
+          overwrite_files: true
           files: release-out/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  reset-status:
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: needs.release.result == 'success'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to latest on branch
+        run: |
+          git fetch origin "${{ github.ref_name }}"
+          git reset --hard "origin/${{ github.ref_name }}"
+
+      - name: Reset status.json
+        run: node scripts/ci-reset-status.mjs
+
+      - name: Commit and push status.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status.json
+          if git diff --staged --quiet; then
+            echo "status.json unchanged, nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: reset needsUpdate in status.json"
+          git push
