@@ -2,14 +2,16 @@ import * as adventureStory from "./CN/adventureStoryCN.js";
 const exit = "退出";
 export function getCopy() {
 	return {
-		functions: {
+		exit,
+		io: {
 			outputSpeed: 1,
+			pressEnterToContinue: "按 Enter 继续"
+		},
+		settings: {
 			speedName: ["慢速", "普通", "及时"],
 			this_is: "这是",
 			chooseSpeed: "请选择输出速度",
-			skills: ["请选择开局技能", "1. 美味诱饵, 2. 稀世珍宝, 3. 牢靠安全绳, 4. 大力水手, 5. 放长线钓大鱼, 6. 孤苦人家", "美味诱饵:", "    上钩速度变为原先的1.5倍", "稀世珍宝:", "    鱼的价格变为原先的2倍", "牢靠安全绳:", "    脱钩概率大幅降低 (50% -> 10%)", "大力水手:", "    抛竿与收线速度变为2倍", "放长线钓大鱼:", "    大鱼概率由20%变为40%", "孤苦人家:", "    无额外加成"],
-			exit,
-			pressEnterToContinue: "按 Enter 继续"
+			skills: ["请选择开局技能", "1. 美味诱饵, 2. 稀世珍宝, 3. 牢靠安全绳, 4. 大力水手, 5. 放长线钓大鱼, 6. 孤苦人家", "美味诱饵:", "    上钩速度变为原先的1.5倍", "稀世珍宝:", "    鱼的价格变为原先的2倍", "牢靠安全绳:", "    脱钩概率大幅降低 (50% -> 10%)", "大力水手:", "    抛竿与收线速度变为2倍", "放长线钓大鱼:", "    大鱼概率由20%变为40%", "孤苦人家:", "    无额外加成"]
 		},
 		checkpoint: {
 			login: "登录 / 注册",

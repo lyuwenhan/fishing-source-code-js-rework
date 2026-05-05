@@ -1,11 +1,10 @@
-import deepFreeze from "./deepFreeze.js";
-export default function createParkour(lang, data, functions) {
+export default function createParkour(lang, functions, data, io) {
 	let level = 0;
 	let x = 0;
 	let y = 0;
 	let sx = 1;
 	let sy = 0;
-	const born = deepFreeze([
+	const born = functions.deepFreeze([
 		[1, 30],
 		[33, 30],
 		[66, 30],
@@ -59,29 +58,29 @@ export default function createParkour(lang, data, functions) {
 		for (let i = b; i < b + 10; i++) {
 			for (let j = a; j < a + 60; j++) {
 				if (i === y - 1 && j === x) {
-					await functions.write("O")
+					await io.write("O")
 				} else {
 					const mapIJ = cellAt(i, j);
 					if (mapIJ === ".") {
-						await functions.write("\x1b[34;1m\x1b[m")
+						await io.write("\x1b[34;1m\x1b[m")
 					} else if (mapIJ === "*") {
-						await functions.write("\x1b[31;1m*\x1b[m")
+						await io.write("\x1b[31;1m*\x1b[m")
 					} else if (mapIJ === "Z") {
-						await functions.write("\x1b[32;1mZ\x1b[m")
+						await io.write("\x1b[32;1mZ\x1b[m")
 					} else if (mapIJ === "^") {
-						await functions.write("\x1b[33;1m^\x1b[m")
+						await io.write("\x1b[33;1m^\x1b[m")
 					} else if (mapIJ === ">") {
-						await functions.write("\x1b[33;1m>\x1b[m")
+						await io.write("\x1b[33;1m>\x1b[m")
 					} else if (mapIJ === "<") {
-						await functions.write("\x1b[33;1m<\x1b[m")
+						await io.write("\x1b[33;1m<\x1b[m")
 					} else if (isFinishCell(j, i + 1)) {
-						await functions.write("\x1b[33;1m" + mapIJ + "\x1b[m")
+						await io.write("\x1b[33;1m" + mapIJ + "\x1b[m")
 					} else {
-						await functions.write(mapIJ)
+						await io.write(mapIJ)
 					}
 				}
 			}
-			await functions.write("\n")
+			await io.write("\n")
 		}
 	}
 
@@ -109,7 +108,7 @@ export default function createParkour(lang, data, functions) {
 		}
 		x = born[level][0];
 		y = born[level][1];
-		await functions.clear();
+		await io.clear();
 		let sinkTimer = 0;
 		let jumpCarry = false;
 		while (true) {
@@ -119,17 +118,17 @@ export default function createParkour(lang, data, functions) {
 			if (y <= 0) {
 				y = 1
 			}
-			await functions.clear();
+			await io.clear();
 			if (level + 1 < born.length && x === born[level + 1][0] && y === born[level + 1][1]) {
 				level++
 			}
 			if (isAirAbove()) {
 				sinkTimer = 0;
-				await functions.write(lang.current.parkour.jumpTip + "\n");
+				await io.write(lang.current.parkour.jumpTip + "\n");
 				await show();
 				let shouldJump = false;
 				let shouldRespawn = false;
-				for (const c of functions.getch2s()) {
+				for (const c of io.getch2s()) {
 					if (c === "") {
 						return
 					}
@@ -142,15 +141,15 @@ export default function createParkour(lang, data, functions) {
 					}
 				}
 				if (isFinishCell(x, y - 1)) {
-					await functions.clear();
-					await functions.printa(lang.current.parkour.challengeCompleteReward);
+					await io.clear();
+					await io.printa(lang.current.parkour.challengeCompleteReward);
 					data.gameState.dataSaver.money += 500;
 					data.gameState.dataSaver.challengeLevel = 1;
 					return
 				}
 				if (isLavaCell()) {
-					await functions.print(lang.current.parkour.deathMessage);
-					if (!await functions.printYn(lang.current.parkour.respawnConfirm)) {
+					await io.print(lang.current.parkour.deathMessage);
+					if (!await io.printYn(lang.current.parkour.respawnConfirm)) {
 						return
 					}
 					x = born[level][0];
@@ -241,7 +240,7 @@ export default function createParkour(lang, data, functions) {
 				await functions.sleep(.1)
 			} else {
 				jumpCarry = false;
-				await functions.write(lang.current.parkour.swimTip + "\n");
+				await io.write(lang.current.parkour.swimTip + "\n");
 				await show();
 				sinkTimer++;
 				sinkTimer %= 5;
@@ -250,7 +249,7 @@ export default function createParkour(lang, data, functions) {
 				let moveLeft = false;
 				let moveRight = false;
 				let shouldRespawn = false;
-				for (const c of functions.getch2s()) {
+				for (const c of io.getch2s()) {
 					if (c === "") {
 						return
 					}
@@ -271,8 +270,8 @@ export default function createParkour(lang, data, functions) {
 					}
 				}
 				if (isLavaCell()) {
-					await functions.print(lang.current.parkour.deathMessage);
-					if (!await functions.printYn(lang.current.parkour.respawnConfirm)) {
+					await io.print(lang.current.parkour.deathMessage);
+					if (!await io.printYn(lang.current.parkour.respawnConfirm)) {
 						return
 					}
 					x = born[level][0];

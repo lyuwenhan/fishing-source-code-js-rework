@@ -2,13 +2,15 @@ import * as adventureStory from "./EN/adventureStoryEN.js";
 const exit = "exit";
 export function getCopy() {
 	return {
-		functions: {
+		exit,
+		io: {
 			outputSpeed: 2,
+			pressEnterToContinue: "press Enter to continue"
+		},
+		settings: {
 			speedName: ["slow mode", "normal mode", "instant mode"],
 			chooseSpeed: "Please choose output speed.",
-			skills: ["Please choose a starting skill", "1. Delicious Bait, 2. Rare Treasures, 3. Secure Safety Rope, 4. Popeye the Sailor, 5. Long Line for Big Fish, 6. Poor Family", "Delicious Bait:", "    Hooking speed increases to 1.5x", "Rare Treasures:", "    Fish prices increase to 2x", "Secure Safety Rope:", "    Slip-off chance greatly reduced (50% -> 10%)", "Popeye the Sailor:", "    Casting and reeling speed increase to 2x", "Long Line for Big Fish:", "    Big fish chance increases (20% -> 40%)", "Poor Family:", "    No additional bonuses"],
-			exit,
-			pressEnterToContinue: "press Enter to continue"
+			skills: ["Please choose a starting skill", "1. Delicious Bait, 2. Rare Treasures, 3. Secure Safety Rope, 4. Popeye the Sailor, 5. Long Line for Big Fish, 6. Poor Family", "Delicious Bait:", "    Hooking speed increases to 1.5x", "Rare Treasures:", "    Fish prices increase to 2x", "Secure Safety Rope:", "    Slip-off chance greatly reduced (50% -> 10%)", "Popeye the Sailor:", "    Casting and reeling speed increase to 2x", "Long Line for Big Fish:", "    Big fish chance increases (20% -> 40%)", "Poor Family:", "    No additional bonuses"]
 		},
 		checkpoint: {
 			login: "login / register",

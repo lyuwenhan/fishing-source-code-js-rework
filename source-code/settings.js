@@ -1,21 +1,21 @@
-export default function createSettings(lang, data, functions) {
+export default function createSettings(lang, functions, data, io) {
 	async function choose() {
-		await functions.clear();
+		await io.clear();
 		if (!data.gameState.settings.forceInstantOutput) {
-			await functions.print(lang.current.functions.chooseSpeed);
-			await functions.print(functions.listToChoice(lang.current.functions.speedName));
+			await io.print(lang.current.settings.chooseSpeed);
+			await io.print(functions.listToChoice(lang.current.settings.speedName));
 			let c;
 			do {
-				c = await functions.getch()
+				c = await io.getch()
 			} while (!/[1-3]/.test(c));
 			data.gameState.dataSaver.textSpeed = Number(c) - 1
 		}
-		await functions.clear();
-		for (const text of lang.current.functions.skills) {
-			await functions.print(text)
+		await io.clear();
+		for (const text of lang.current.settings.skills) {
+			await io.print(text)
 		}
 		while (true) {
-			const c = await functions.getch();
+			const c = await io.getch();
 			if (c === "1") {
 				data.gameState.dataSaver.catchSpeedLevel = 5;
 				break
@@ -37,12 +37,12 @@ export default function createSettings(lang, data, functions) {
 		}
 	}
 	async function setTextSpeed() {
-		await functions.clear();
-		await functions.print(lang.current.functions.chooseSpeed);
-		await functions.print(functions.listToChoice(lang.current.functions.speedName, lang.current.functions.exit));
+		await io.clear();
+		await io.print(lang.current.settings.chooseSpeed);
+		await io.print(functions.listToChoice(lang.current.settings.speedName, lang.current.exit));
 		let c;
 		do {
-			c = Number(await functions.getch())
+			c = Number(await io.getch())
 		} while (!functions.isNumberBetween(c, 1, 4));
 		if (c <= 3) {
 			data.gameState.dataSaver.textSpeed = c - 1

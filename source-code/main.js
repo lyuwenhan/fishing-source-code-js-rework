@@ -1,6 +1,7 @@
-import Lang from "./lang.js";
-import createData from "./data.js";
+import createLang from "./lang.js";
 import createFunctions from "./functions.js";
+import createData from "./data.js";
+import createIo from "./io.js";
 import createNormalizeDataSaver from "./normalizeDataSaver.js";
 import createCheckpoint from "./checkpoint.js";
 import createShop from "./shop.js";
@@ -10,17 +11,18 @@ import createLottery from "./lottery.js";
 import createAdventure from "./adventure.js";
 import createSettings from "./settings.js";
 export function createGameInstance(write, loadGame, saveGame, hasSave, languageCode) {
-	const data = createData();
-	const lang = new Lang(languageCode);
-	const functions = createFunctions(data, lang);
-	const normalizeDataSaver = createNormalizeDataSaver(data, functions);
-	const checkpoint = createCheckpoint(lang, data, functions, normalizeDataSaver);
-	const shop = createShop(lang, data, functions);
-	const fishing = createFishing(lang, data, functions);
-	const parkour = createParkour(lang, data, functions);
-	const lottery = createLottery(lang, data, functions);
-	const adventure = createAdventure(lang, data, functions);
-	const settings = createSettings(lang, data, functions);
+	const lang = createLang(languageCode);
+	const functions = createFunctions();
+	const data = createData(functions);
+	const io = createIo(lang, functions, data);
+	const normalizeDataSaver = createNormalizeDataSaver(functions, data);
+	const checkpoint = createCheckpoint(lang, functions, data, io, normalizeDataSaver);
+	const shop = createShop(lang, functions, data, io);
+	const fishing = createFishing(lang, functions, data, io);
+	const parkour = createParkour(lang, functions, data, io);
+	const lottery = createLottery(lang, functions, data, io);
+	const adventure = createAdventure(lang, functions, data, io);
+	const settings = createSettings(lang, functions, data, io);
 	data.gameState.setRequiredFunctions(write, loadGame, saveGame, hasSave);
 	let launchCount = 0;
 	async function launch() {
@@ -28,10 +30,10 @@ export function createGameInstance(write, loadGame, saveGame, hasSave, languageC
 		if (launchCount > 1) {
 			return
 		}
-		await functions.clear();
+		await io.clear();
 		if (!data.gameState.settings.skipStory) {
 			for (let text of lang.current.main.story) {
-				await functions.printa(text)
+				await io.printa(text)
 			}
 		}
 		if (await checkpoint.login()) {
@@ -44,10 +46,10 @@ export function createGameInstance(write, loadGame, saveGame, hasSave, languageC
 			await functions.sleep(.5)
 		}
 		while (true) {
-			await functions.clear();
-			await functions.print(functions.listToChoice(lang.current.main.mainMenu));
+			await io.clear();
+			await io.print(functions.listToChoice(lang.current.main.mainMenu));
 			while (true) {
-				let type = await functions.getch();
+				let type = await io.getch();
 				if (type === "1") {
 					await fishing();
 					break
@@ -66,12 +68,12 @@ export function createGameInstance(write, loadGame, saveGame, hasSave, languageC
 					} else if (data.gameState.dataSaver.challengeLevel === 1) {
 						await adventure()
 					} else {
-						await functions.clear();
-						await functions.printa(lang.current.main.challengeCompleted)
+						await io.clear();
+						await io.printa(lang.current.main.challengeCompleted)
 					}
 					break
 				} else if (type === "6") {
-					await functions.clear();
+					await io.clear();
 					return
 				}
 			}
@@ -84,7 +86,7 @@ export function createGameInstance(write, loadGame, saveGame, hasSave, languageC
 			data.gameState.setConsoleSize(size)
 		},
 		onInput: str => {
-			functions.onInput(str)
+			io.onInput(str)
 		},
 		languages: {
 			langs: functions.deepCopy(lang.langs),

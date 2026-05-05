@@ -1,9 +1,8 @@
-import deepFreeze from "./deepFreeze.js";
-export default function createFishing(lang, data, functions) {
+export default function createFishing(lang, functions, data, io) {
 	const paintTemplate = Object.freeze(["                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                                            ", "                         o                  ", "                        /|\\--------         ", "                        /_\\___              ", "~~~~~~~~~~~~~~~~~~~~~~~|      |~~~~~~~~~~~~|", "                              |            |", "                              |            |", "                              |____________|"]);
 	const precipitationSymbol = Object.freeze([".", "*", " ", " ", " ", " "]);
 	const precipitationColor = Object.freeze(["\x1b[1;34m", "\x1b[1;36m", "", "", "", ""]);
-	const weatherPaintTemplate = deepFreeze([
+	const weatherPaintTemplate = functions.deepFreeze([
 		["     \x1b[33;1m_____\x1b[m                                  ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|     |\x1b[m                                 ", "    \x1b[33;1m|_____|\x1b[m                                 "],
 		["         _______      ___________           ", "     ___/       \\____/           \\___       ", "    (                                )      ", "     \\______________________________/       "],
 		["         \x1b[33;1m_____\x1b[m       ___________            ", "     ___\x1b[33;1m|_____|\x1b[m_____/           \\____       ", "    (                                )      ", "     \\______________________________/       "]
@@ -94,17 +93,17 @@ export default function createFishing(lang, data, functions) {
 		return 0
 	}
 	async function getFish(isBigFish, fishType) {
-		await functions.clear();
+		await io.clear();
 		if (data.gameState.dataSaver.hunger <= 2) {
-			await functions.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.fishName[fishType] + (isBigFish ? lang.current.fishing.big : "") + lang.current.fishing.fish + "\x1b[m, " + lang.current.fishing.eaten);
+			await io.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.fishName[fishType] + (isBigFish ? lang.current.fishing.big : "") + lang.current.fishing.fish + "\x1b[m, " + lang.current.fishing.eaten);
 			data.gameState.dataSaver.hunger += fishType + 3;
 			return
 		}
 		const price = getRandomIncome((isBigFish ? 2 : 1) * data.constant.fishValueMultipliers[fishType]);
 		if (fishType === 4 && isBigFish) {
-			await functions.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.egg + ", " + lang.current.fishing.worth + "$" + price)
+			await io.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.egg + ", " + lang.current.fishing.worth + "$" + price)
 		} else {
-			await functions.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.fish + (isBigFish ? lang.current.fishing.bf : "") + lang.current.fishing.fishName[fishType] + ", " + lang.current.fishing.worth + "$" + price)
+			await io.printa(lang.current.fishing.youCaughtA + fishColor[fishType] + lang.current.fishing.fish + (isBigFish ? lang.current.fishing.bf : "") + lang.current.fishing.fishName[fishType] + ", " + lang.current.fishing.worth + "$" + price)
 		}
 		fishInPond[fishType].push(10);
 		data.gameState.dataSaver.totalFishCaught++
@@ -113,7 +112,7 @@ export default function createFishing(lang, data, functions) {
 	let lastWaitingMaxTime = 0;
 	let lastWaitingStatus = 0;
 	async function draw(minWaitingTime = 0, maxWaitingTime = 0) {
-		const changeCompactMode = (await functions.getch2s()).includes("e");
+		const changeCompactMode = (await io.getch2s()).includes("e");
 		if (changeCompactMode) {
 			data.gameState.dataSaver.compactMode = !data.gameState.dataSaver.compactMode
 		}
@@ -184,34 +183,34 @@ export default function createFishing(lang, data, functions) {
 		}
 		if (data.gameState.dataSaver.compactMode || notEnoughRows || notEnoughCols) {
 			if (needClear) {
-				await functions.write("\x1bc\x1b[?25l")
+				await io.write("\x1bc\x1b[?25l")
 			} else if (data.gameState.dataSaver.compactMode || weatherChanged) {
-				await functions.write("\x1b[H")
+				await io.write("\x1b[H")
 			} else {
 				return
 			}
 			if (!data.gameState.dataSaver.compactMode) {
 				if (notEnoughRows) {
-					await functions.write(lang.current.fishing.notEnoughRows + " " + requiredRows + " " + lang.current.fishing.rows + "\n");
-					await functions.write(lang.current.fishing.currentSize + ": " + data.gameState.consoleSize.rows + " " + lang.current.fishing.rows + "\n")
+					await io.write(lang.current.fishing.notEnoughRows + " " + requiredRows + " " + lang.current.fishing.rows + "\n");
+					await io.write(lang.current.fishing.currentSize + ": " + data.gameState.consoleSize.rows + " " + lang.current.fishing.rows + "\n")
 				}
 				if (notEnoughCols) {
-					await functions.write(lang.current.fishing.notEnoughCols + " " + requiredCols + " " + lang.current.fishing.cols + "\n");
-					await functions.write(lang.current.fishing.currentSize + ": " + data.gameState.consoleSize.cols + " " + lang.current.fishing.cols + "\n")
+					await io.write(lang.current.fishing.notEnoughCols + " " + requiredCols + " " + lang.current.fishing.cols + "\n");
+					await io.write(lang.current.fishing.currentSize + ": " + data.gameState.consoleSize.cols + " " + lang.current.fishing.cols + "\n")
 				}
 			}
 		} else {
 			if (needClear) {
-				await functions.write("\x1bc\x1b[?25l")
+				await io.write("\x1bc\x1b[?25l")
 			} else if (weatherChanged || precipitationPointsChanged) {
-				await functions.write("\x1b[H")
+				await io.write("\x1b[H")
 			} else {
 				return
 			}
 			if (currentWeather[0] >= 2 && currentWeather[0] <= 4) {
 				start = 4;
 				for (let i = 0; i < 4; i++) {
-					await functions.write(weatherPaintTemplate[currentWeather[0] - 2][i] + "\n")
+					await io.write(weatherPaintTemplate[currentWeather[0] - 2][i] + "\n")
 				}
 			}
 			for (let i = start; i < 15; i++) {
@@ -224,25 +223,25 @@ export default function createFishing(lang, data, functions) {
 						}
 					}
 					if (paint[i][j] === " " && b) {
-						await functions.write("\x1b[m" + precipitationColor[lastPrecipitation] + precipitationSymbol[lastPrecipitation])
+						await io.write("\x1b[m" + precipitationColor[lastPrecipitation] + precipitationSymbol[lastPrecipitation])
 					} else {
-						await functions.write("\x1b[m" + color[i][j] + paint[i][j])
+						await io.write("\x1b[m" + color[i][j] + paint[i][j])
 					}
 				}
-				await functions.write("\n")
+				await io.write("\n")
 			}
 		}
-		await functions.write(lang.current.fishing.currentStatus + ": " + lang.current.fishing.waitingStatus[currentWaitingStatus] + "\n");
-		await functions.write(lang.current.fishing.totalFishCaught + ": " + data.gameState.dataSaver.totalFishCaught + "\n");
-		await functions.write(lang.current.fishing.currentWeather + ": " + lang.current.fishing.rainSize[currentWeather[1]] + lang.current.fishing.weatherNames[currentWeather[0]] + "\n");
+		await io.write(lang.current.fishing.currentStatus + ": " + lang.current.fishing.waitingStatus[currentWaitingStatus] + "\n");
+		await io.write(lang.current.fishing.totalFishCaught + ": " + data.gameState.dataSaver.totalFishCaught + "\n");
+		await io.write(lang.current.fishing.currentWeather + ": " + lang.current.fishing.rainSize[currentWeather[1]] + lang.current.fishing.weatherNames[currentWeather[0]] + "\n");
 		if (maxWaitingTime) {
 			if (minWaitingTime) {
-				await functions.write(lang.current.fishing.remainingTime + ": " + minWaitingTime / 2 + " min ~ " + maxWaitingTime / 2 + " min\n")
+				await io.write(lang.current.fishing.remainingTime + ": " + minWaitingTime / 2 + " min ~ " + maxWaitingTime / 2 + " min\n")
 			} else {
-				await functions.write(lang.current.fishing.remainingTime + ": < " + maxWaitingTime / 2 + " min\n")
+				await io.write(lang.current.fishing.remainingTime + ": < " + maxWaitingTime / 2 + " min\n")
 			}
 		}
-		await functions.write((data.gameState.dataSaver.compactMode ? lang.current.fishing.exitCompactMode : lang.current.fishing.enterCompactMode) + "\n")
+		await io.write((data.gameState.dataSaver.compactMode ? lang.current.fishing.exitCompactMode : lang.current.fishing.enterCompactMode) + "\n")
 	}
 	async function slep(time) {
 		time = Math.round(time * 100) / 100;
@@ -287,7 +286,7 @@ export default function createFishing(lang, data, functions) {
 	async function fishingStep2(isBigFish, fishType) {
 		const speedMultiplierByHunger = data.gameState.dataSaver.hunger < 5 ? 3 : data.gameState.dataSaver.hunger < 10 ? 2 : data.gameState.dataSaver.hunger < 30 ? 1 : data.gameState.dataSaver.hunger < 35 ? .8 : .5;
 		const bigFishMultiplier = isBigFish ? 2 : 1;
-		await functions.write("\x1b[?25l");
+		await io.write("\x1b[?25l");
 		color[11][18] = "\x1b[1;34m";
 		paint[11][18] = "~";
 		color[10][19] = fishColor[fishType];
@@ -377,13 +376,13 @@ export default function createFishing(lang, data, functions) {
 		}
 		paint[13][38] = paint[13][37] = " ";
 		color[13][38] = color[13][37] = "";
-		await functions.write("\x1b[?25h");
+		await io.write("\x1b[?25h");
 		await getFish(isBigFish, fishType)
 	}
 	async function fishingStep2Slip(isBigFish, fishType) {
 		const speedMultiplierByHunger = data.gameState.dataSaver.hunger < 5 ? 3 : data.gameState.dataSaver.hunger < 10 ? 2 : data.gameState.dataSaver.hunger < 30 ? 1 : data.gameState.dataSaver.hunger < 35 ? .8 : .5;
 		const bigFishMultiplier = isBigFish ? 2 : 1;
-		await functions.write("\x1b[?25l");
+		await io.write("\x1b[?25l");
 		color[11][18] = "\x1b[1;34m";
 		paint[11][18] = "~";
 		color[10][19] = fishColor[fishType];
@@ -467,7 +466,7 @@ export default function createFishing(lang, data, functions) {
 		await slep(.5 / bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier);
 		paint[8][23] = paint[7][22] = paint[6][21] = paint[5][20] = paint[5][19] = " ";
 		paint[9][24] = "/";
-		await functions.write("\x1b[?25h")
+		await io.write("\x1b[?25h")
 	}
 	async function fishingStep1(isBigFish, fishType) {
 		const speedMultiplierByHunger = data.gameState.dataSaver.hunger < 5 ? 3 : data.gameState.dataSaver.hunger < 10 ? 2 : data.gameState.dataSaver.hunger < 30 ? 1 : data.gameState.dataSaver.hunger < 35 ? .8 : .5;
@@ -476,7 +475,7 @@ export default function createFishing(lang, data, functions) {
 		consoleSizeLastTick = "";
 		lastDrawTime = Math.floor(Date.now() / 1e3);
 		currentWaitingStatus = 0;
-		await functions.write("\x1b[?25l");
+		await io.write("\x1b[?25l");
 		for (let i = 0; i < 15; i++) {
 			for (let j = 0; j < 44; j++) {
 				color[i][j] = "";
@@ -550,7 +549,7 @@ export default function createFishing(lang, data, functions) {
 			paint[11][i] = "O";
 			await slep(.5 * bigFishMultiplier / data.gameState.dataSaver.actionSpeedMultiplier)
 		}
-		await functions.write("\x1b[?25h");
+		await io.write("\x1b[?25h");
 		const slipOff = functions.random(1, 100) <= data.gameState.dataSaver.slipOffChance + (currentWeather[0] === 5) * 10;
 		if (slipOff) {
 			await fishingStep2Slip(isBigFish, fishType)
@@ -583,9 +582,9 @@ export default function createFishing(lang, data, functions) {
 		}
 	}
 	async function makeFishingRod() {
-		await functions.clear();
-		await functions.print(lang.current.fishing.makeFishingRod);
-		await functions.print(lang.current.fishing.currentFishingRod + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
+		await io.clear();
+		await io.print(lang.current.fishing.makeFishingRod);
+		await io.print(lang.current.fishing.currentFishingRod + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
 		let hasFishInPond = Array(8).fill(false);
 		let fishInPondChoices = "";
 		for (let i = 0; i <= 6; i++) {
@@ -596,14 +595,14 @@ export default function createFishing(lang, data, functions) {
 		}
 		hasFishInPond[7] = true;
 		if (fishInPondChoices.length === 0) {
-			await functions.print(lang.current.fishing.none);
+			await io.print(lang.current.fishing.none);
 			return
 		}
-		fishInPondChoices += lang.current.functions.exit;
-		await functions.print(fishInPondChoices);
+		fishInPondChoices += lang.current.exit;
+		await io.print(fishInPondChoices);
 		let selectedFishInPondIndex;
 		do {
-			selectedFishInPondIndex = Number(await functions.getch())
+			selectedFishInPondIndex = Number(await io.getch())
 		} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
 		if (selectedFishInPondIndex === 7) {
 			return
@@ -613,9 +612,9 @@ export default function createFishing(lang, data, functions) {
 	}
 	async function makeFood() {
 		while (true) {
-			await functions.clear();
-			await functions.print(lang.current.fishing.rawFish);
-			await functions.print(lang.current.fishing.currentAmount);
+			await io.clear();
+			await io.print(lang.current.fishing.rawFish);
+			await io.print(lang.current.fishing.currentAmount);
 			let hasFishInPond = Array(8).fill(false);
 			let fishInPondChoices = "";
 			for (let i = 0; i <= 6; i++) {
@@ -626,31 +625,31 @@ export default function createFishing(lang, data, functions) {
 			}
 			hasFishInPond[7] = true;
 			if (fishInPondChoices.length === 0) {
-				await functions.print(lang.current.fishing.none);
+				await io.print(lang.current.fishing.none);
 				await functions.sleep(.5);
 				return
 			}
-			fishInPondChoices += lang.current.functions.exit;
+			fishInPondChoices += lang.current.exit;
 			for (let i = 1; i <= 6; i++) {
-				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 				if (fishInPond[i].length) {
-					await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 				}
 				if (data.gameState.dataSaver.foodFish[i][0]) {
-					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 				}
 				if (data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 				}
 				if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.none + "\n")
+					await io.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			await functions.write("\n");
-			await functions.print(fishInPondChoices);
+			await io.write("\n");
+			await io.print(fishInPondChoices);
 			let selectedFishInPondIndex;
 			do {
-				selectedFishInPondIndex = Number(await functions.getch())
+				selectedFishInPondIndex = Number(await io.getch())
 			} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
 			if (selectedFishInPondIndex === 7) {
 				return
@@ -663,9 +662,9 @@ export default function createFishing(lang, data, functions) {
 		}
 	}
 	async function roastFish() {
-		await functions.clear();
-		await functions.print(lang.current.fishing.roastedFish);
-		await functions.print(lang.current.fishing.currentAmount + ": ");
+		await io.clear();
+		await io.print(lang.current.fishing.roastedFish);
+		await io.print(lang.current.fishing.currentAmount + ": ");
 		let hasFishInPond = Array(8).fill(false);
 		let fishInPondChoices = "";
 		for (let i = 0; i <= 6; i++) {
@@ -676,31 +675,31 @@ export default function createFishing(lang, data, functions) {
 		}
 		hasFishInPond[7] = true;
 		if (fishInPondChoices.length === 0) {
-			await functions.print(lang.current.fishing.none);
+			await io.print(lang.current.fishing.none);
 			await functions.sleep(.5);
 			return
 		}
-		fishInPondChoices += lang.current.functions.exit;
+		fishInPondChoices += lang.current.exit;
 		for (let i = 1; i <= 6; i++) {
-			await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+			await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 			if (fishInPond[i].length) {
-				await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
+				await io.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 			}
 			if (data.gameState.dataSaver.foodFish[i][0]) {
-				await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
+				await io.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 			}
 			if (data.gameState.dataSaver.foodFish[i][1]) {
-				await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
+				await io.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 			}
 			if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
-				await functions.write("    " + lang.current.fishing.none + "\n")
+				await io.write("    " + lang.current.fishing.none + "\n")
 			}
 		}
-		await functions.write("\n");
-		await functions.print(fishInPondChoices);
+		await io.write("\n");
+		await io.print(fishInPondChoices);
 		let selectedFishInPondIndex;
 		do {
-			selectedFishInPondIndex = Number(await functions.getch())
+			selectedFishInPondIndex = Number(await io.getch())
 		} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
 		if (selectedFishInPondIndex === 7 || !data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0]) {
 			return
@@ -709,10 +708,10 @@ export default function createFishing(lang, data, functions) {
 			maxCount = data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0];
 		let count = 0;
 		while (true) {
-			await functions.clear();
-			await functions.write(lang.current.fishing.makeFoodAction + "\n" + lang.current.fishing.makeRoastedFish + ": " + fishColor[selectedFishInPondIndex] + lang.current.fishing.fishName[selectedFishInPondIndex] + lang.current.fishing.fish + "\x1b[m\n");
-			await functions.write((count === minCount ? "\x1b[1;31m" : "\x1b[1m") + " < \x1b[m" + count + lang.current.fishing.fishNumber + (count === maxCount ? "\x1b[1;31m" : "\x1b[1m") + " > \x1b[m\n");
-			const input = await functions.getch();
+			await io.clear();
+			await io.write(lang.current.fishing.makeFoodAction + "\n" + lang.current.fishing.makeRoastedFish + ": " + fishColor[selectedFishInPondIndex] + lang.current.fishing.fishName[selectedFishInPondIndex] + lang.current.fishing.fish + "\x1b[m\n");
+			await io.write((count === minCount ? "\x1b[1;31m" : "\x1b[1m") + " < \x1b[m" + count + lang.current.fishing.fishNumber + (count === maxCount ? "\x1b[1;31m" : "\x1b[1m") + " > \x1b[m\n");
+			const input = await io.getch();
 			if (input === "a" || input === "A") {
 				count--;
 				if (count < minCount) {
@@ -725,57 +724,57 @@ export default function createFishing(lang, data, functions) {
 				}
 			} else if (input === "\r") {
 				if (count > data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0] || count < 0 || !data.gameState.dataSaver.ovenCount) {
-					await functions.clear();
+					await io.clear();
 					return
 				}
 				data.gameState.dataSaver.foodFish[selectedFishInPondIndex][0] -= count;
 				data.gameState.dataSaver.foodFish[selectedFishInPondIndex][1] += count;
-				await functions.clear();
+				await io.clear();
 				const roastingTime = Math.ceil(count / data.gameState.dataSaver.ovenCount);
 				for (let i = 0; i < roastingTime; i++) {
 					for (let j = 0; j < 20; j++) {
-						await functions.clear();
-						await functions.write(lang.current.fishing.roasting + "\n");
+						await io.clear();
+						await io.write(lang.current.fishing.roasting + "\n");
 						const currentRoastingTime = i * 20 + j;
 						let done = Math.floor(currentRoastingTime / roastingTime * 3);
 						let d2 = done % 2;
 						done = Math.floor(done / 2);
 						for (let k = 1; k <= done; k++) {
-							await functions.write("\x1b[32;1m=\x1b[m")
+							await io.write("\x1b[32;1m=\x1b[m")
 						}
 						if (done < 30) {
-							await functions.write(d2 ? "\x1b[32;1m-\x1b[m" : "\x1b[31;1m=\x1b[m")
+							await io.write(d2 ? "\x1b[32;1m-\x1b[m" : "\x1b[31;1m=\x1b[m")
 						}
 						for (let k = done + 1; k < 30; k++) {
-							await functions.write("\x1b[31;1m=\x1b[m")
+							await io.write("\x1b[31;1m=\x1b[m")
 						}
-						await functions.write("\n");
-						await functions.write(i * data.gameState.dataSaver.ovenCount + "/" + count + lang.current.fishing.done + "\n");
+						await io.write("\n");
+						await io.write(i * data.gameState.dataSaver.ovenCount + "/" + count + lang.current.fishing.done + "\n");
 						await functions.sleep(.5)
 					}
 				}
-				await functions.clear();
-				await functions.write(lang.current.fishing.done + "\n");
+				await io.clear();
+				await io.write(lang.current.fishing.done + "\n");
 				for (let k = 0; k < 30; k++) {
-					await functions.write("\x1b[32;1m=\x1b[m")
+					await io.write("\x1b[32;1m=\x1b[m")
 				}
-				await functions.write("\n");
-				await functions.write(count + "/" + count + lang.current.fishing.done + "\n");
+				await io.write("\n");
+				await io.write(count + "/" + count + lang.current.fishing.done + "\n");
 				await functions.sleep();
 				return
 			} else if (input === "") {
-				await functions.clear();
+				await io.clear();
 				return
 			}
 		}
 	}
 	async function eatFish() {
 		while (true) {
-			await functions.clear();
-			await functions.print(lang.current.fishing.eatRawFish);
-			await functions.printnl(lang.current.fishing.currentHunger + ": ");
-			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await functions.print(lang.current.fishing.currentAmount + ": ");
+			await io.clear();
+			await io.print(lang.current.fishing.eatRawFish);
+			await io.printnl(lang.current.fishing.currentHunger + ": ");
+			await io.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await io.print(lang.current.fishing.currentAmount + ": ");
 			let hasFishInPond = Array(8).fill(false);
 			let fishInPondChoices = "";
 			for (let i = 0; i <= 6; i++) {
@@ -786,25 +785,25 @@ export default function createFishing(lang, data, functions) {
 			}
 			hasFishInPond[7] = true;
 			if (fishInPondChoices.length === 0) {
-				await functions.print(lang.current.fishing.none);
+				await io.print(lang.current.fishing.none);
 				await functions.sleep(.5);
 				return
 			}
-			fishInPondChoices += lang.current.functions.exit;
+			fishInPondChoices += lang.current.exit;
 			for (let i = 1; i <= 6; i++) {
-				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 				if (data.gameState.dataSaver.foodFish[i][0]) {
-					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + " + " + (i + 3) + "\n")
+					await io.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + " + " + (i + 3) + "\n")
 				}
 				if (!data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.none + "\n")
+					await io.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			await functions.write("\n");
-			await functions.print(fishInPondChoices);
+			await io.write("\n");
+			await io.print(fishInPondChoices);
 			let selectedFishInPondIndex;
 			do {
-				selectedFishInPondIndex = Number(await functions.getch())
+				selectedFishInPondIndex = Number(await io.getch())
 			} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
 			if (selectedFishInPondIndex === 7) {
 				await functions.sleep(.5);
@@ -822,11 +821,11 @@ export default function createFishing(lang, data, functions) {
 	}
 	async function eatRoastedFish() {
 		while (true) {
-			await functions.clear();
-			await functions.print(lang.current.fishing.eatRoastedFish);
-			await functions.printnl(lang.current.fishing.currentHunger + ": ");
-			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await functions.print(lang.current.fishing.currentAmount + ": ");
+			await io.clear();
+			await io.print(lang.current.fishing.eatRoastedFish);
+			await io.printnl(lang.current.fishing.currentHunger + ": ");
+			await io.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await io.print(lang.current.fishing.currentAmount + ": ");
 			let hasFishInPond = Array(8).fill(false);
 			let fishInPondChoices = "";
 			for (let i = 0; i <= 6; i++) {
@@ -837,25 +836,25 @@ export default function createFishing(lang, data, functions) {
 			}
 			hasFishInPond[7] = true;
 			if (fishInPondChoices.length === 0) {
-				await functions.print(lang.current.fishing.none);
+				await io.print(lang.current.fishing.none);
 				await functions.sleep(.5);
 				return
 			}
-			fishInPondChoices += lang.current.functions.exit;
+			fishInPondChoices += lang.current.exit;
 			for (let i = 1; i <= 6; i++) {
-				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 				if (data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + " + " + (i + 7) + "\n")
+					await io.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + " + " + (i + 7) + "\n")
 				}
 				if (!data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.none + "\n")
+					await io.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			await functions.write("\n");
-			await functions.print(fishInPondChoices);
+			await io.write("\n");
+			await io.print(fishInPondChoices);
 			let selectedFishInPondIndex;
 			do {
-				selectedFishInPondIndex = Number(await functions.getch())
+				selectedFishInPondIndex = Number(await io.getch())
 			} while (!Number.isInteger(selectedFishInPondIndex) || selectedFishInPondIndex < 0 || selectedFishInPondIndex > 7 || !hasFishInPond[selectedFishInPondIndex]);
 			if (selectedFishInPondIndex === 7) {
 				await functions.sleep(.5);
@@ -872,28 +871,28 @@ export default function createFishing(lang, data, functions) {
 	}
 	async function eatMenuNoOven() {
 		while (true) {
-			await functions.clear();
-			await functions.print(functions.listToChoice(lang.current.fishing.noOvenMenu));
-			await functions.printnl(lang.current.fishing.currentHunger + ": ");
-			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await functions.print(lang.current.fishing.currentAmount + ": ");
+			await io.clear();
+			await io.print(functions.listToChoice(lang.current.fishing.noOvenMenu));
+			await io.printnl(lang.current.fishing.currentHunger + ": ");
+			await io.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await io.print(lang.current.fishing.currentAmount + ": ");
 			for (let i = 1; i <= 6; i++) {
-				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 				if (fishInPond[i].length) {
-					await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 				}
 				if (data.gameState.dataSaver.foodFish[i][0]) {
-					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 				}
 				if (data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.roastedFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 				}
 				if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.none + "\n")
+					await io.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
 			while (true) {
-				const input = await functions.getch();
+				const input = await io.getch();
 				if (input === "1") {
 					await makeFood();
 					break
@@ -913,29 +912,29 @@ export default function createFishing(lang, data, functions) {
 			return
 		}
 		while (true) {
-			await functions.clear();
-			await functions.print(functions.listToChoice(lang.current.fishing.ovenMenu));
-			await functions.printnl(lang.current.fishing.currentHunger + ": ");
-			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await functions.print(lang.current.fishing.currentAmount + ": ");
+			await io.clear();
+			await io.print(functions.listToChoice(lang.current.fishing.ovenMenu));
+			await io.printnl(lang.current.fishing.currentHunger + ": ");
+			await io.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await io.print(lang.current.fishing.currentAmount + ": ");
 			for (let i = 1; i <= 6; i++) {
-				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 				if (fishInPond[i].length) {
-					await functions.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.fishpond + ": " + fishInPond[i].length + lang.current.fishing.fishNumber + "\n")
 				}
 				if (data.gameState.dataSaver.foodFish[i][0]) {
-					await functions.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.rawFish + ": " + data.gameState.dataSaver.foodFish[i][0] + lang.current.fishing.fishNumber + "\n")
 				}
 				if (data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.roastFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
+					await io.write("    " + lang.current.fishing.roastFish + ": " + data.gameState.dataSaver.foodFish[i][1] + lang.current.fishing.fishNumber + "\n")
 				}
 				if (fishInPond[i].length === 0 && !data.gameState.dataSaver.foodFish[i][0] && !data.gameState.dataSaver.foodFish[i][1]) {
-					await functions.write("    " + lang.current.fishing.none + "\n")
+					await io.write("    " + lang.current.fishing.none + "\n")
 				}
 			}
-			await functions.write("\n");
+			await io.write("\n");
 			while (true) {
-				const input = await functions.getch();
+				const input = await io.getch();
 				if (input === "1") {
 					await makeFood();
 					break
@@ -957,29 +956,29 @@ export default function createFishing(lang, data, functions) {
 	}
 	async function run() {
 		while (true) {
-			await functions.clear();
-			await functions.print(functions.listToChoice(lang.current.fishing.mainMenu));
-			await functions.printnl(lang.current.fishing.currentHunger + ": ");
-			await functions.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await functions.print(lang.current.fishing.currentFishingRod + ": " + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
+			await io.clear();
+			await io.print(functions.listToChoice(lang.current.fishing.mainMenu));
+			await io.printnl(lang.current.fishing.currentHunger + ": ");
+			await io.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
+			await io.print(lang.current.fishing.currentFishingRod + ": " + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
 			for (let i = 0; i <= 6; i++) {
-				await functions.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
+				await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 				for (let j = 0; j < fishInPond[i].length; j++) {
 					if (fishInPond[i][j] >= 8) {
-						await functions.write("\x1b[1;32m")
+						await io.write("\x1b[1;32m")
 					} else if (fishInPond[i][j] <= 2) {
-						await functions.write("\x1b[1;31m")
+						await io.write("\x1b[1;31m")
 					} else {
-						await functions.write("\x1b[1m")
+						await io.write("\x1b[1m")
 					}
-					await functions.write("    " + lang.current.fishing.freshness + ": " + fishInPond[i][j] + "\x1b[m\n")
+					await io.write("    " + lang.current.fishing.freshness + ": " + fishInPond[i][j] + "\x1b[m\n")
 				}
 				if (fishInPond[i].length === 0) {
-					await functions.write("    " + lang.current.fishing.none + "\x1b[m\n")
+					await io.write("    " + lang.current.fishing.none + "\x1b[m\n")
 				}
 			}
 			while (true) {
-				const input = await functions.getch();
+				const input = await io.getch();
 				if (input === "1") {
 					for (let i = 0; i <= 6; i++) {
 						for (let j = 0; j < fishInPond[i].length; j++) {
@@ -1015,7 +1014,7 @@ export default function createFishing(lang, data, functions) {
 							fishInPond[i].pop()
 						}
 					}
-					await functions.clear();
+					await io.clear();
 					break
 				} else if (input === "5") {
 					for (let i = 0; i <= 6; i++) {

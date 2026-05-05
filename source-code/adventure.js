@@ -1,4 +1,4 @@
-export default function createAdventure(lang, data, functions) {
+export default function createAdventure(lang, functions, data, io) {
 	let now = 0;
 	let america = 0;
 	let sleepcnt = 0;
@@ -24,42 +24,42 @@ export default function createAdventure(lang, data, functions) {
 			next: nextIds
 		} = scene;
 		if (title) {
-			await functions.print(title)
+			await io.print(title)
 		}
 		for (const line of lines) {
-			await functions.print(line);
+			await io.print(line);
 			await functions.sleep(.1)
 		}
-		await functions.write("\n");
+		await io.write("\n");
 		if (now === 21) {
 			if (!romar) {
-				await functions.printa(lang.current.adventure.achievementAllRoadsToRome);
+				await io.printa(lang.current.adventure.achievementAllRoadsToRome);
 				data.gameState.dataSaver.money += 100
 			}
 			if (romar === 5) {
-				await functions.printa(lang.current.adventure.achievementWrongWay);
+				await io.printa(lang.current.adventure.achievementWrongWay);
 				data.gameState.dataSaver.money += 100
 			}
 			romar++
 		}
 		if (now === 22) {
 			if (!america) {
-				await functions.printa(lang.current.adventure.achievementVoyage);
+				await io.printa(lang.current.adventure.achievementVoyage);
 				data.gameState.dataSaver.money += 100
 			}
 			if (america === 5) {
-				await functions.printa(lang.current.adventure.achievementWrongWay);
+				await io.printa(lang.current.adventure.achievementWrongWay);
 				data.gameState.dataSaver.money += 100
 			}
 			america++
 		}
 		if (now === 24) {
 			if (!headbone) {
-				await functions.printa(lang.current.adventure.achievementSurprise);
+				await io.printa(lang.current.adventure.achievementSurprise);
 				data.gameState.dataSaver.money += 100
 			}
 			if (headbone === 5) {
-				await functions.printa(lang.current.adventure.achievementArchaeologist);
+				await io.printa(lang.current.adventure.achievementArchaeologist);
 				data.gameState.dataSaver.money += 100
 			}
 			headbone++
@@ -71,39 +71,39 @@ export default function createAdventure(lang, data, functions) {
 				menu += ", "
 			}
 		}
-		await functions.print(menu);
+		await io.print(menu);
 		let idx;
 		do {
-			idx = Number(await functions.getch()) - 1
+			idx = Number(await io.getch()) - 1
 		} while (idx < 0 || idx >= choose.length);
 		if (cnext[idx]) {
-			await functions.clear();
-			await functions.printa(cnext[idx])
+			await io.clear();
+			await io.printa(cnext[idx])
 		}
 		now = nextIds[idx];
 		if (now === 13) {
 			if (!temple) {
-				await functions.printa(lang.current.adventure.achievementBuddhism);
+				await io.printa(lang.current.adventure.achievementBuddhism);
 				data.gameState.dataSaver.money += 100
 			} else if (temple === 5) {
-				await functions.printa(lang.current.adventure.achievementAscend);
+				await io.printa(lang.current.adventure.achievementAscend);
 				data.gameState.dataSaver.money += 100
 			}
 			temple++
 		}
 		if (now === 30) {
 			if (eatcnt >= 30 && !drafood) {
-				await functions.printa(lang.current.adventure.achievementDragonMeal);
+				await io.printa(lang.current.adventure.achievementDragonMeal);
 				data.gameState.dataSaver.money += 100
 			}
 			drafood++
 		}
 		if (now === -3) {
 			if (eatcnt >= 30 && e2 === 0) {
-				await functions.printa(lang.current.adventure.achievementOriginalAspiration);
+				await io.printa(lang.current.adventure.achievementOriginalAspiration);
 				data.gameState.dataSaver.money += 100
 			} else if (eatcnt >= 30 && e2 === 5) {
-				await functions.printa(lang.current.adventure.achievementMission);
+				await io.printa(lang.current.adventure.achievementMission);
 				data.gameState.dataSaver.money += 200
 			}
 			e2++;
@@ -111,10 +111,10 @@ export default function createAdventure(lang, data, functions) {
 		}
 		if (now === -4) {
 			if (sleepcnt >= 30 && s2 === 0) {
-				await functions.printa(lang.current.adventure.achievementSoftBed);
+				await io.printa(lang.current.adventure.achievementSoftBed);
 				data.gameState.dataSaver.money += 100
 			} else if (sleepcnt >= 30 && s2 === 5) {
-				await functions.printa(lang.current.adventure.achievementSleepComfort);
+				await io.printa(lang.current.adventure.achievementSleepComfort);
 				data.gameState.dataSaver.money += 200
 			}
 			s2++;
@@ -123,13 +123,13 @@ export default function createAdventure(lang, data, functions) {
 		if (now === -1) {
 			eatcnt++;
 			if (eatcnt === 5) {
-				await functions.printa(lang.current.adventure.achievementNeedFood);
+				await io.printa(lang.current.adventure.achievementNeedFood);
 				data.gameState.dataSaver.money += 100
 			} else if (eatcnt === 10) {
-				await functions.printa(lang.current.adventure.achievementHungryGhost);
+				await io.printa(lang.current.adventure.achievementHungryGhost);
 				data.gameState.dataSaver.money += 100
 			} else if (eatcnt === 30) {
-				await functions.printa(lang.current.adventure.achievementVirtuousHui);
+				await io.printa(lang.current.adventure.achievementVirtuousHui);
 				data.gameState.dataSaver.money += 100
 			}
 			now = 1
@@ -137,13 +137,13 @@ export default function createAdventure(lang, data, functions) {
 		if (now === -2) {
 			sleepcnt++;
 			if (sleepcnt === 5) {
-				await functions.printa(lang.current.adventure.achievementReadyAfterSleep);
+				await io.printa(lang.current.adventure.achievementReadyAfterSleep);
 				data.gameState.dataSaver.money += 100
 			} else if (sleepcnt === 10) {
-				await functions.printa(lang.current.adventure.achievementBedComfort);
+				await io.printa(lang.current.adventure.achievementBedComfort);
 				data.gameState.dataSaver.money += 100
 			} else if (sleepcnt === 30) {
-				await functions.printa(lang.current.adventure.achievementSleepGod);
+				await io.printa(lang.current.adventure.achievementSleepGod);
 				data.gameState.dataSaver.money += 100
 			}
 			now = 1
@@ -158,12 +158,12 @@ export default function createAdventure(lang, data, functions) {
 		const things = lang.current.adventure.story;
 		while (true) {
 			if (now === -5) {
-				await functions.printa(lang.current.adventure.missionComplete);
+				await io.printa(lang.current.adventure.missionComplete);
 				data.gameState.dataSaver.money += 100;
 				data.gameState.dataSaver.challengeLevel = 2;
 				return
 			}
-			await functions.clear();
+			await io.clear();
 			await runTurn(things)
 		}
 	}

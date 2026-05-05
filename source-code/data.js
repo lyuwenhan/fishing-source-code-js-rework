@@ -1,6 +1,5 @@
-import deepFreeze from "./deepFreeze.js";
-export default function createData() {
-	const constant = deepFreeze({
+export default function createData(functions) {
+	const constant = functions.deepFreeze({
 		maxCatchSpeedLevel: 25,
 		minCatchSpeed: [50, 40, 40, 40, 30, 30, 30, 30, 20, 20, 10, 9, 7, 5, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 1],
 		maxCatchSpeed: [100, 100, 90, 80, 80, 70, 60, 50, 50, 40, 40, 40, 40, 40, 40, 35, 30, 25, 20, 10, 5, 4, 4, 3, 3, 2],
@@ -19,7 +18,7 @@ export default function createData() {
 			[0, 6600, 1700, 700, 390, 309, 301]
 		],
 		fishValueMultipliers: [0, 1, 2, 5, 10, 50, 100],
-		precipitationDensityByIntensity: [0, 11, 20, 40],
+		precipitationDensityByIntensity: [0, 11, 20, 40]
 	});
 
 	function createDataSaver() {

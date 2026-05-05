@@ -1,4 +1,4 @@
-export default function createNormalizeDataSaver(data, functions) {
+export default function createNormalizeDataSaver(functions, data) {
 	function run() {
 		const fallback = data.createDataSaver();
 		const source = functions.isPlainObject(data.gameState.dataSaver) ? data.gameState.dataSaver : {};
