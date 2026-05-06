@@ -581,7 +581,7 @@ export default function createFishing(functions, lang, data, io) {
 	async function makeFishingRod() {
 		await io.clear();
 		await io.print(lang.current.fishing.makeFishingRod);
-		await io.print(lang.current.fishing.currentFishingRod + lang.current.getValue("fishing", "fishName", data.gameState.dataSaver.rodLevel) + lang.current.fishing.fishingRod);
+		await io.print(lang.current.fishing.currentFishingRod + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
 		let hasFishInPond = Array(8).fill(false);
 		let fishInPondChoices = "";
 		for (let i = 0; i <= 6; i++) {
@@ -957,7 +957,7 @@ export default function createFishing(functions, lang, data, io) {
 			await io.print(functions.listToChoice(lang.current.fishing.mainMenu));
 			await io.printnl(lang.current.fishing.currentHunger + ": ");
 			await io.write((data.gameState.dataSaver.hunger < 10 ? "\x1b[31;1m" : data.gameState.dataSaver.hunger < 30 ? "" : data.gameState.dataSaver.hunger < 35 ? "\x1b[32m" : "\x1b[32;1m") + data.gameState.dataSaver.hunger + "\x1b[m\n");
-			await io.print(lang.current.fishing.currentFishingRod + ": " + lang.current.getValue("fishing", "fishName", data.gameState.dataSaver.rodLevel) + lang.current.fishing.fishingRod);
+			await io.print(lang.current.fishing.currentFishingRod + ": " + lang.current.fishing.fishName[data.gameState.dataSaver.rodLevel] + lang.current.fishing.fishingRod);
 			for (let i = 0; i <= 6; i++) {
 				await io.write(fishColor[i] + lang.current.fishing.fishName[i] + lang.current.fishing.fish + "\x1b[m\n");
 				for (let j = 0; j < fishInPond[i].length; j++) {

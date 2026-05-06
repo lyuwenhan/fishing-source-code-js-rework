@@ -1,3 +1,3 @@
-# fishing-source-code-js
+# fishing-game
 
-Port fishing-source-code-cpp to a esm javascript lib
+Port fishing-source-code-cpp to a esm javascript library
